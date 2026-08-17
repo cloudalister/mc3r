@@ -1,35 +1,35 @@
 # MC3 Boot Probe Status
 
-Updated: 2026-08-17 20:20:52
+Updated: 2026-08-17 20:56:34
 Mode: pollsid59c595
 Seconds: 8
 Trace log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\14_run_boot_trace.log
-Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260817_202050.log
-Partial runner timestamp: 2026-08-17 20:20:09
+Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260817_205625.log
+Partial runner timestamp: 2026-08-17 20:51:11
 
 ## Summary
 
 | Field | Value |
 |---|---|
-| Classification | semaphore |
-| Detail | [boot-trace:WaitSema:block] tid=3 sid=5 count=0 waiters=0 pc=0x5469e0 ra=0x398b28 |
-| Stable PC | 0x3985d8 |
-| RA | 0x3985d8 |
-| SP | 0x19f970 |
+| Classification | counters-moved |
+| Detail | dma/vif counters moved without gif/gsw visual traffic |
+| Stable PC | 0x5a8908 |
+| RA | 0x5a88f0 |
+| SP | 0x19fe10 |
 | GP | 0x67f070 |
-| Function | sub_00398480_0x398480 |
-| File | E:\Games\Emuladores\Sony\mc3recomp\work\generated\ghidra\sub_00398480_0x398480.cpp |
+| Function | sub_005A8898_0x5a8898 |
+| File | E:\Games\Emuladores\Sony\mc3recomp\work\generated\ghidra\sub_005A8898_0x5a8898.cpp |
 | Resolve evidence | register_functions.cpp |
-| Render counters | dma=0 gif=0 gsw=0 vif=0 |
-| Deterministic | yes |
-| Dispatch budget | 25000 |
-| Dispatch budget marker | yes |
-| Timeout reached | no |
+| Render counters | dma=2 gif=0 gsw=0 vif=3 |
+| Deterministic | no |
+| Dispatch budget | n/a |
+| Dispatch budget marker | no |
+| Timeout reached | yes |
 
 ## Last Stable Frame
 
 ~~~text
-[boot-trace:frame] tick=10 activeThreads=3 pc=0x3985d8 ra=0x3985d8 sp=0x19f970 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=0 gif=0 gsw=0 vif=0
+[boot-trace:frame] tick=420 activeThreads=3 pc=0x5a8908 ra=0x5a88f0 sp=0x19fe10 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=2 gif=0 gsw=0 vif=3
 ~~~
 
 ## Last WaitSema Block
@@ -74,4 +74,4 @@ Partial runner timestamp: 2026-08-17 20:20:09
 
 ## Next Action
 
-Find the producer expected to signal the blocked semaphore before adding compatibility.
+DMA/VIF moved without GIF/GS writes; this is not visual render. Inspect the transport path and blocker evidence.
