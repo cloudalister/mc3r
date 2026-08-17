@@ -1,0 +1,301 @@
+{
+  "version": 1,
+  "project": "MC3 Provider Investigation Batch",
+  "overview": "Investigar por que o provider prim\u00e1rio 0x629F44 n\u00e3o est\u00e1 dispon\u00edvel no runner parcial e mapear os caminhos de package, backend e FMV sem aplicar patches cegos.",
+  "goals": [
+    "Identificar quem cria ou deveria preencher 0x629F44.",
+    "Mapear a tabela de backend de 0x3991F0 e seus dispatches indiretos.",
+    "Adicionar apenas instrumenta\u00e7\u00e3o env-gated quando a an\u00e1lise est\u00e1tica n\u00e3o bastar.",
+    "Produzir evid\u00eancia reproduz\u00edvel e um pr\u00f3ximo experimento m\u00ednimo."
+  ],
+  "nonGoals": [
+    "N\u00e3o for\u00e7ar handles v\u00e1lidos ou SignalSema.",
+    "N\u00e3o alterar o runtime original nem os assets da ISO.",
+    "N\u00e3o implementar o skip de FMV nesta fase.",
+    "N\u00e3o permitir que dois agentes escrevam no mesmo arquivo simultaneamente."
+  ],
+  "successMetrics": [
+    "Cada hist\u00f3ria gera um relat\u00f3rio com endere\u00e7os, arquivos e evid\u00eancia.",
+    "O produtor de 0x629F44 ou o ponto exato de perda do valor \u00e9 identificado.",
+    "O probe registra o valor do provider sem mudar o comportamento padr\u00e3o quando o env-gate est\u00e1 desligado.",
+    "O lote termina com um \u00fanico pr\u00f3ximo experimento aprovado por evid\u00eancia."
+  ],
+  "openQuestions": [
+    "O provider prim\u00e1rio \u00e9 criado por uma f\u00e1brica virtual, por resposta SIF/IOP ou por inicializa\u00e7\u00e3o de pacote anterior?",
+    "Qual valor e qual sequ\u00eancia aparecem no PCSX2 real antes de 0x4F9760?",
+    "O bloqueio atual \u00e9 independente do caminho de v\u00eddeo/FMV?"
+  ],
+  "stack": {
+    "framework": "C++ PS2 recompilation + PowerShell batch tools",
+    "hosting": "Not applicable",
+    "database": "Not applicable",
+    "auth": "Not applicable",
+    "agentMode": "Small read-only investigation stories first; mutation stories serial"
+  },
+  "routes": [],
+  "uiNotes": [],
+  "dataModel": [
+    {
+      "entity": "ProviderState",
+      "fields": [
+        "primary_0x629F44",
+        "fallback_0x629F4C",
+        "flag_0x629F40",
+        "flag_0x629F41",
+        "backend_table_0x618020"
+      ]
+    },
+    {
+      "entity": "EvidenceRecord",
+      "fields": [
+        "storyId",
+        "command",
+        "file",
+        "address",
+        "result",
+        "timestamp"
+      ]
+    }
+  ],
+  "importFormat": {
+    "description": "Not applicable",
+    "example": {}
+  },
+  "rules": [
+    "One Ralph story per iteration.",
+    "Read-only stories may run in parallel only when their allowedPaths do not overlap.",
+    "Only one story may edit generated C++ or run compile/relink at a time.",
+    "Every story must record a positive example and a negative case.",
+    "All runtime experiments remain behind MC3_* env-gates until compared with PCSX2 evidence.",
+    "Do not launch PCSX2 fullscreen or mutate the original ISO."
+  ],
+  "qualityGates": [
+    "Static evidence command exits successfully and names exact files/addresses.",
+    "Generated object compilation passes for every edited function.",
+    "10_link_partial_runner.bat completes and mc3_partial.exe has a new timestamp when code is edited.",
+    "15_auto_boot_probe.bat 8 595 completes and work/boot_probe/latest_status.md is read.",
+    "Default probe behavior is unchanged when the new env-gate is absent.",
+    "No unreviewed direct write to 0x629F44, fake handle, semaphore injection, or permanent compatibility patch."
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Inventory provider global references",
+      "status": "done",
+      "dependsOn": [],
+      "allowedPaths": [
+        "work/generated/ghidra",
+        "docs"
+      ],
+      "description": "As an investigator, I want a complete reference inventory for 0x629F40, 0x629F41, 0x629F44, 0x629F4C and 0x629F50 so that producers and consumers are not guessed.",
+      "acceptanceCriteria": [
+        "Report every relevant read/write with exact file and address.",
+        "Example: 0x4F9760 reads 0x629F44 and 0x629F4C.",
+        "Negative case: references that only contain an instruction address such as 0x4F9F44 are excluded.",
+        "No source file is modified."
+      ],
+      "startedAt": "2026-08-02T02:32:10.654026+00:00",
+      "completedAt": "2026-08-02T02:35:55.954258+00:00",
+      "updatedAt": "2026-08-02T02:35:55.954241+00:00"
+    },
+    {
+      "id": "US-002",
+      "title": "Map backend table and indirect calls",
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
+      "allowedPaths": [
+        "work/generated/ghidra",
+        "docs"
+      ],
+      "description": "As an investigator, I want the 0x3991F0 backend table and indirect call targets mapped so that the provider creation path is concrete.",
+      "acceptanceCriteria": [
+        "Map table bases 0x618020 and 0x618024 and every indirect call used by 0x3991F0.",
+        "Example: identify the vtable slot and the function called after the backend lookup.",
+        "Negative case: do not label an unknown indirect target as a provider constructor without evidence.",
+        "Produce a standalone markdown result."
+      ],
+      "startedAt": "2026-08-02T02:36:16.022191+00:00",
+      "completedAt": "2026-08-02T02:41:32.710738+00:00",
+      "updatedAt": "2026-08-02T02:41:32.710726+00:00"
+    },
+    {
+      "id": "US-003",
+      "title": "Map provider lifecycle flags",
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
+      "allowedPaths": [
+        "work/generated/ghidra",
+        "docs"
+      ],
+      "description": "As an investigator, I want the lifecycle around 0x4FA7A8, 0x4FAED8, 0x4F9A68 and 0x4FAA10 mapped so that initialization order is known.",
+      "acceptanceCriteria": [
+        "Document flag reads, writes, branches and return values for the four functions.",
+        "Example: 0x4FAED8 reads flags 0x629F40 and 0x629F41 before continuing.",
+        "Negative case: a flag write in an unrelated function is not treated as provider initialization.",
+        "No runtime behavior changes."
+      ],
+      "startedAt": "2026-08-02T02:41:34.880313+00:00",
+      "completedAt": "2026-08-02T02:46:38.000332+00:00",
+      "updatedAt": "2026-08-02T02:46:38.000319+00:00"
+    },
+    {
+      "id": "US-004",
+      "title": "Add provider entry trace",
+      "status": "done",
+      "dependsOn": [
+        "US-002",
+        "US-003"
+      ],
+      "allowedPaths": [
+        "work/generated/ghidra",
+        "tools",
+        "docs"
+      ],
+      "description": "As an investigator, I want env-gated entry and exit telemetry for the provider chain so that live values can be compared with static expectations.",
+      "acceptanceCriteria": [
+        "Trace 0x3991F0, 0x4FAED8, 0x4F9A68 and 0x4F9760 with MC3_BOOT_TRACE or a new documented MC3_* gate.",
+        "Example: log primary, fallback, flags and relevant arguments at 0x4F9760 entry.",
+        "Negative case: with the env-gate absent, no new output or behavior occurs.",
+        "Edited functions compile individually before relink."
+      ],
+      "startedAt": "2026-08-02T02:52:25.289475+00:00",
+      "completedAt": "2026-08-02T02:58:29.781417+00:00",
+      "updatedAt": "2026-08-02T02:58:29.781403+00:00"
+    },
+    {
+      "id": "US-005",
+      "title": "Validate instrumented runner",
+      "status": "done",
+      "dependsOn": [
+        "US-004"
+      ],
+      "allowedPaths": [
+        "work/compile",
+        "work/link",
+        "work/logs",
+        "work/boot_probe",
+        "docs"
+      ],
+      "description": "As an investigator, I want the instrumented runner rebuilt and probed so that the new telemetry is real and reproducible.",
+      "acceptanceCriteria": [
+        "Compile only the affected batch and relink successfully.",
+        "Example: 15_auto_boot_probe.bat 8 595 produces latest_status.md and provider trace lines.",
+        "Negative case: a stale executable or missing object is reported as failure, not success.",
+        "Record Stable PC, provider values and last wait in a markdown checkpoint."
+      ],
+      "startedAt": "2026-08-02T02:58:39.811885+00:00",
+      "completedAt": "2026-08-02T03:05:33.745804+00:00",
+      "updatedAt": "2026-08-02T03:05:33.745792+00:00"
+    },
+    {
+      "id": "US-006",
+      "title": "Run controlled probe matrix",
+      "status": "done",
+      "dependsOn": [
+        "US-005"
+      ],
+      "allowedPaths": [
+        "work/logs",
+        "work/boot_probe",
+        "docs"
+      ],
+      "description": "As an investigator, I want a small matrix of existing probe modes compared so that a mode-specific SIF response is not confused with a provider fix.",
+      "acceptanceCriteria": [
+        "Run the minimum matrix of default 8/595 and the previously validated req4 mode.",
+        "Example: compare Stable PC and provider values between the two modes.",
+        "Negative case: do not promote a mode that changes multiple unrelated experiments as a provider fix.",
+        "Keep each run log and record timestamps."
+      ],
+      "startedAt": "2026-08-02T03:05:35.907334+00:00",
+      "completedAt": "2026-08-02T03:08:56.444364+00:00",
+      "updatedAt": "2026-08-02T03:08:56.444351+00:00"
+    },
+    {
+      "id": "US-007",
+      "title": "Compare PCSX2 provider snapshot",
+      "status": "done",
+      "dependsOn": [
+        "US-002",
+        "US-006"
+      ],
+      "allowedPaths": [
+        "docs"
+      ],
+      "description": "As an investigator, I want the native runner values compared with the existing PCSX2 evidence so that the next experiment is evidence-based.",
+      "acceptanceCriteria": [
+        "Use the existing PCSX2 session evidence and identify matching provider/backend points.",
+        "Example: compare provider slot 0x618020, provider 0x619F58 and fallback state.",
+        "Negative case: timestamps or hashes alone cannot be used as gameplay equivalence evidence.",
+        "List unknown values that still require live capture."
+      ],
+      "startedAt": "2026-08-02T03:09:55.871755+00:00",
+      "completedAt": "2026-08-02T03:14:36.685286+00:00",
+      "updatedAt": "2026-08-02T03:14:36.685274+00:00"
+    },
+    {
+      "id": "US-008",
+      "title": "Select one minimal compatibility experiment",
+      "status": "done",
+      "dependsOn": [
+        "US-006",
+        "US-007"
+      ],
+      "allowedPaths": [
+        "docs"
+      ],
+      "description": "As a maintainer, I want one ranked, env-gated experiment selected so that the next runtime change is small and reversible.",
+      "acceptanceCriteria": [
+        "State the hypothesis, expected value, exact function/file, gate name and rollback path.",
+        "Example: a provider initialization response experiment with one changed request value.",
+        "Negative case: reject fake handles, semaphore injection and broad replace-all changes.",
+        "Do not implement the experiment in this story."
+      ],
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-08-02T03:15:44.940427+00:00"
+    },
+    {
+      "id": "US-009",
+      "title": "Investigate FMV path separately",
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
+      "allowedPaths": [
+        "work/generated/ghidra",
+        "docs"
+      ],
+      "description": "As a maintainer, I want the video callback and package path mapped separately so that FMV work is not incorrectly blamed for the provider gate.",
+      "acceptanceCriteria": [
+        "Map callbacks 0x541348 and 0x5413F0 and their package requests.",
+        "Example: identify whether the callback appears before or after the 0x5A8908 loop.",
+        "Negative case: do not add MC3_SKIP_VIDEO without a concrete player/decision function.",
+        "Produce findings only; no patch."
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Write end-of-batch handoff",
+      "status": "done",
+      "dependsOn": [
+        "US-008",
+        "US-009"
+      ],
+      "allowedPaths": [
+        "docs",
+        ".ralph"
+      ],
+      "description": "As Cloud, I want one concise handoff with verified findings, failed attempts and exact next commands so that the next session resumes without rediscovery.",
+      "acceptanceCriteria": [
+        "Record what changed, what was verified, what remains unknown and the next command.",
+        "Example: include Stable PC, provider values and probe log paths.",
+        "Negative case: do not claim visual gameplay acceptance from hashes, counters or logs alone.",
+        "Leave the worktree and generated artifacts clearly described."
+      ]
+    }
+  ]
+}

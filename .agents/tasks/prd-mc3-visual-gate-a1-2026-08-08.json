@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "project": "MC3 first visible frame - deterministic measurement gate",
+  "overview": "Find the dominant source of native-runner nondeterminism so the next runtime patch can be evaluated honestly on the shortest path to real GIF or GS traffic.",
+  "goals": [
+    "Prove whether host thread scheduling, wall-clock cutoff, uninitialized state, or real-time seeds dominate run variation.",
+    "Specify the smallest reversible A2 implementation that makes experiments comparable.",
+    "Keep the project focused on the first real GIF or GS output."
+  ],
+  "nonGoals": [
+    "Do not edit runtime or generated C++ in this story.",
+    "Do not touch provider, FMV, asset bridge, semaphores, executables, or build outputs.",
+    "Do not launch PCSX2 or claim visual success."
+  ],
+  "successMetrics": [
+    "A root-cause report ranks all four hypotheses using current source and existing raw logs.",
+    "The report gives one exact A2 patch boundary, files, behavior, rollback and verification commands.",
+    "No unsupported hypothesis is promoted to fact."
+  ],
+  "rules": [
+    "Use docs/STATUS_2026-08-07_AUDIT.md and docs/HANDOFF_2026-08-07_A_DETERMINISM.md as the current truth.",
+    "Treat gif>0 or gsw>0 as the only render signal.",
+    "Use existing logs; do not run the runner or any graphical application in this story.",
+    "Every terminal command must be prefixed with rtk or rtk proxy.",
+    "Do not modify files outside allowedPaths."
+  ],
+  "qualityGates": [
+    "Read PS2_PROJECT_STATE.md and the 2026-08-07 audit/handoff before analysis.",
+    "Inspect the actual host-thread creation, main dispatch loop, wall-clock probe cutoff, RDRAM/context initialization and time/RTC sources.",
+    "Cross-check at least the five-run baseline report and raw logs without launching a new runner.",
+    "Verify only the allowed report and Ralph state files changed."
+  ],
+  "stories": [
+    {
+      "id": "VIS-A1",
+      "title": "Prove the dominant nondeterminism source",
+      "status": "done",
+      "dependsOn": [],
+      "description": "As Cloud's cheap investigation agent, determine why identical MC3 native runs end at different PCs and hand the coordinator one bounded implementation gate toward trustworthy visual progress.",
+      "allowedPaths": [
+        "docs/PROBE_NONDETERMINISM_ROOT_CAUSE.md",
+        ".ralph/progress-visual.md",
+        ".ralph/activity.log",
+        ".ralph/errors.log",
+        ".ralph/guardrails.md",
+        ".ralph/runs/**",
+        ".ralph/.tmp/**"
+      ],
+      "acceptanceCriteria": [
+        "Rank host OS threads, wall-clock cutoff, uninitialized state and real-time seed with fact/hypothesis labels and direct file:line plus raw-log evidence.",
+        "Determine whether each guest thread is executed by an independent std::thread and whether the probe kills the process after wall-clock seconds.",
+        "Explain what Stable PC actually samples and why 0x3 can appear, without inventing a cause for 0x3 if not proven.",
+        "Define exactly one minimal A2 implementation: owned files, env gate/default behavior, deterministic budget or scheduler approach, rollback, and N=10 acceptance using the honest classifier.",
+        "Document why this gate is necessary for reaching GIF/GS output and explicitly state that no visual frame exists yet.",
+        "Do not edit runtime, generated code, scripts, binaries, PS2_PROJECT_STATE.md or existing audit/handoff documents."
+      ],
+      "startedAt": "2026-08-09T02:42:17.323264+00:00",
+      "completedAt": "2026-08-09T02:46:39.502724+00:00",
+      "updatedAt": "2026-08-09T02:46:39.502714+00:00"
+    }
+  ]
+}

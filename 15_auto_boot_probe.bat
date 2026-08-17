@@ -1,0 +1,75 @@
+@echo off
+setlocal EnableExtensions
+
+set "ROOT=%~dp0"
+set "ROOT=%ROOT:~0,-1%"
+set "SECONDS=%~1"
+set "MODE=%~2"
+set "SCRIPT=%ROOT%\tools\Boot-Probe.ps1"
+
+if "%SECONDS%"=="" set "SECONDS=10"
+if "%MODE%"=="" set "MODE=probe"
+if /I "%MODE%"=="experiment" set "MODE=compare"
+if /I "%MODE%"=="queue" set "MODE=latch-iopqueue"
+if /I "%MODE%"=="gsfield" set "MODE=latch-iopqueue-gsfield"
+if /I "%MODE%"=="callback" set "MODE=latch-iopqueue-gsfield-callback"
+if /I "%MODE%"=="cb" set "MODE=latch-iopqueue-gsfield-callback"
+if /I "%MODE%"=="592" set "MODE=payload592"
+if /I "%MODE%"=="payload" set "MODE=payload592"
+if /I "%MODE%"=="poll" set "MODE=pollsid"
+if /I "%MODE%"=="pollsid" set "MODE=pollsid"
+if /I "%MODE%"=="force541760ret1" set "MODE=pollsid541760ret1"
+if /I "%MODE%"=="541760ret1" set "MODE=pollsid541760ret1"
+if /I "%MODE%"=="pollsid541760ret1" set "MODE=pollsid541760ret1"
+if /I "%MODE%"=="force5422c8pass" set "MODE=pollsid5422c8pass"
+if /I "%MODE%"=="5422c8pass" set "MODE=pollsid5422c8pass"
+if /I "%MODE%"=="pollsid5422c8pass" set "MODE=pollsid5422c8pass"
+if /I "%MODE%"=="59c" set "MODE=pollsid59c"
+if /I "%MODE%"=="poll59c" set "MODE=pollsid59c"
+if /I "%MODE%"=="pollsid59c" set "MODE=pollsid59c"
+if /I "%MODE%"=="595" set "MODE=pollsid59c595"
+if /I "%MODE%"=="59c595" set "MODE=pollsid59c595"
+if /I "%MODE%"=="pollsid59c595" set "MODE=pollsid59c595"
+if /I "%MODE%"=="595ret2" set "MODE=pollsid59c595ret2"
+if /I "%MODE%"=="59c595ret2" set "MODE=pollsid59c595ret2"
+if /I "%MODE%"=="pollsid59c595ret2" set "MODE=pollsid59c595ret2"
+if /I "%MODE%"=="595ret2m9" set "MODE=pollsid59c595ret2mode9"
+if /I "%MODE%"=="mode9" set "MODE=pollsid59c595ret2mode9"
+if /I "%MODE%"=="pollsid59c595ret2mode9" set "MODE=pollsid59c595ret2mode9"
+if /I "%MODE%"=="595ret2m9p1" set "MODE=pollsid59c595ret2mode9payload1"
+if /I "%MODE%"=="mode9p1" set "MODE=pollsid59c595ret2mode9payload1"
+if /I "%MODE%"=="payload1" set "MODE=pollsid59c595ret2mode9payload1"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1" set "MODE=pollsid59c595ret2mode9payload1"
+if /I "%MODE%"=="595ret2m9p1m3" set "MODE=pollsid59c595ret2mode9payload1m3"
+if /I "%MODE%"=="mode9p1m3" set "MODE=pollsid59c595ret2mode9payload1m3"
+if /I "%MODE%"=="payload1m3" set "MODE=pollsid59c595ret2mode9payload1m3"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1m3" set "MODE=pollsid59c595ret2mode9payload1m3"
+if /I "%MODE%"=="595ret2m9p1m3skip5a" set "MODE=pollsid59c595ret2mode9payload1m3skip5a"
+if /I "%MODE%"=="mode9p1m3skip5a" set "MODE=pollsid59c595ret2mode9payload1m3skip5a"
+if /I "%MODE%"=="payload1m3skip5a" set "MODE=pollsid59c595ret2mode9payload1m3skip5a"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1m3skip5a" set "MODE=pollsid59c595ret2mode9payload1m3skip5a"
+if /I "%MODE%"=="595ret2m9p1m3skip5areq4" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4"
+if /I "%MODE%"=="mode9p1m3skip5areq4" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4"
+if /I "%MODE%"=="payload1m3skip5areq4" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4"
+if /I "%MODE%"=="req4" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1m3skip5areq4" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4"
+if /I "%MODE%"=="req4nosid" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4nosid"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1m3skip5areq4nosid" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4nosid"
+if /I "%MODE%"=="req4ret2" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4ret2"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1m3skip5areq4ret2" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4ret2"
+if /I "%MODE%"=="req4ret2ret1" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4ret2ret1"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1m3skip5areq4ret2ret1" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4ret2ret1"
+if /I "%MODE%"=="req4ret2ret1a8" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4ret2ret1a8"
+if /I "%MODE%"=="pollsid59c595ret2mode9payload1m3skip5areq4ret2ret1a8" set "MODE=pollsid59c595ret2mode9payload1m3skip5areq4ret2ret1a8"
+
+if not exist "%SCRIPT%" (
+  echo [ERROR] Boot probe script not found: %SCRIPT%
+  exit /b 1
+)
+
+pushd "%ROOT%" >nul
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" -Seconds "%SECONDS%" -Mode "%MODE%"
+set "EXITCODE=%ERRORLEVEL%"
+popd >nul
+
+exit /b %EXITCODE%

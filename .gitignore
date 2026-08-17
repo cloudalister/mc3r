@@ -1,0 +1,24 @@
+# jogo / assets — nunca subir
+*.iso
+*.ISO
+*.7z
+extracted_iso/
+MIDNIGHT CLUB 3 DUB PS2 ALPHA BUILD 102404/
+PS2-Programming-Docs/
+
+# saida gerada a partir do ELF do jogo
+work/
+preproc*.txt
+*.o
+
+# ferramentas baixadas
+ghidra_*/
+*.zip
+external/PCSX2-MCP/
+
+# logs e lixo de execucao
+.ralph/*.log
+.ralph/*.err.log
+.ralph/runs/
+*.log
+.ralph/.tmp/
