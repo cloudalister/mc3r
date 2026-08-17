@@ -281,3 +281,12 @@ Leitura: o módulo de arquivo cria o semáforo de conclusão, emite a operação
 - **Novo plano mestre: `docs\PLANO_2026-08-17_ALPHA_SYMBOLS.md`** — Fase 0: importar MC.MAP no Ghidra e diffar alpha→retail para nomear o boot path (fecha a Tarefa 1 do handoff sid=5 sem chute); Fase 1: reescrever a camada SIF como protocolo genérico (proibido novo `else if` por payloadAddr); Fase 2: scheduler cooperativo (determinismo); Fase 3: primeiro frame. Contingência: se o diffing casar mal, trocar o alvo do recomp para o ELF do alpha (símbolos completos).
 - **Higiene urgente:** `.git\` está VAZIO — não há repositório nem versionamento. `git init` + `.gitignore` + commit inicial é o primeiro passo prático. `cmake` segue fora do PATH.
 - Próximo passo ao retomar: Fase 0 do plano de 17/08 (script de import do MC.MAP + Version Tracking no Ghidra).
+
+## Checkpoint 2026-08-17 (noite) — Fase 0 executada: 8.815 funções do retail nomeadas
+
+- Repo público no ar: `github.com/cloudalister/mc3r` (docs+pipeline+tools, sem conteúdo do jogo) + fork `github.com/cloudalister/PS2Recomp` branch `mc3` (28 arquivos de runtime commitados). Roadmap de automação em `ROADMAP.md`.
+- **`tools/port_symbols.py` (Python puro) casou alpha→retail: 8.815 pares (55,7% do retail)** — 6.695 por hash de bytes mascarados + 2.120 por propagação de callgraph. Saída: `work\exports\retail_symbol_port.csv`. Relatório: `docs\SYMBOL_PORT_REPORT.md`.
+- **Todos os gates históricos têm nome agora.** O bloqueio do boot é a pilha SCE CDVD/FS sobre SIF RPC: `0x5422C8`=sceCdRead, `0x541968`=sceCdSync, `0x5424A8`=sceCdSeek, `0x5420C0`≈sceCdDiskReady (o "retorno 2" = SCECdComplete), `0x54A080`=sceFsInit (onde o boot para hoje), `0x549680`=sceSifCheckStatRpc. Protocolo público (ps2sdk/PCSX2), não proprietário.
+- **Handoff sid=5 respondido:** `0x398A60`=ipcCreateSemaEx cria, `0x398B18`=ipcWaitSema espera, e o produtor legítimo é **`coreFileSignalSema` = retail `0x398450`**, acionado pela completion `coreRaw*` que o runtime nunca produz. Provider = `zipFile::` (`0x4F9760`=zipOpen, `0x4FB0D8`=Open, `0x4FAED8`=Locate).
+- Consequência para a Fase 1: implementar semântica cdvdfsv/fileio padrão no runtime (referência: fonte do PCSX2 + ps2sdk), não reverse de protocolo. Os requests descartados (0x1/0xFF/0x9/0x22) são comandos cdvd padrão a confirmar contra o PCSX2.
+- Pendente da Fase 0: import do MC.MAP no Ghidra (JDK 21 em instalação), nomes de dados/globais via MC.SYM, melhorias de matcher (vizinhança/sequência).
