@@ -25,26 +25,41 @@ Evidência do trace (`14_run_boot_trace.log`): `sceSifSetDma` com cmd `0x8000000
 `0xF`=ADDDRV `0x10`=DELDRV. Structs de request/response com tamanhos: fileio-common.h
 (open=260B, read_arg=24B + read_data=48B, lseek=16B, getstat=264B...).
 
-## Requests hoje descartados pelo runtime (causa-raiz de 13/08)
+## Evidência dura: o cliente SCE decompilado com nomes (2026-08-17)
 
-| request | size | hipótese atual |
+`work\exports\alpha_decomp_sce.txt` — 179 funções `sce*`/`ipc*`/`coreFile*`/`psxCdCache*` do
+alpha decompiladas pelo Ghidra **com os nomes e até os globais internos do MC.MAP**
+(`_sceCd_rd_intr_data`, `_sceCd_ee_read_mode`, ...). Gerado por
+`tools\ghidra\ExportSceDecomp.java`. É a referência primária para implementar os handlers.
+
+Confirmado nesse decompilado:
+
+- `sceCdInit`: bind `0x80000592`, depois `sceSifCallRpc(fno=0, send=4B, recv=0x10)`.
+- `sceCdRead`: `sceSifCallRpc(cliente_ncmd, fno=1, async, send=0x18)` com buffer de resposta
+  de **0x90 bytes** (`_sceCd_rd_intr_data`) — **é exatamente o `request=0x1 size=0x90` que o
+  runtime descarta hoje.** O handler atual escreve 4 bytes onde a intr-data tem 144.
+- Binds vistos no boot: `0x80000592` (cdvd), `0x80000001` (fileio), `0x80000400` (padman),
+  `0x80000100/0x80000101` (memcard), `0x80000701` (usbkb), `0x80000211` (a identificar).
+- Descartado: LGDEVW.IRX é driver Logitech (volante/headset), não file server.
+- Bônus: `sceMpeg*`/`sceIpu*` decompilados = a lane de FMV/skip de vídeo tem referência pronta.
+
+## Requests hoje descartados (causa-raiz de 13/08) — leitura atualizada
+
+| request | size | leitura |
 |---|---|---|
-| `0x0` | 4/8 | FILEIO OPEN ou fno 0 de servidor custom |
-| `0x1` | 0x90/0x80 | **não bate com FILEIO CLOSE** (response de 144B) → provável LGDEV/cdvd |
-| `0x9` | 4 | FILEIO DOPEN ou custom |
-| `0x22` | 4 | fora da tabela FILEIO → custom (LGDEV) |
-| `0xFF` | 8 | handshake/init de servidor custom |
+| `0x1` | 0x90 | resposta N-cmd de `sceCdRead` (`_sceCd_rd_intr_data`, 0x90 bytes) — confirmado |
+| `0x1` | 0x80 | variação da mesma família (conferir no decomp: `sceCdSeek`/`sceCdGetToc`) |
+| `0x0` | 4/8 | init handshake (fno=0) de um dos servidores |
+| `0x9`, `0x22`, `0xFF` | 4-8 | mapear pelo decomp da função chamadora (olhar `ra` no trace) |
 
-Regra: nenhuma dessas hipóteses vira código sem confirmação por (a) dispatch table do IRX ou
-(b) captura PCSX2. Nada de valor plausível.
+Regra mantida: nada vira código sem casar o callsite no decomp ou capturar no PCSX2.
 
-## Como confirmar (automação)
+## Como fechar cada handler (automação)
 
-1. **Dispatch do IRX**: importar `SYSTEM\LGDEVW.IRX` (e `SCREAM.IRX`) no Ghidra headless; achar
-   `sceSifRegisterRpc(server_id, func, ...)`; extrair server id e o switch(fno) do handler. Isso dá
-   a tabela completa de fnos + tamanhos de struct do lado que responde.
-2. **Captura PCSX2**: `docs\PCSX2_MCP_LAUNCH_AND_CAPTURE_2026-08-09.md` — dump do buffer de
-   resposta real para cada (servidor, fno) no mesmo ponto do boot.
+1. **Decomp nomeado** (`alpha_decomp_sce.txt`): para cada função sce*, extrair (bind id, fno,
+   tamanho de send, tamanho/estrutura de recv) — o cliente descreve o protocolo inteiro.
+2. **Captura PCSX2** (conteúdo dos bytes, quando a semântica não for óbvia):
+   `docs\PCSX2_MCP_LAUNCH_AND_CAPTURE_2026-08-09.md`.
 3. Implementar em `SIF.cpp` (fork PS2Recomp, branch mc3): dispatcher por servidor → fno →
    handler que preenche a struct inteira no payload do request.
 
