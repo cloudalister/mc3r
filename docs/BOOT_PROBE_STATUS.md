@@ -1,26 +1,26 @@
 # MC3 Boot Probe Status
 
-Updated: 2026-08-13 03:04:56
+Updated: 2026-08-17 18:16:08
 Mode: pollsid59c595
 Seconds: 8
 Trace log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\14_run_boot_trace.log
-Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260813_030452.log
+Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260817_181605.log
 Partial runner timestamp: 2026-08-13 03:01:51
 
 ## Summary
 
 | Field | Value |
 |---|---|
-| Classification | semaphore |
-| Detail | [boot-trace:WaitSema:block] tid=3 sid=5 count=0 waiters=0 pc=0x5469e0 ra=0x398b28 |
-| Stable PC | 0x54a0ac |
-| RA | 0x54a0ac |
-| SP | 0x19f7a0 |
+| Classification | counters-moved |
+| Detail | dma/vif counters moved without gif/gsw visual traffic |
+| Stable PC | 0x54bcb0 |
+| RA | 0x54bcb0 |
+| SP | 0x19fbe0 |
 | GP | 0x67f070 |
-| Function | sub_0054A080_0x54a080 |
-| File | E:\Games\Emuladores\Sony\mc3recomp\work\generated\ghidra\sub_0054A080_0x54a080.cpp |
+| Function | sub_0054BC40_0x54bc40 |
+| File | E:\Games\Emuladores\Sony\mc3recomp\work\generated\ghidra\sub_0054BC40_0x54bc40.cpp |
 | Resolve evidence | register_functions.cpp |
-| Render counters | dma=0 gif=0 gsw=0 vif=0 |
+| Render counters | dma=0 gif=0 gsw=0 vif=2 |
 | Deterministic | yes |
 | Dispatch budget | 25000 |
 | Dispatch budget marker | yes |
@@ -29,7 +29,7 @@ Partial runner timestamp: 2026-08-13 03:01:51
 ## Last Stable Frame
 
 ~~~text
-[boot-trace:frame] tick=9 activeThreads=3 pc=0x54a0ac ra=0x54a0ac sp=0x19f7a0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=0 gif=0 gsw=0 vif=0
+[boot-trace:frame] tick=60 activeThreads=3 pc=0x54bcb0 ra=0x54bcb0 sp=0x19fbe0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=0 gif=0 gsw=0 vif=2
 ~~~
 
 ## Last WaitSema Block
@@ -74,4 +74,4 @@ Partial runner timestamp: 2026-08-13 03:01:51
 
 ## Next Action
 
-Find the producer expected to signal the blocked semaphore before adding compatibility.
+DMA/VIF moved without GIF/GS writes; this is not visual render. Inspect the transport path and blocker evidence.

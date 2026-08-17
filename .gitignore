@@ -15,6 +15,7 @@ preproc*.txt
 ghidra_*/
 *.zip
 external/PCSX2-MCP/
+cmake-*-windows-x86_64/
 
 # logs e lixo de execucao
 .ralph/*.log
