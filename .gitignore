@@ -22,3 +22,5 @@ external/PCSX2-MCP/
 .ralph/runs/
 *.log
 .ralph/.tmp/
+jdk21.zip
+jdk-21.0.12+8/
