@@ -27,10 +27,13 @@ funções fechados no repo inteiro, `resume_gaps.csv` = 0, teste novo na suíte.
 `cdrom0:\assets.dat` agora monta e chega ao open do provider.
 `docs/RESULT_FORMATTER_RESUME_V1.md`.
 
-Gate atual: **`0x245718`, `bad=0x540838`** — função não-implementada na região `sceUsbKb`
-(entre `sceUsbKbSync` `0x540720` e `sceUsbKbCnvRawCode` `0x541178` no symbol port). Classe
-"missing function": entrou no alcance agora que a regeneração descobriu novos entry targets.
-Handoff ativo: `docs/HANDOFF_FASE1_MISSING_0x540838.md`.
+Gate atual: **`0x245718`** — loop de `psxCdCache` (imediatamente antes de
+`psxCdCache::RawRead` `0x245790`), o gate histórico de julho: espera `sceCdDiskReady`
+retornar `2` (`SCECdComplete`). O `bad=0x540838` foi resolvido no passo 10
+(`RESULT_MISSING_0x540838_V1.md`: heurística de jump-table no gerador + filtro geral para 450
+colisões de alias) mas era thread paralela — o gate principal é o CD. Próximo: cdvd
+diskready/status pelo caminho legítimo → `RawRead` exercita o `sceCdRead` fno=1 do passo 1 →
+DATs carregam. Handoff ativo: `docs/HANDOFF_FASE1_CDCACHE_DISKREADY.md`.
 
 ## Como medir qualquer coisa
 
