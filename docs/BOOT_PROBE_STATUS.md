@@ -1,11 +1,11 @@
 # MC3 Boot Probe Status
 
-Updated: 2026-08-18 03:40:39
+Updated: 2026-08-18 04:32:15
 Mode: probe
-Seconds: 45
+Seconds: 30
 Trace log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\14_run_boot_trace.log
-Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260818_034011.log
-Partial runner timestamp: 2026-08-18 03:34:35
+Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260818_043145.log
+Partial runner timestamp: 2026-08-18 04:28:43
 
 ## Summary
 
@@ -29,7 +29,7 @@ Partial runner timestamp: 2026-08-18 03:34:35
 ## Last Stable Frame
 
 ~~~text
-[boot-trace:frame] tick=1560 activeThreads=3 pc=0x245718 ra=0x245734 sp=0x19f2f0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gsPrims=0 gsPixels=0
+[boot-trace:frame] tick=1740 activeThreads=3 pc=0x245718 ra=0x245734 sp=0x19f2f0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gsPrims=0 gsPixels=0
 ~~~
 
 ## Last WaitSema Block
