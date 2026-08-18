@@ -26,18 +26,25 @@ $outDir = Join-Path $root "work\boot_probe"
 $report = Join-Path $outDir "repeat_${Label}_${stamp}.md"
 
 function Get-RenderMeasurement {
-    param([string]$Classification, [int]$Gif, [int]$Gsw)
+    param([string]$Classification, [int]$Gif, [int]$Gsw, [int]$GifPkTotal = -1, [int]$GsPrims = -1)
 
-    $hasVisualTraffic = ($Gif -gt 0 -or $Gsw -gt 0)
+    # Bloco A render ruler (docs/HANDOFF_FASE1_GSYNCV_METRICS.md, docs/RENDER_METRICS.md): the
+    # win condition is gifPackets(total)>0 and gsPrims>0 -- real GIF packets delivered to the GS
+    # and real primitives reaching the rasterizer. When those fields are available (Counters line
+    # includes gifPkTotal=/gsPrims=), they are the sole authority; gif=/gsw= (DMA-channel copies /
+    # privileged register writes, per docs/AUDIT_M4M5_RENDER.md) are structurally blind to GIF/GS
+    # traffic and are kept only as a legacy fallback for older trace logs that predate this field.
+    $hasNewRulerFields = ($GifPkTotal -ge 0 -and $GsPrims -ge 0)
+    $hasVisualTraffic = if ($hasNewRulerFields) { ($GifPkTotal -gt 0 -and $GsPrims -gt 0) } else { ($Gif -gt 0 -or $Gsw -gt 0) }
     $claimsRender = ($Classification -eq "render-started")
     $trueRender = ($claimsRender -and $hasVisualTraffic)
     $contradiction = ($claimsRender -ne $hasVisualTraffic)
     $detail = ""
     if ($claimsRender -and -not $hasVisualTraffic) {
-        $detail = "render-started without gif/gsw visual traffic"
+        $detail = "render-started without gifPackets(total)>0/gsPrims>0 visual traffic"
     }
     elseif (-not $claimsRender -and $hasVisualTraffic) {
-        $detail = "classification=$Classification with gif/gsw visual traffic"
+        $detail = "classification=$Classification with gifPackets(total)>0/gsPrims>0 visual traffic"
     }
 
     return [pscustomobject]@{
@@ -97,8 +104,10 @@ try {
 
         $gif = if ($ctr -match 'gif=(\d+)') { [int]$Matches[1] } else { -1 }
         $gsw = if ($ctr -match 'gsw=(\d+)') { [int]$Matches[1] } else { -1 }
+        $gifPkTotal = if ($ctr -match 'gifPkTotal=(\d+)') { [int]$Matches[1] } else { -1 }
+        $gsPrims = if ($ctr -match 'gsPrims=(\d+)') { [int]$Matches[1] } else { -1 }
 
-        $measurement = Get-RenderMeasurement -Classification $cls -Gif $gif -Gsw $gsw
+        $measurement = Get-RenderMeasurement -Classification $cls -Gif $gif -Gsw $gsw -GifPkTotal $gifPkTotal -GsPrims $gsPrims
         $deterministicFailure = ($deterministic -eq "yes") -and (($budgetMarker -ne "yes") -or ($timeoutReached -eq "yes"))
         $deterministicDetail = if ($deterministicFailure) { "deterministic evidence requires dispatch-budget marker=yes and timeout=no" } else { "" }
         $rows.Add([pscustomobject]@{

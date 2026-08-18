@@ -475,8 +475,42 @@ function Get-LastFrame {
     # Concurrent trace writers can splice another marker or a partial token into
     # a frame line. Counters are evidence of visual output, so only accept them
     # from a complete, standalone frame with every field in the emitted order.
-    $completeFramePattern = '^\[boot-trace:frame\] tick=[0-9]+ activeThreads=[0-9]+ pc=0x[0-9a-fA-F]+ ra=0x[0-9a-fA-F]+ sp=0x[0-9a-fA-F]+ gp=0x[0-9a-fA-F]+ dispfb1=0x[0-9a-fA-F]+ display1=0x[0-9a-fA-F]+ dma=[0-9]+ gif=[0-9]+ gsw=[0-9]+ vif=[0-9]+$'
+    # gifPk1/gifPk2/gifPk3/gsPrims/gsPixels are the Bloco A render ruler (docs/RENDER_METRICS.md):
+    # they see real GIF packets delivered to the GS and real primitives reaching the rasterizer,
+    # unlike gif=/gsw= which only see DMA-channel copies and privileged-register writes
+    # (docs/AUDIT_M4M5_RENDER.md). Older trace logs from before this field was added will simply
+    # not match this pattern and fall through to the PC-only fallback below.
+    $completeFramePattern = '^\[boot-trace:frame\] tick=[0-9]+ activeThreads=[0-9]+ pc=0x[0-9a-fA-F]+ ra=0x[0-9a-fA-F]+ sp=0x[0-9a-fA-F]+ gp=0x[0-9a-fA-F]+ dispfb1=0x[0-9a-fA-F]+ display1=0x[0-9a-fA-F]+ dma=[0-9]+ gif=[0-9]+ gsw=[0-9]+ vif=[0-9]+ gifPk1=[0-9]+ gifPk2=[0-9]+ gifPk3=[0-9]+ gsPrims=[0-9]+ gsPixels=[0-9]+$'
     $line = Get-LastMatchingLine -Lines $Lines -Pattern $completeFramePattern
+
+    # In deterministic mode, [boot-trace:dispatch-budget-reached] pc=/ra= is the *exact* guest PC
+    # at which the dispatch budget was exhausted -- purely a count of guest dispatches, never
+    # host wall-clock time. The periodic [boot-trace:frame] line above is sampled by the render
+    # loop instead, which is host-paced (draws frames as fast as the window/host allow) and can
+    # therefore land on a different nearby PC run-to-run even when the underlying deterministic
+    # simulation is identical -- this became visible only once a fix let the guest do real
+    # per-frame work (docs/RESULT_GSYNCV_METRICS_V1.md). When both markers are present, prefer
+    # the budget marker's PC/RA as the authoritative "Stable PC", but keep the frame line's
+    # counters (dma/gif/gsw/vif/gifPk*/gsPrims/gsPixels), which the budget line does not carry.
+    $budgetLine = Get-LastMatchingLine -Lines $Lines -Pattern '^\[boot-trace:dispatch-budget-reached\] budget=[0-9]+ pc=0x[0-9a-fA-F]+ ra=0x[0-9a-fA-F]+$'
+    if ($line -and $budgetLine) {
+        return [pscustomobject]@{
+            Line = $line
+            Pc = Get-FieldHex $budgetLine "pc"
+            Ra = Get-FieldHex $budgetLine "ra"
+            Sp = Get-FieldHex $line "sp"
+            Gp = Get-FieldHex $line "gp"
+            Dma = Get-FieldInt $line "dma"
+            Gif = Get-FieldInt $line "gif"
+            Gsw = Get-FieldInt $line "gsw"
+            Vif = Get-FieldInt $line "vif"
+            GifPk1 = Get-FieldInt $line "gifPk1"
+            GifPk2 = Get-FieldInt $line "gifPk2"
+            GifPk3 = Get-FieldInt $line "gifPk3"
+            GsPrims = Get-FieldInt $line "gsPrims"
+            GsPixels = Get-FieldInt $line "gsPixels"
+        }
+    }
     if ($line) {
         return [pscustomobject]@{
             Line = $line
@@ -488,6 +522,11 @@ function Get-LastFrame {
             Gif = Get-FieldInt $line "gif"
             Gsw = Get-FieldInt $line "gsw"
             Vif = Get-FieldInt $line "vif"
+            GifPk1 = Get-FieldInt $line "gifPk1"
+            GifPk2 = Get-FieldInt $line "gifPk2"
+            GifPk3 = Get-FieldInt $line "gifPk3"
+            GsPrims = Get-FieldInt $line "gsPrims"
+            GsPixels = Get-FieldInt $line "gsPixels"
         }
     }
 
@@ -512,6 +551,11 @@ function Get-LastFrame {
                 Gif = 0
                 Gsw = 0
                 Vif = 0
+                GifPk1 = 0
+                GifPk2 = 0
+                GifPk3 = 0
+                GsPrims = 0
+                GsPixels = 0
             }
         }
     }
@@ -526,6 +570,11 @@ function Get-LastFrame {
         Gif = 0
         Gsw = 0
         Vif = 0
+        GifPk1 = 0
+        GifPk2 = 0
+        GifPk3 = 0
+        GsPrims = 0
+        GsPixels = 0
     }
 }
 
@@ -591,13 +640,28 @@ function Get-Classification {
         return [pscustomobject]@{ Name = "invalid-pc"; Detail = $detail }
     }
 
-    $visualTraffic = (($Frame.Gif -as [int64]) -gt 0) -or (($Frame.Gsw -as [int64]) -gt 0)
-    if ($visualTraffic) {
-        $detail = "gif/gsw counters moved"
+    # Bloco A render ruler (docs/HANDOFF_FASE1_GSYNCV_METRICS.md, docs/RENDER_METRICS.md): the
+    # win condition is gifPackets(total)>0 and gsPrims>0 -- real GIF packets delivered to the GS
+    # and real primitives reaching the rasterizer. gif=/gsw= (DMA-channel copies / privileged
+    # register writes) are kept as a secondary, weaker signal: they can move without any GIF/GS
+    # traffic at all (docs/AUDIT_M4M5_RENDER.md), so they no longer decide render-started alone.
+    $gifPkTotal = (($Frame.GifPk1 -as [int64]) + ($Frame.GifPk2 -as [int64]) + ($Frame.GifPk3 -as [int64]))
+    $gsPrims = ($Frame.GsPrims -as [int64])
+    $newRulerTraffic = ($gifPkTotal -gt 0) -and ($gsPrims -gt 0)
+    $legacyTraffic = (($Frame.Gif -as [int64]) -gt 0) -or (($Frame.Gsw -as [int64]) -gt 0)
+    if ($newRulerTraffic) {
+        $detail = "gifPackets(total)=$gifPkTotal gsPrims=$gsPrims"
         if ($missing) {
             $detail = "$detail; missing-function evidence also observed: $missing"
         }
         return [pscustomobject]@{ Name = "render-started"; Detail = $detail }
+    }
+    if ($legacyTraffic) {
+        $detail = "gif/gsw counters moved (dma-channel copy / privileged-register write) but gifPackets(total)=$gifPkTotal gsPrims=$gsPrims -- not the Bloco A render ruler, do not treat as visual render"
+        if ($missing) {
+            $detail = "$detail; missing-function evidence also observed: $missing"
+        }
+        return [pscustomobject]@{ Name = "counters-moved"; Detail = $detail }
     }
 
     # Keep a missing dispatch visible when only DMA/VIF moved. Such counters are
@@ -663,7 +727,14 @@ function New-MarkdownStatus {
     $gif = if ($null -eq $Frame.Gif) { 0 } else { $Frame.Gif }
     $gsw = if ($null -eq $Frame.Gsw) { 0 } else { $Frame.Gsw }
     $vif = if ($null -eq $Frame.Vif) { 0 } else { $Frame.Vif }
-    $renderTraffic = "dma={0} gif={1} gsw={2} vif={3}" -f $dma, $gif, $gsw, $vif
+    $gifPk1 = if ($null -eq $Frame.GifPk1) { 0 } else { $Frame.GifPk1 }
+    $gifPk2 = if ($null -eq $Frame.GifPk2) { 0 } else { $Frame.GifPk2 }
+    $gifPk3 = if ($null -eq $Frame.GifPk3) { 0 } else { $Frame.GifPk3 }
+    $gifPkTotal = [int64]$gifPk1 + [int64]$gifPk2 + [int64]$gifPk3
+    $gsPrims = if ($null -eq $Frame.GsPrims) { 0 } else { $Frame.GsPrims }
+    $gsPixels = if ($null -eq $Frame.GsPixels) { 0 } else { $Frame.GsPixels }
+    $renderTraffic = "dma={0} gif={1} gsw={2} vif={3} gifPk1={4} gifPk2={5} gifPk3={6} gifPkTotal={7} gsPrims={8} gsPixels={9}" -f `
+        $dma, $gif, $gsw, $vif, $gifPk1, $gifPk2, $gifPk3, $gifPkTotal, $gsPrims, $gsPixels
 
     $next = switch ($Classification.Name) {
         "sif-reg-poll" { "Run baseline vs MC3_SIF_EXPERIMENT_LATCH_REG4=1 and accept only if PC moves past 0x246740 or render traffic starts." }
@@ -807,7 +878,9 @@ function New-ComparisonMarkdown {
         $gif = if ($null -eq $frame.Gif) { 0 } else { $frame.Gif }
         $gsw = if ($null -eq $frame.Gsw) { 0 } else { $frame.Gsw }
         $vif = if ($null -eq $frame.Vif) { 0 } else { $frame.Vif }
-        $rows.Add("| $($result.Experiment) | $($classification.Name) | $(Format-Hex $frame.Pc) | $($resolved.Function) | dma=$dma gif=$gif gsw=$gsw vif=$vif | $($result.Trace) |")
+        $gifPkTotal = [int64]($frame.GifPk1 -as [int64]) + [int64]($frame.GifPk2 -as [int64]) + [int64]($frame.GifPk3 -as [int64])
+        $gsPrims = if ($null -eq $frame.GsPrims) { 0 } else { $frame.GsPrims }
+        $rows.Add("| $($result.Experiment) | $($classification.Name) | $(Format-Hex $frame.Pc) | $($resolved.Function) | dma=$dma gif=$gif gsw=$gsw vif=$vif gifPkTotal=$gifPkTotal gsPrims=$gsPrims | $($result.Trace) |")
     }
 
     $baseline = $validResults | Where-Object { $_.Experiment -eq "baseline" } | Select-Object -First 1
@@ -818,7 +891,9 @@ function New-ComparisonMarkdown {
         }
         $frame = $result.Analysis.Frame
         $baseFrame = $baseline.Analysis.Frame
-        $trueRender = (($frame.Gif -as [int64]) -gt 0) -or (($frame.Gsw -as [int64]) -gt 0)
+        # Bloco A render ruler: gifPackets(total)>0 and gsPrims>0 (docs/RENDER_METRICS.md).
+        $gifPkTotal = [int64]($frame.GifPk1 -as [int64]) + [int64]($frame.GifPk2 -as [int64]) + [int64]($frame.GifPk3 -as [int64])
+        $trueRender = ($gifPkTotal -gt 0) -and (($frame.GsPrims -as [int64]) -gt 0)
         if ($frame.Pc -ne $baseFrame.Pc -or $trueRender) {
             $advanced = $true
         }
