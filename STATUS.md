@@ -19,14 +19,18 @@ Atualizado: 2026-08-18 ~01h
 
 ## O gate único
 
-`0x5a8908` (spin do provider). A escavação dos passos 6-8 (`RESULT_PROVIDER_TABLE_V1`,
-`RESULT_DAVE_HEADER_V1`, `RESULT_BOOT_ARGS_V1`) eliminou três hipóteses com evidência
-(a0=7 era lixo de print; header "Dave" nunca chega a ser lido; boot args JÁ funcionam) e
-cravou a causa atual: **`sub_0042F558` (motor de formatação/sprintf do jogo) retorna 0
-caracteres com argumentos válidos**, em 2 call sites independentes, deterministicamente —
-o path `cdrom0:\assets.dat` nunca é montado. Suspeita forte (a confirmar no passo 9):
-tabela de resume (`switch(ctx->pc)`) incompleta em função gerada — mesma doença do gap
-`0x42EB48` documentado em `HANDOFF_2026-08-07_B_DISPATCH_0x42EB48.md` e NUNCA fechado.
+**`0x5a8908` CAIU (18/08, passo 9)** — causa raiz: `jalr` computado cross-função apontando
+para `0x42EB48` (o first-bad-pc fantasma de 07/08) sem tabela de resume na função dona; o
+sprintf do jogo restartava do topo com args errados e retornava 0. Fix no **gerador**
+(`code_generator.cpp`: idiom `lui+addiu` cross-função vira entry target) — 95 gaps em 80
+funções fechados no repo inteiro, `resume_gaps.csv` = 0, teste novo na suíte. O path
+`cdrom0:\assets.dat` agora monta e chega ao open do provider.
+`docs/RESULT_FORMATTER_RESUME_V1.md`.
+
+Gate atual: **`0x245718`, `bad=0x540838`** — função não-implementada na região `sceUsbKb`
+(entre `sceUsbKbSync` `0x540720` e `sceUsbKbCnvRawCode` `0x541178` no symbol port). Classe
+"missing function": entrou no alcance agora que a regeneração descobriu novos entry targets.
+Handoff ativo: `docs/HANDOFF_FASE1_MISSING_0x540838.md`.
 
 ## Como medir qualquer coisa
 
