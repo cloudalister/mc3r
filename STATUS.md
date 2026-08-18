@@ -19,10 +19,14 @@ Atualizado: 2026-08-18 ~01h
 
 ## O gate único
 
-`0x5a8908` (spin do provider, `LOOP_0x5A8908_ANATOMY.md`) — desta vez com a causa-raiz
-candidata documentada: provider-table lookup com argumento `a0=7` bogus. Próximo passo:
-rastrear no decomp de onde vem esse `7` (índice de provider? enum de device?) e o que deveria
-registrar o provider correspondente (`datAssetManager`/`zipFile` init chain).
+`0x5a8908` (spin do provider). A escavação dos passos 6-8 (`RESULT_PROVIDER_TABLE_V1`,
+`RESULT_DAVE_HEADER_V1`, `RESULT_BOOT_ARGS_V1`) eliminou três hipóteses com evidência
+(a0=7 era lixo de print; header "Dave" nunca chega a ser lido; boot args JÁ funcionam) e
+cravou a causa atual: **`sub_0042F558` (motor de formatação/sprintf do jogo) retorna 0
+caracteres com argumentos válidos**, em 2 call sites independentes, deterministicamente —
+o path `cdrom0:\assets.dat` nunca é montado. Suspeita forte (a confirmar no passo 9):
+tabela de resume (`switch(ctx->pc)`) incompleta em função gerada — mesma doença do gap
+`0x42EB48` documentado em `HANDOFF_2026-08-07_B_DISPATCH_0x42EB48.md` e NUNCA fechado.
 
 ## Como medir qualquer coisa
 
