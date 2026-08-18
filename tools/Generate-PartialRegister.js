@@ -106,6 +106,32 @@ for (let i = 1; i < lines.length; i++) {
     }
 }
 
+// A switch-case alias is only a convenience re-entry point discovered inside
+// SOME owner function's body (internal jump-table / resume label). If that
+// same address is ALSO the genuine start of a different, independently
+// generated function (a real Ghidra function boundary, registered above in
+// `registered`), the real function must win -- aliases are written AFTER all
+// top-level registrations, so an unfiltered alias would silently overwrite
+// the correct entry in PS2Runtime::m_functionTable with the wrong owner
+// (found while closing the 0x540838 class: the code_generator.cpp jump-table
+// fix that discovered 0x540838 as an internal target of sub_005407D0 also
+// discovered its sibling table entry 0x540890, which happens to be the real
+// start of the separately-generated FUN_00540890 -- without this filter that
+// alias would hijack every external call to 0x540890). See
+// docs/RESULT_MISSING_0x540838_V1.md.
+function canonicalHexAddress(address) {
+    // Both sides of this comparison need the SAME numeric canonicalization:
+    // `registered` addresses come from the CSV index (zero-padded, e.g.
+    // "0x00540890"), while alias addresses come from a regex capture over
+    // "case 0x540890u:" source text (no padding). A naive string compare
+    // never matches across that formatting difference -- parse to a number
+    // and re-render so "0x00540890" and "0x540890" collapse to one key.
+    return "0x" + (parseInt(address, 16) >>> 0).toString(16).toLowerCase();
+}
+const registeredAddrSet = new Set(registered.map(item => canonicalHexAddress(item.Address)));
+const filteredAliases = aliases.filter(item => !registeredAddrSet.has(canonicalHexAddress(item.Address)));
+const skippedAliasCount = aliases.length - filteredAliases.length;
+
 console.log("Writing register cpp file...");
 const regCppLines = [
     '#include "ps2_runtime.h"',
@@ -126,7 +152,7 @@ for (const item of registered) {
     const addr = item.Address.toLowerCase();
     regCppLines.push(`    runtime.registerFunction(${addr}u, ${item.Symbol});`);
 }
-for (const item of aliases) {
+for (const item of filteredAliases) {
     const addr = item.Address.toLowerCase();
     regCppLines.push(`    runtime.registerFunction(${addr}u, ${item.Symbol});`);
 }
@@ -148,7 +174,7 @@ const manifestPath = outputPath.replace(/\.cpp$/, '.manifest.csv');
 writeCSVManifest(manifestPath, registered, ['Address', 'Symbol', 'Batch', 'Object']);
 
 const aliasManifestPath = outputPath.replace(/\.cpp$/, '.aliases.csv');
-writeCSVManifest(aliasManifestPath, aliases, ['Address', 'Symbol', 'OwnerAddress', 'Batch', 'Source', 'Kind']);
+writeCSVManifest(aliasManifestPath, filteredAliases, ['Address', 'Symbol', 'OwnerAddress', 'Batch', 'Source', 'Kind']);
 
 console.log("Writing missing stubs cpp file...");
 const stubLines = [
@@ -189,7 +215,8 @@ writeCSVManifest(missingManifestPath, missing, ['Address', 'Symbol', 'Batch', 'O
 console.log(`[OK] Partial register source: ${outputPath}`);
 console.log(`[OK] Partial register manifest: ${manifestPath}`);
 console.log(`[OK] Registered functions: ${registered.length}`);
-console.log(`[OK] Internal PC aliases: ${aliases.length}`);
+console.log(`[OK] Internal PC aliases: ${filteredAliases.length}`);
+console.log(`[OK] Aliases skipped (collide with a real function start): ${skippedAliasCount}`);
 console.log(`[OK] Alias manifest: ${aliasManifestPath}`);
 console.log(`[OK] Missing stub source: ${missingStubsPath}`);
 console.log(`[OK] Missing stub manifest: ${missingManifestPath}`);

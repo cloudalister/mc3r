@@ -1,18 +1,18 @@
 # MC3 Boot Probe Status
 
-Updated: 2026-08-18 03:05:23
+Updated: 2026-08-18 03:40:39
 Mode: probe
-Seconds: 8
+Seconds: 45
 Trace log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\14_run_boot_trace.log
-Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260818_030514.log
-Partial runner timestamp: 2026-08-18 03:03:17
+Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260818_034011.log
+Partial runner timestamp: 2026-08-18 03:34:35
 
 ## Summary
 
 | Field | Value |
 |---|---|
-| Classification | missing-function |
-| Detail | [dispatch:first-bad-pc] bad=0x540838 ra=0x540814 sp=0x19fc30 gp=0x67f070 v0=0x540838 v1=0x61fb44 a0=0x0 a1=0x19fd30 trace=0x4328a0 -> 0x246880 -> 0x2467f8 -> 0x4328a0 -> 0x4328a0 -> 0x54bb78 -> 0x54b510 -> 0x54b610 -> 0x432d38 -> 0x432e98 -> 0x432ef0 -> 0x432ef0 -> 0x432ef0 -> 0x432ef0 -> 0x54bbc4 -> 0x549488 -> 0x548e40 -> 0x54c160 -> 0x54c1b8 -> 0x548bc8 -> 0x5469a0 -> 0x548a00 -> 0x5488c8 -> 0x548bc8 -> 0x546d60 -> 0x548a80 -> 0x5469e0 -> 0x5469b0 -> 0x246914 -> 0x234614 -> 0x5402e8 -> 0x548c78 -> 0x54c160 -> 0x54c1b8 -> 0x5492b8 -> 0x548e40 -> 0x54c160 -> 0x54c1b8 -> 0x5469a0 -> 0x548a00 -> 0x5488c8 -> 0x548bc8 -> 0x546d60 -> 0x548a80 -> 0x5469e0 -> 0x5469b0 -> 0x5469a0 -> 0x5404e0 -> 0x5469e0 -> 0x549488 -> 0x548e40 -> 0x54c160 -> 0x54c1b8 -> 0x548bc8 -> 0x548bc8 -> 0x548a00 -> 0x5488c8 -> 0x548bc8 -> 0x546d60 -> 0x548a80 -> 0x540720 -> 0x5469e0 -> 0x5407d0 -> 0x540838 [stack] +0=0x19fd30 +4=0x0 +8=0x0 +c=0xfffffff3 +10=0x540774 +14=0x0 +18=0x0 +1c=0x0 +20=0xffffffff +24=0xffffffff +28=0x0 +2c=0x0 +30=0x620000 +34=0x0 +38=0x0 +3c=0x306d6f72 |
+| Classification | counters-moved |
+| Detail | dma/vif counters moved without gif/gsw visual traffic |
 | Stable PC | 0x245718 |
 | RA | 0x245734 |
 | SP | 0x19f2f0 |
@@ -23,13 +23,13 @@ Partial runner timestamp: 2026-08-18 03:03:17
 | Render counters | dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gifPkTotal=0 gsPrims=0 gsPixels=0 |
 | Deterministic | yes |
 | Dispatch budget | 25000 |
-| Dispatch budget marker | no |
-| Timeout reached | yes |
+| Dispatch budget marker | yes |
+| Timeout reached | no |
 
 ## Last Stable Frame
 
 ~~~text
-[boot-trace:frame] tick=420 activeThreads=3 pc=0x245718 ra=0x245734 sp=0x19f2f0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gsPrims=0 gsPixels=0
+[boot-trace:frame] tick=1560 activeThreads=3 pc=0x245718 ra=0x245734 sp=0x19f2f0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gsPrims=0 gsPixels=0
 ~~~
 
 ## Last WaitSema Block
@@ -74,4 +74,4 @@ Partial runner timestamp: 2026-08-18 03:03:17
 
 ## Next Action
 
-Resume trace-driven compile for the missing function/batch, then relink and probe again.
+DMA/VIF moved without GIF/GS writes; this is not visual render. Inspect the transport path and blocker evidence.
