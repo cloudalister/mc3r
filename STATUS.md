@@ -7,23 +7,22 @@ Atualizado: 2026-08-18 ~01h
 - Marco: **M1 quase fechado, entrando em M2/M3** — IOP reboot handshake ✅, cdvd init ✅,
   usbkb ✅, versão de módulo ✅. O gate `0x5a8908` (provider) foi ATRAVESSADO em 17/08; o gate
   seguinte `0x528fa0` (spin eterno em vsync) foi ATRAVESSADO em 18/08.
-- **Gate atual: dentro do próprio ciclo de vsync** (`0x545674`/`0x546e70`/`0x528fa8`, mesma
-  região — `sceGsSyncV`/`VSync()` do jogo, chamado repetidamente pelo loop principal, não mais
-  um freeze). Causa do freeze anterior: `INTC_STAT` (EE, `0x1000F000`) nunca era escrito pelo
-  runtime; o jogo faz busy-poll direto nesse registrador (bypassa `AddIntcHandler`). Corrigido
-  em `PS2Memory::latchIntcStatBit`. Ver `docs/RESULT_GSYNCV_METRICS_V1.md`.
-- Ainda sem imagem — régua nova pronta (`docs/RENDER_METRICS.md`): critério de vitória agora é
-  `gifPackets(total)>0` e `gsPrims>0`, ambos ainda `0` nas corridas mais recentes. Os
-  contadores antigos `gif`/`gsw` continuam cegos aos paths reais de render (auditoria M4-M5).
+- **Gate atual: `0x5a8908`/`0x5a88f0` de novo — mas agora com causa mapeada.** Correção do
+  passo 5: o "ciclo de vsync" do passo 4 era um init único (`FUN_00528ca0` esperando CSR.FIELD,
+  corrigido com toggle real do bit 13 por VBlank) + callback de conclusão do loader promovido
+  de experimento morto a permanente (decomp prova que o callback registrado `0x5407C0` É
+  `iSignalSema` — produtor legítimo). Depois disso o boot chega em `zipFile::Init` e para na
+  lookup da tabela do provider recebendo `a0=7` (inteiro) onde deveria chegar ponteiro de path.
+  Ver `docs/RESULT_MAINLOOP_DRAW_V1.md`.
+- Ainda sem imagem — régua nova (`docs/RENDER_METRICS.md`) toda zerada: `gifPk1/2/3=0`,
+  `gsPrims=0`. Determinístico 3/3 no gate atual.
 
 ## O gate único
 
-Não é mais um freeze fixo — o boot agora executa o ciclo real de vsync (múltiplas chamadas por
-segundo). O PC "estável" reportado por `dispatch-budget-reached` cai quase sempre (~80% das
-corridas) em `0x545674` (dentro de `sceGsSyncV`), com jitter residual ocasional em `0x528fa8`/
-`0x546e70` — mesma região de código, não uma trava nova. Handoff que produziu isso:
-`docs/HANDOFF_FASE1_GSYNCV_METRICS.md`. Próximo passo: achar por que `gifPackets`/`gsPrims`
-continuam `0` — o jogo ainda não chega a programar path GIF real depois do vsync desbloqueado.
+`0x5a8908` (spin do provider, `LOOP_0x5A8908_ANATOMY.md`) — desta vez com a causa-raiz
+candidata documentada: provider-table lookup com argumento `a0=7` bogus. Próximo passo:
+rastrear no decomp de onde vem esse `7` (índice de provider? enum de device?) e o que deveria
+registrar o provider correspondente (`datAssetManager`/`zipFile` init chain).
 
 ## Como medir qualquer coisa
 
