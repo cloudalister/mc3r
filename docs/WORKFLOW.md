@@ -17,6 +17,21 @@ Papéis: **coordenador** (pensa, escreve handoff, revisa, decide, atualiza STATU
 quando não disputam os mesmos arquivos nem a mesma medição (probe compete por CPU — nunca
 medir durante build).
 
+## Economia de tokens (camadas de execução)
+
+- **Fable (coordenador)**: só pensa/revisa/decide — nunca executa tarefa longa.
+- **Sonnet**: handoffs que mudam código. É onde vale gastar.
+- **Haiku**: mecânica pura — rodar build/relink/probe, filtrar log em arquivo, grep — quando o
+  handoff é só executar e coletar, sem julgamento.
+- **Gemini CLI** (`gemini -p "..."`, cota Google, zero token Claude): leitura em massa e
+  investigação exploratória — resumir decomp por função, varrer manuais, "onde olhar".
+  **Regra dura**: saída do Gemini vai para arquivo e é tratada como pista não-verificada;
+  nada vira código sem confirmação barata (grep/leitura pontual). Histórico: bom em
+  investigação (relink 28/07), mas já produziu doc-drift (auditoria 14/07, nota 6.5).
+- Handoffs devem entregar ao executor **insumos pré-filtrados** (trecho de decomp por função,
+  trace filtrado em arquivo) em vez de mandar ler arquivos inteiros; polls de espera a
+  90-120s; RESULT doc é o único artefato que o coordenador lê inteiro.
+
 ## Hierarquia de documentos (quem manda em quem)
 
 1. **`STATUS.md`** — o presente. Uma página, sobrescrita a cada ciclo. Única porta de entrada.
