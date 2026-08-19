@@ -50,7 +50,7 @@ julho) nunca responde. A leitura por ISO está pronta e testada byte-a-byte
 
 ```bat
 set "MC3_DETERMINISTIC=1"
-set "MC3_DISPATCH_BUDGET=25000"
+set "MC3_DISPATCH_BUDGET=100000"
 14_run_boot_trace.bat          &rem 1 corrida com trace = prova
 21_probe_repeat.bat 3 probe X  &rem 3x confirmação; modo "probe" LIMPO
 ```

@@ -1,10 +1,10 @@
 # MC3 Boot Probe Status
 
-Updated: 2026-08-19 05:10:16
+Updated: 2026-08-19 05:25:36
 Mode: probe
 Seconds: 90
 Trace log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\14_run_boot_trace.log
-Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260819_050845.log
+Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260819_052442.log
 Partial runner timestamp: 2026-08-19 04:59:23
 
 ## Summary
@@ -13,23 +13,23 @@ Partial runner timestamp: 2026-08-19 04:59:23
 |---|---|
 | Classification | counters-moved |
 | Detail | dma/vif counters moved without gif/gsw visual traffic |
-| Stable PC | 0x542230 |
+| Stable PC | 0x245720 |
 | RA | 0x245720 |
-| SP | 0x19f2f0 |
+| SP | 0x19f1a0 |
 | GP | 0x67f070 |
-| Function | sub_005420C0_0x5420c0 |
-| File | E:\Games\Emuladores\Sony\mc3recomp\work\generated\ghidra\sub_005420C0_0x5420c0.cpp |
+| Function | sub_00245680_0x245680 |
+| File | E:\Games\Emuladores\Sony\mc3recomp\work\generated\ghidra\sub_00245680_0x245680.cpp |
 | Resolve evidence | register_functions.cpp |
 | Render counters | dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gifPkTotal=0 gsPrims=0 gsPixels=0 |
-| Deterministic | no |
-| Dispatch budget | n/a |
-| Dispatch budget marker | no |
-| Timeout reached | yes |
+| Deterministic | yes |
+| Dispatch budget | 100000 |
+| Dispatch budget marker | yes |
+| Timeout reached | no |
 
 ## Last Stable Frame
 
 ~~~text
-[boot-trace:frame] tick=5340 activeThreads=3 pc=0x542230 ra=0x245720 sp=0x19f2f0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gsPrims=0 gsPixels=0
+[boot-trace:frame] tick=2820 activeThreads=3 pc=0x548e70 ra=0x5494e0 sp=0x19f1a0 gp=0x67f070 dispfb1=0x1400 display1=0x1bf27f00000000 dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gsPrims=0 gsPixels=0
 ~~~
 
 ## Last WaitSema Block
