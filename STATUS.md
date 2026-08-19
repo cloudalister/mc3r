@@ -27,13 +27,15 @@ funções fechados no repo inteiro, `resume_gaps.csv` = 0, teste novo na suíte.
 `cdrom0:\assets.dat` agora monta e chega ao open do provider.
 `docs/RESULT_FORMATTER_RESUME_V1.md`.
 
-Gate atual: **`0x245718`** — loop de `psxCdCache` (imediatamente antes de
-`psxCdCache::RawRead` `0x245790`), o gate histórico de julho: espera `sceCdDiskReady`
-retornar `2` (`SCECdComplete`). O `bad=0x540838` foi resolvido no passo 10
-(`RESULT_MISSING_0x540838_V1.md`: heurística de jump-table no gerador + filtro geral para 450
-colisões de alias) mas era thread paralela — o gate principal é o CD. Próximo: cdvd
-diskready/status pelo caminho legítimo → `RawRead` exercita o `sceCdRead` fno=1 do passo 1 →
-DATs carregam. Handoff ativo: `docs/HANDOFF_FASE1_CDCACHE_DISKREADY.md`.
+**FASE 2c ACEITA (19/08, passo 15)**: VBlank roda inline no tick do scheduler (sem thread
+paralela no modo determinístico, N=50 handoffs), contrato de semáforos permanente (flag
+removida). **1 Stable PC em 10/10 e 7x mais rápido** (3.9s vs 26.7s até o marcador).
+`docs/RESULT_FASE2C_V1.md`. Medições padrão agora: janela 90s.
+
+Gate atual: **`0x245720`** — o gate histórico de julho dentro de `sub_00245680`
+(`psxCdCache`): o loop onde `sceCdRead` retorna 0. Com semáforos e determinismo resolvidos,
+o bloqueio é finalmente a leitura real do CD — o handler cdvd fno=1 (passo 1, nunca
+exercitado) entra em cena. Handoff ativo: `docs/HANDOFF_FASE1_CDREAD_REAL.md`.
 
 ## Como medir qualquer coisa
 
