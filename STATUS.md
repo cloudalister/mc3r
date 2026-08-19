@@ -1,6 +1,18 @@
 # STATUS — fonte única de verdade (manter com ≤1 página, sobrescrever sempre)
 
-Atualizado: 2026-08-19 ~08h
+Atualizado: 2026-08-19 ~10h — PROJETO PAUSADO PELO USUÁRIO
+
+## ⏸️ Ponto de parada (retomar daqui)
+
+Passo 23 (callback de conclusão do sceCdRead) foi INTERROMPIDO no meio: o WIP está em
+`git stash` do submódulo PS2Recomp ("WIP passo 23") — SIF.cpp/RPC.cpp/RPC.h modificados,
+NÃO validados, relink interrompido (exe pode estar stale: rodar find_stale.py + relink
+antes de qualquer medição). Contexto completo: docs/RESULT_BOOT_DEPTH_V1.md (a causa: o
+contador 0x61FB90 esgota porque o callback de fim-de-RPC do sceCdRead nunca roda) + o
+prompt do passo 23b está reproduzível pelos docs. Última corrida conhecida morreu em
+missing-function 0x3afe40 (classe do passo 10) — sinal de que o callback passou a rodar
+e o boot foi mais fundo. Conquistas do dia já pushadas: leitura de CD byte-exata (passo
+21), pool de fichas RPC (passo 20), gates 0x245720/0x5a8908 atravessados.
 
 ## Onde o projeto está, em 3 linhas
 
