@@ -1,50 +1,26 @@
 # STATUS — fonte única de verdade (manter com ≤1 página, sobrescrever sempre)
 
-Atualizado: 2026-08-18 ~01h
+Atualizado: 2026-08-19 ~08h
 
 ## Onde o projeto está, em 3 linhas
 
-- Marco: **M1 quase fechado, entrando em M2/M3** — IOP reboot handshake ✅, cdvd init ✅,
-  usbkb ✅, versão de módulo ✅. O gate `0x5a8908` (provider) foi ATRAVESSADO em 17/08; o gate
-  seguinte `0x528fa0` (spin eterno em vsync) foi ATRAVESSADO em 18/08.
-- **Gate atual: `0x5a8908`/`0x5a88f0` de novo — mas agora com causa mapeada.** Correção do
-  passo 5: o "ciclo de vsync" do passo 4 era um init único (`FUN_00528ca0` esperando CSR.FIELD,
-  corrigido com toggle real do bit 13 por VBlank) + callback de conclusão do loader promovido
-  de experimento morto a permanente (decomp prova que o callback registrado `0x5407C0` É
-  `iSignalSema` — produtor legítimo). Depois disso o boot chega em `zipFile::Init` e para na
-  lookup da tabela do provider recebendo `a0=7` (inteiro) onde deveria chegar ponteiro de path.
-  Ver `docs/RESULT_MAINLOOP_DRAW_V1.md`.
-- Ainda sem imagem — régua nova (`docs/RENDER_METRICS.md`) toda zerada: `gifPk1/2/3=0`,
-  `gsPrims=0`. Determinístico 3/3 no gate atual.
+- Marco: **M1 quase fechado** — todos os serviços IOP do boot respondem (cdvd init+diskready,
+  usbkb, fileio handshake, versão de módulo). Kernel determinístico (Fases 2/2c/2d), binário
+  100% honesto (19/08 04:43), medição calibrada (budget 100k, janela 90s): 10/10 no mesmo PC.
+- **Gate único atual: `0x245720`** — laço de `sub_00245680` (`psxCdCache`). O diskready=2 já
+  chega (5x por corrida), o boot toca `0x542230`/`0x5494e0` e volta ao laço: existe uma
+  SEGUNDA condição não mapeada (candidato: cadeia `sceCdSeek`/`func_5424A8`==1 + completion).
+  `sceCdRead` nunca dispara. Ver `docs/RESULT_FASE2D_RPC_TICK_V1.md`.
+- Ainda sem imagem (`gifPk*=0`, `gsPrims=0`) — esperado até o CD ler de fato (M2).
 
-## O gate único
+## Conquistas estruturais (não reabrir)
 
-**`0x5a8908` CAIU (18/08, passo 9)** — causa raiz: `jalr` computado cross-função apontando
-para `0x42EB48` (o first-bad-pc fantasma de 07/08) sem tabela de resume na função dona; o
-sprintf do jogo restartava do topo com args errados e retornava 0. Fix no **gerador**
-(`code_generator.cpp`: idiom `lui+addiu` cross-função vira entry target) — 95 gaps em 80
-funções fechados no repo inteiro, `resume_gaps.csv` = 0, teste novo na suíte. O path
-`cdrom0:\assets.dat` agora monta e chega ao open do provider.
-`docs/RESULT_FORMATTER_RESUME_V1.md`.
-
-**FASE 2c ACEITA (19/08, passo 15)**: VBlank roda inline no tick do scheduler (sem thread
-paralela no modo determinístico, N=50 handoffs), contrato de semáforos permanente (flag
-removida). **1 Stable PC em 10/10 e 7x mais rápido** (3.9s vs 26.7s até o marcador).
-`docs/RESULT_FASE2C_V1.md`. Medições padrão agora: janela 90s.
-
-**BINÁRIO 100% HONESTO desde 19/08 04:43** — 13.555 `.o` recompilados (conteúdo divergia de
-verdade pós-regeneração de 18/08; o "bad value" do linker era corrida com compile concorrente,
-não objeto podre). Baseline 5/5 determinístico no mesmo PC. Ferramentas novas:
-`tools/parallel_compile.py` (13,5k arquivos em ~26 min, 20 workers — o caminho antigo levaria
-8h), `tools/find_stale.py` (auditoria fonte-vs-objeto — RODAR ANTES DE QUALQUER RELINK),
-`tools/validate_objs.py`. Regra nova: relink NUNCA concorrente com compilação.
-
-Gate atual: **`0x245720`** — o gate histórico de julho dentro de `sub_00245680`
-(`psxCdCache`): o loop onde `sceCdRead` retorna 0. O degrau anterior a ele: o servidor
-"disco pronto" (sid `0x8000059c`, `sub_005420C0` — o "precisa retornar 2"/SCECdComplete de
-julho) nunca responde. A leitura por ISO está pronta e testada byte-a-byte
-(`RESULT_CDREAD_REAL_V1.md`) esperando o boot chegar nela. Handoff ativo:
-`docs/HANDOFF_FASE1_DISKREADY_059C.md`.
+Fase 2/2c/2d: scheduler cooperativo com VBlank inline (N=50) e entrega RPC no turno —
+1 PC em 10/10. Contrato de semáforos correto (retorno=sid), permanente. Gerador: resume gaps
+(95), jump-tables, 450 colisões de alias — classes fechadas com teste. Binário honesto +
+tooling (`parallel_compile.py` ~26min, `find_stale.py`=0 obrigatório pré-relink, relink nunca
+concorrente). Leitura por ISO pronta e testada byte-a-byte esperando o boot chegar nela.
+Histórico completo: `PS2_PROJECT_STATE.md` e `docs/RESULT_*.md`.
 
 ## Como medir qualquer coisa
 
