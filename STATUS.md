@@ -32,10 +32,19 @@ paralela no modo determinístico, N=50 handoffs), contrato de semáforos permane
 removida). **1 Stable PC em 10/10 e 7x mais rápido** (3.9s vs 26.7s até o marcador).
 `docs/RESULT_FASE2C_V1.md`. Medições padrão agora: janela 90s.
 
+**BINÁRIO 100% HONESTO desde 19/08 04:43** — 13.555 `.o` recompilados (conteúdo divergia de
+verdade pós-regeneração de 18/08; o "bad value" do linker era corrida com compile concorrente,
+não objeto podre). Baseline 5/5 determinístico no mesmo PC. Ferramentas novas:
+`tools/parallel_compile.py` (13,5k arquivos em ~26 min, 20 workers — o caminho antigo levaria
+8h), `tools/find_stale.py` (auditoria fonte-vs-objeto — RODAR ANTES DE QUALQUER RELINK),
+`tools/validate_objs.py`. Regra nova: relink NUNCA concorrente com compilação.
+
 Gate atual: **`0x245720`** — o gate histórico de julho dentro de `sub_00245680`
-(`psxCdCache`): o loop onde `sceCdRead` retorna 0. Com semáforos e determinismo resolvidos,
-o bloqueio é finalmente a leitura real do CD — o handler cdvd fno=1 (passo 1, nunca
-exercitado) entra em cena. Handoff ativo: `docs/HANDOFF_FASE1_CDREAD_REAL.md`.
+(`psxCdCache`): o loop onde `sceCdRead` retorna 0. O degrau anterior a ele: o servidor
+"disco pronto" (sid `0x8000059c`, `sub_005420C0` — o "precisa retornar 2"/SCECdComplete de
+julho) nunca responde. A leitura por ISO está pronta e testada byte-a-byte
+(`RESULT_CDREAD_REAL_V1.md`) esperando o boot chegar nela. Handoff ativo:
+`docs/HANDOFF_FASE1_DISKREADY_059C.md`.
 
 ## Como medir qualquer coisa
 
