@@ -63,3 +63,17 @@ nada ainda'. Quando o primeiro desenho chegar, ela acorda."
 - Se precisar de um termo, troca por objeto físico: semáforo→campainha, RPC→telefonema,
   gate→porta trancada, framebuffer→tela, scheduler→maestro.
 - Pode formato tirinha, infográfico vertical, ou 8 slides. Escolha um e seja consistente.
+
+---
+
+## 🛠️ Artefato Gerado: Explicação Visual Interativa
+
+Para facilitar a apresentação e a gravação de um futuro vídeo no YouTube, criamos uma versão interativa e estilizada dessas 8 cenas.
+
+* **Local do Arquivo:** `EXPLICA_VISUAL.html`
+* **Recursos do Artefato:**
+  * **Modo Visão Geral (Grid):** Mostra todas as cenas em cards responsivos organizados verticalmente, ideal para consulta e planejamento rápida do roteiro do vídeo.
+  * **Modo Apresentação (Slides):** Foca em um slide de cada vez, permitindo focar na explicação da cena.
+  * **Controles Interativos:** Botões de "Anterior" e "Próximo", além de suporte completo para navegação pelas setas direcionais do teclado (`←` e `→`) para transições suaves durante a gravação.
+  * **Estética Midnight Club:** Tema escuro com tons de Neon Ciano e Neon Rosa, homenageando a famosa "Tela Rosa" de renderização e o estilo de corrida de rua arcade.
+  * **ASCII Seguro:** Arte em monospace perfeitamente preservada com caracteres HTML devidamente escapados para exibição limpa em qualquer navegador.

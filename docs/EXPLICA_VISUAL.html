@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midnight Club 3 - Explicação Visual (PS2 para o PC)</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #1f2833;
+            --text-color: #c5a1c0;
+            --title-color: #66fcf1;
+            --accent-pink: #f92672;
+            --accent-blue: #66fcf1;
+            --text-white: #ffffff;
+            --glow-color: rgba(102, 252, 241, 0.2);
+            --glow-pink: rgba(249, 38, 114, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-white);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 50%, #1a0e2e 0%, #0b0c10 100%);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--accent-pink);
+            text-shadow: 0 0 10px var(--glow-pink), 0 0 20px var(--glow-pink);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--accent-blue);
+            text-shadow: 0 0 8px var(--glow-color);
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background-color: transparent;
+            border: 2px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px var(--glow-color);
+        }
+
+        button:hover, button.active {
+            background-color: var(--accent-blue);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        button.pink-btn {
+            border-color: var(--accent-pink);
+            color: var(--accent-pink);
+            box-shadow: 0 0 10px var(--glow-pink);
+        }
+
+        button.pink-btn:hover, button.pink-btn.active {
+            background-color: var(--accent-pink);
+            color: var(--text-white);
+            box-shadow: 0 0 20px var(--accent-pink);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* Slide Mode Styles */
+        .slide-container {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 25px var(--glow-color);
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide-num {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.2rem;
+            font-family: monospace;
+            color: var(--accent-pink);
+            font-weight: bold;
+        }
+
+        .slide-title {
+            font-size: 1.8rem;
+            color: var(--accent-blue);
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            border-bottom: 2px dashed rgba(102, 252, 241, 0.3);
+            padding-bottom: 10px;
+            width: 100%;
+        }
+
+        /* Grid Mode Styles */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            width: 100%;
+        }
+
+        @media (min-width: 900px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-pink);
+            box-shadow: 0 8px 25px var(--glow-pink);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+            width: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            font-weight: bold;
+        }
+
+        /* ASCII Art Styling */
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #050508;
+            color: #39ff14; /* Retro Green Matrix look */
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            overflow-x: auto;
+            border-left: 4px solid var(--accent-pink);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+            margin-bottom: 20px;
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+
+        .card:nth-child(even) pre, .slide:nth-child(even) pre {
+            color: #ff007f; /* Neon Pink look for variety */
+            border-left-color: var(--accent-blue);
+        }
+
+        .caption {
+            font-size: 1.15rem;
+            color: var(--text-white);
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 6px;
+            width: 100%;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .card:nth-child(even) .caption {
+            border-left-color: var(--accent-pink);
+        }
+
+        /* Navigation buttons inside Slide Mode */
+        .slide-nav {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 25px;
+        }
+
+        .instructions-footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            max-width: 600px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--card-bg);
+            border-radius: 5px;
+            border: 2px solid var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Midnight Club 3: Recompilation</h1>
+        <div class="subtitle">Traduzindo um clássico do PS2 para o PC nativo (Sem Emulador!)</div>
+        <p style="color: #a0a0b0; max-width: 700px; margin: 0 auto 20px auto; font-size: 1.05rem;">
+            A história de como pegamos um game lendário de 2004 e estamos reescrevendo ele peça por peça para rodar liso no computador. Um infográfico visual perfeito para roteiro de vídeo no YouTube!
+        </p>
+        
+        <div class="controls">
+            <button id="grid-mode-btn" class="active">Visão Geral (Grid)</button>
+            <button id="slide-mode-btn" class="pink-btn">Modo Apresentação (Slides)</button>
+        </div>
+    </header>
+
+    <!-- CONTAINER DA APRESENTAÇÃO (SLIDES) -->
+    <div id="slide-view" class="slide-container">
+        <!-- Slide 1 -->
+        <div class="slide active">
+            <span class="slide-num">Cena 1/8</span>
+            <div class="slide-title">1. O Quebra-Cabeça no Escuro</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│      [???]   [0x3F]  [???]   [0x8A]          │
+│         \     /        \     /               │
+│         ┌┴───┴┐        ┌┴───┴┐               │
+│         │     │        │     │               │
+│      ┌──┤  ?  ├──┐  ┌──┤  ?  ├──┐            │
+│      │  │     │  │  │  │     │  │            │
+│      └──┤     ├──┘  └──┤     ├──┘            │
+│         └┬───┬┘        └┬───┬┘               │
+│          o   o          o   o                │
+│             \              /                 │
+│              \    (O_O)   /                  │
+│               \--  | |  --/                  │
+│                    / \                       │
+│              [Escavando no escuro]           │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O jogo era código sem nome — meses travados sem saber onde."</div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide">
+            <span class="slide-num">Cena 2/8</span>
+            <div class="slide-title">2. O Mapa do Tesouro</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│          __________________                  │
+│         /  MAPA DE 2004   /\                 │
+│        /  ================  \                │
+│       /  [0x5A] = "Carro"    \               │
+│      /   [0x4C] = "Roda"      \              │
+│     /    [0x3B] = "Asfalto"    \             │
+│    /___________________________/             │
+│                 ||                           │
+│                 \/                           │
+│         ┌─────────┐   ┌─────────┐            │
+│       ┌─┤  CARRO  ├─┐ │ ASFA-   │            │
+│       │ │ [0x5A]  │ │ │ LTO     │            │
+│       └─┤         ├─┘ │ [0x3B]  │            │
+│         └─────────┘   └─────────┘            │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Um protótipo antigo trouxe a 'planta' com 19 mil nomes — agora sabemos o que cada peça faz."</div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="slide">
+            <span class="slide-num">Cena 3/8</span>
+            <div class="slide-title">3. O Alvo que Parava de se Mexer</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│     Antes (Impossível mirar!):               │
+│       ( ºoº) ~*  ~~*  (º_º )   &lt;- Trava em   │
+│         /           \             lugares    │
+│        /\           /\            aleatórios │
+│                                              │
+│     Depois (Congelado com alvo!):            │
+│                ___                           │
+│               / _ \                          │
+│              | / \ |  (o_o) &lt;"Me pegou!")    │
+│              | \_/ |   /|\                   │
+│               \___/    / \                   │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Fizemos o jogo travar sempre no MESMO lugar — agora dá pra mirar."</div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="slide">
+            <span class="slide-num">Cena 4/8</span>
+            <div class="slide-title">4. As Portas Trancadas em Fila</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│   [Fone do CD] [Teclado]   [Relógio]  [Senha]│
+│    ┌────┐      ┌────┐      ┌────┐     ┌────┐ │
+│    │    │      │    │      │    │     │ [?]│ │
+│    │ ✔  │      │ ✔  │      │ ✔  │     │ 🔓 │ │
+│    │    │      │    │      │    │     │    │ │
+│    └────┘      └────┘      └────┘     └────┘ │
+│      |           |           |          |    │
+│      V           V           V          V    │
+│    Aberto!     Aberto!     Aberto!   Quase!  │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Cada trava tinha nome; fomos abrindo uma por uma, pela fechadura — nunca no pé-de-cabra."</div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="slide">
+            <span class="slide-num">Cena 5/8</span>
+            <div class="slide-title">5. A Fábrica com Defeito de Série</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│      Molde com defeito: [ ==X== ]            │
+│                           ||                 │
+│                           \/                 │
+│      Peças com erro:  [X]  [X]  [X]  [X]     │
+│                                              │
+│      🔧 CONSERTO DO MOLDE!                   │
+│                           ||                 │
+│                           \/                 │
+│      Peças perfeitas: [O]  [O]  [O]  [O]     │
+│                       └─ 450 BUGS MORTOS! ─┘ │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Achamos 5 defeitos no molde da tradução — um conserto matou 95 bugs, outro matou 450."</div>
+        </div>
+
+        <!-- Slide 6 -->
+        <div class="slide">
+            <span class="slide-num">Cena 6/8</span>
+            <div class="slide-title">6. O Medidor no Cano Errado</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│   Cano Principal (Desenho da Tela)           │
+│   =======================\     /========     │
+│   [ Fluxo de Imagens ]    \___/              │
+│                                              │
+│   Cano Secundário (Errado!)                  │
+│   =============[ [0.0] Medidor ]========     │
+│                    ^                         │
+│                    | "Ué, tá zero..." (o_O)  │
+│                                              │
+│   🔧 Novo Medidor instalado no Cano Principal│
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O medidor de 'desenho' media o cano errado há meses — instalamos medidores nos canos certos."</div>
+        </div>
+
+        <!-- Slide 7 -->
+        <div class="slide">
+            <span class="slide-num">Cena 7/8</span>
+            <div class="slide-title">7. O Dominó Armado</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│       |    |    |    |    |    |    🎉       │
+│      /    /    /    /    /    /    ┌───┐     │
+│     /|   /|   /|   /|   /|   /|    │   │     │
+│    [_]  [_]  [_]  [_]  [_]  [_]    │ 🌟│     │
+│     |    |    |    |    |    |     └───┘     │
+│    Res- Tranca Jogo  Lê   Car- Pri-   TELA!  │
+│    posta abre  lê o  os   rega meira         │
+│    certa       disco arqs tudo ima-          │
+│                             gem              │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Falta consertar UMA resposta no formato errado — e os dominós caem até a primeira imagem."</div>
+        </div>
+
+        <!-- Slide 8 -->
+        <div class="slide">
+            <span class="slide-num">Cena 8/8</span>
+            <div class="slide-title">8. A Tela Rosa (Bônus!)</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│         .────────────────────────.           │
+│        /                          \          │
+│       |   ┌────────────────────┐   |         │
+│       |   │  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  │   |         │
+│       |   │  ▒▒ TELA ROSA! ▒▒  │   |         │
+│       |   │  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  │   |         │
+│       |   └────────────────────┘   |         │
+│        \      [ ] [ ] [ ] [ ]     /          │
+│         '────────────────────────'           │
+│                     ||                       │
+│         "O rosa é só o jogo acordado         │
+│          esperando o desenho chegar!"        │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O rosa não é erro — é a cor de 'ninguém desenhou nada ainda'. Quando o primeiro desenho chegar, ela acorda."</div>
+        </div>
+
+        <!-- Controle de Navegação dos Slides -->
+        <div class="slide-nav">
+            <button id="prev-btn" class="pink-btn">&larr; Anterior</button>
+            <button id="next-btn">Próximo &rarr;</button>
+        </div>
+    </div>
+
+    <!-- CONTAINER DA VISÃO GERAL (GRID) -->
+    <div id="grid-view" class="container grid-container">
+        <!-- Card 1 -->
+        <div class="card">
+            <div class="card-title">1. O Quebra-Cabeça no Escuro</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│      [???]   [0x3F]  [???]   [0x8A]          │
+│         \     /        \     /               │
+│         ┌┴───┴┐        ┌┴───┴┐               │
+│         │     │        │     │               │
+│      ┌──┤  ?  ├──┐  ┌──┤  ?  ├──┐            │
+│      │  │     │  │  │  │     │  │            │
+│      └──┤     ├──┘  └──┤     ├──┘            │
+│         └┬───┬┘        └┬───┬┘               │
+│          o   o          o   o                │
+│             \              /                 │
+│              \    (O_O)   /                  │
+│               \--  | |  --/                  │
+│                    / \                       │
+│              [Escavando no escuro]           │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O jogo era código sem nome — meses travados sem saber onde."</div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card">
+            <div class="card-title">2. O Mapa do Tesouro</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│          __________________                  │
+│         /  MAPA DE 2004   /\                 │
+│        /  ================  \                │
+│       /  [0x5A] = "Carro"    \               │
+│      /   [0x4C] = "Roda"      \              │
+│     /    [0x3B] = "Asfalto"    \             │
+│    /___________________________/             │
+│                 ||                           │
+│                 \/                           │
+│         ┌─────────┐   ┌─────────┐            │
+│       ┌─┤  CARRO  ├─┐ │ ASFA-   │            │
+│       │ │ [0x5A]  │ │ │ LTO     │            │
+│       └─┤         ├─┘ │ [0x3B]  │            │
+│         └─────────┘   └─────────┘            │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Um protótipo antigo trouxe a 'planta' com 19 mil nomes — agora sabemos o que cada peça faz."</div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card">
+            <div class="card-title">3. O Alvo que Parava de se Mexer</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│     Antes (Impossível mirar!):               │
+│       ( ºoº) ~*  ~~*  (º_º )   &lt;- Trava em   │
+│         /           \             lugares    │
+│        /\           /\            aleatórios │
+│                                              │
+│     Depois (Congelado com alvo!):            │
+│                ___                           │
+│               / _ \                          │
+│              | / \ |  (o_o) &lt;"Me pegou!")    │
+│              | \_/ |   /|\                   │
+│               \___/    / \                   │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Fizemos o jogo travar sempre no MESMO lugar — agora dá pra mirar."</div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="card">
+            <div class="card-title">4. As Portas Trancadas em Fila</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│   [Fone do CD] [Teclado]   [Relógio]  [Senha]│
+│    ┌────┐      ┌────┐      ┌────┐     ┌────┐ │
+│    │    │      │    │      │    │     │ [?]│ │
+│    │ ✔  │      │ ✔  │      │ ✔  │     │ 🔓 │ │
+│    │    │      │    │      │    │     │    │ │
+│    └────┘      └────┘      └────┘     └────┘ │
+│      |           |           |          |    │
+│      V           V           V          V    │
+│    Aberto!     Aberto!     Aberto!   Quase!  │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Cada trava tinha nome; fomos abrindo uma por uma, pela fechadura — nunca no pé-de-cabra."</div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="card">
+            <div class="card-title">5. A Fábrica com Defeito de Série</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│      Molde com defeito: [ ==X== ]            │
+│                           ||                 │
+│                           \/                 │
+│      Peças com erro:  [X]  [X]  [X]  [X]     │
+│                                              │
+│      🔧 CONSERTO DO MOLDE!                   │
+│                           ||                 │
+│                           \/                 │
+│      Peças perfeitas: [O]  [O]  [O]  [O]     │
+│                       └─ 450 BUGS MORTOS! ─┘ │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Achamos 5 defeitos no molde da tradução — um conserto matou 95 bugs, outro matou 450."</div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="card">
+            <div class="card-title">6. O Medidor no Cano Errado</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│   Cano Principal (Desenho da Tela)           │
+│   =======================\     /========     │
+│   [ Fluxo de Imagens ]    \___/              │
+│                                              │
+│   Cano Secundário (Errado!)                  │
+│   =============[ [0.0] Medidor ]========     │
+│                    ^                         │
+│                    | "Ué, tá zero..." (o_O)  │
+│                                              │
+│   🔧 Novo Medidor instalado no Cano Principal│
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O medidor de 'desenho' media o cano errado há meses — instalamos medidores nos canos certos."</div>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="card">
+            <div class="card-title">7. O Dominó Armado</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│       |    |    |    |    |    |    🎉       │
+│      /    /    /    /    /    /    ┌───┐     │
+│     /|   /|   /|   /|   /|   /|    │   │     │
+│    [_]  [_]  [_]  [_]  [_]  [_]    │ 🌟│     │
+│     |    |    |    |    |    |     └───┘     │
+│    Res- Tranca Jogo  Lê   Car- Pri-   TELA!  │
+│    posta abre  lê o  os   rega meira         │
+│    certa       disco arqs tudo ima-          │
+│                             gem              │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Falta consertar UMA resposta no formato errado — e os dominós caem até a primeira imagem."</div>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="card">
+            <div class="card-title">8. A Tela Rosa (Bônus!)</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│         .────────────────────────.           │
+│        /                          \          │
+│       |   ┌────────────────────┐   |         │
+│       |   │  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  │   |         │
+│       |   │  ▒▒ TELA ROSA! ▒▒  │   |         │
+│       |   │  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  │   |         │
+│       |   └────────────────────┘   |         │
+│        \      [ ] [ ] [ ] [ ]     /          │
+│         '────────────────────────'           │
+│                     ||                       │
+│         "O rosa é só o jogo acordado         │
+│          esperando o desenho chegar!"        │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O rosa não é erro — é a cor de 'ninguém desenhou nada ainda'. Quando o primeiro desenho chegar, ela acorda."</div>
+        </div>
+    </div>
+
+    <footer class="instructions-footer">
+        <p>💡 <strong>Dica para o Vídeo:</strong> Se você abrir este arquivo no navegador, poderá alternar para o <strong>Modo Apresentação</strong> e usar as teclas &larr; e &rarr; do seu teclado para passar os slides na gravação!</p>
+        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">E:\Games\Emuladores\Sony\mc3recomp\docs\EXPLICA_VISUAL.html</p>
+    </footer>
+
+    <script>
+        // Lógica de alternância entre Grid e Slides
+        const gridBtn = document.getElementById('grid-mode-btn');
+        const slideBtn = document.getElementById('slide-mode-btn');
+        const gridView = document.getElementById('grid-view');
+        const slideView = document.getElementById('slide-view');
+
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        gridBtn.addEventListener('click', () => {
+            gridBtn.classList.add('active');
+            slideBtn.classList.remove('active');
+            gridView.style.display = 'grid';
+            slideView.style.display = 'none';
+        });
+
+        slideBtn.addEventListener('click', () => {
+            slideBtn.classList.add('active');
+            gridBtn.classList.remove('active');
+            gridView.style.display = 'none';
+            slideView.style.display = 'block';
+            showSlide(currentSlide);
+        });
+
+        // Navegação de slides
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                if (i === index) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+
+        // Suporte a teclas direcionais (Seta Esquerda/Direita)
+        document.addEventListener('keydown', (event) => {
+            if (slideView.style.display === 'block') {
+                if (event.key === 'ArrowLeft') {
+                    prevBtn.click();
+                } else if (event.key === 'ArrowRight') {
+                    nextBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
