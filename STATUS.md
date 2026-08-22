@@ -1,37 +1,25 @@
 # STATUS — fonte única de verdade (manter com ≤1 página, sobrescrever sempre)
 
-Atualizado: 2026-08-19 ~10h — PROJETO PAUSADO PELO USUÁRIO
+Atualizado: 2026-08-20 ~02h — PASSO 23 CONCLUÍDO (STREAMING DE CD LIBERADO)
 
-## ⏸️ Ponto de parada (retomar daqui)
+## 📌 Ponto de parada (retomar daqui)
 
-Passo 23 (callback de conclusão do sceCdRead) foi INTERROMPIDO no meio: o WIP está em
-`git stash` do submódulo PS2Recomp ("WIP passo 23") — SIF.cpp/RPC.cpp/RPC.h modificados,
-NÃO validados, relink interrompido (exe pode estar stale: rodar find_stale.py + relink
-antes de qualquer medição). Contexto completo: docs/RESULT_BOOT_DEPTH_V1.md (a causa: o
-contador 0x61FB90 esgota porque o callback de fim-de-RPC do sceCdRead nunca roda) + o
-prompt do passo 23b está reproduzível pelos docs. Última corrida conhecida morreu em
-missing-function 0x3afe40 (classe do passo 10) — sinal de que o callback passou a rodar
-e o boot foi mais fundo. Conquistas do dia já pushadas: leitura de CD byte-exata (passo
-21), pool de fichas RPC (passo 20), gates 0x245720/0x5a8908 atravessados.
+Passo 23 (callback de conclusão de RPC para `sceCdRead`) **CONCLUÍDO e VALIDADO**.
+- O fix em `ps2xRuntime` (`SIF.cpp`, `RPC.cpp`, `RPC.h`) aciona `InvokeRpcEndCallback` para completar RPCs síncronas com end callback (`_sceCd_cd_read_intr` `0x5413f0`).
+- O contador `0x61FB90` reabastece e desbloqueou o gateB (`func_541760(4)` = 1).
+- **Leitura do CD/ISO disparada**: O boot leu PVD (`lsn=0x10`), diretórios (`0x105`–`0x109`) e os setores do gerenciador de assets **Dave / ASSETS.DAT** (`lsn=0x14e5be`, `0x14e5bf`, `0x14e64f`).
+- **Próximo Gate**: missing-function `bad=0x4fa368` (faixa do pipeline de lote dos passos 08/09/10).
+- Ver detalhes completos em `docs/RESULT_CD_INTR_V1.md`.
 
 ## Onde o projeto está, em 3 linhas
 
-- Marco: **M1 quase fechado** — todos os serviços IOP do boot respondem (cdvd init+diskready,
-  usbkb, fileio handshake, versão de módulo). Kernel determinístico (Fases 2/2c/2d), binário
-  100% honesto (19/08 04:43), medição calibrada (budget 100k, janela 90s): 10/10 no mesmo PC.
-- **Gate único atual: `0x245720`** — laço de `sub_00245680` (`psxCdCache`). O diskready=2 já
-  chega (5x por corrida), o boot toca `0x542230`/`0x5494e0` e volta ao laço: existe uma
-  SEGUNDA condição não mapeada (candidato: cadeia `sceCdSeek`/`func_5424A8`==1 + completion).
-  `sceCdRead` nunca dispara. Ver `docs/RESULT_FASE2D_RPC_TICK_V1.md`.
-- Ainda sem imagem (`gifPk*=0`, `gsPrims=0`) — esperado até o CD ler de fato (M2).
+- Marco: **M2 (Streaming de CD/ISO) ALCANÇADO!** — `sceCdRead` lê a ISO byte-a-byte, o asset manager ("Dave") começou o carregamento dos arquivos do jogo.
+- **Gate atual**: missing-function `bad=0x4fa368` acessado após o término da sequência inicial de leitura do CDVD.
+- Ainda sem imagem (`gifPk*=0`, `gsPrims=0`) — o motor gráfico ainda não iniciou os registros de exibição (esperado até o carregamento das estruturas de assets).
 
 ## Conquistas estruturais (não reabrir)
 
-Fase 2/2c/2d: scheduler cooperativo com VBlank inline (N=50) e entrega RPC no turno —
-1 PC em 10/10. Contrato de semáforos correto (retorno=sid), permanente. Gerador: resume gaps
-(95), jump-tables, 450 colisões de alias — classes fechadas com teste. Binário honesto +
-tooling (`parallel_compile.py` ~26min, `find_stale.py`=0 obrigatório pré-relink, relink nunca
-concorrente). Leitura por ISO pronta e testada byte-a-byte esperando o boot chegar nela.
+Fase 2/2c/2d + Passo 23: scheduler cooperativo com VBlank inline, entrega RPC no turno e invocação de end-callbacks RPC de SIF. Leitura por ISO 100% operacional byte-a-byte. Gerador e tooling (`find_stale.py`, `parallel_compile.py`, relink sequencial) validados.
 Histórico completo: `PS2_PROJECT_STATE.md` e `docs/RESULT_*.md`.
 
 ## Como medir qualquer coisa
@@ -43,8 +31,7 @@ set "MC3_DISPATCH_BUDGET=100000"
 21_probe_repeat.bat 3 probe X  &rem 3x confirmação; modo "probe" LIMPO
 ```
 
-**Modo `595` está APOSENTADO para medição** — ele liga 11 env-vars de experimentos rejeitados
-que agora colidem com os handlers reais (achado do passo 3, `docs/RESULT_FILEIO_GATE_V1.md`).
+**Modo `595` está APOSENTADO para medição** — ele liga 11 env-vars de experimentos rejeitados que agora colidem com os handlers reais (`docs/RESULT_FILEIO_GATE_V1.md`).
 
 ## Regras que não se negociam
 
@@ -52,9 +39,7 @@ que agora colidem com os handlers reais (achado do passo 3, `docs/RESULT_FILEIO_
 2. Nunca injetar SignalSema — completion só pelo produtor legítimo.
 3. Sem chute de bytes — decomp nomeado ou captura PCSX2; incerto = TODO + neutro.
 4. Sem env-gate experimental novo; scheduler da Fase 2 congelado.
-5. Vitória visual = `gifPackets(total)>0` E `gsPrims>0` + framebuffer — nada além disso conta
-   como imagem (atualizado 18/08: `gif>0`/`gsw>0`, o critério antigo, é cego a paths reais de
-   render — auditoria M4-M5, `docs/RENDER_METRICS.md`).
+5. Vitória visual = `gifPackets(total)>0` E `gsPrims>0` + framebuffer — nada além disso conta como imagem (`docs/RENDER_METRICS.md`).
 
 ## Mapa de referência (o que ler para quê)
 
