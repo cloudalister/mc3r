@@ -1,3 +1,23 @@
+# STATUS ATUAL — 2026-08-23 — PASSO 30 CONCLUÍDO PARCIALMENTE
+
+O handshake real do MCMAN foi implementado no dispatcher SIF por (sid,fno):
+
+- sid=0x80000400, fno=0xfe, resposta de 0x0c bytes;
+- resultado 0, versões 0x20a e 0x20e, conforme os limiares lidos no decomp de sceMcInit;
+- trace: mc3-memcard-rpc kind=mcman-init.
+
+O PC saiu do loop 0x1b15xx e terminou em 0x1a2408 por game-thread-return. Ainda não há imagem: gifPk*=0, gsPrims=0, gsPixels=0 na corrida determinística de validação.
+
+Validação: runtime ps2_runtime OK; find_stale Missing=0/Stale=0; relink fast sequencial OK; suíte retry 278/278; corrida MC3_DETERMINISTIC=1, MC3_DISPATCH_BUDGET=500000, MC3_BOOT_TRACE=1; probe 3x em PCs 0x42e738, 0x433254 e 0x4f97b8, render 0/3.
+
+Próximo gate: após mcman-init, MCMAN fno=0x14, 0x1 e 0xd ainda caem no fallback neutro. Casar esses fnos com sceMc* no decomp e preencher somente os campos lidos pelo cliente.
+
+Regras preservadas: sem SignalSema injetado, sem env-gate, sem chute, scheduler intacto.
+
+Artefatos: docs/RESULT_MEMCARD_30_V1.md; work/exports/longrun_timeline.md; tools/analyze_longrun.py.
+
+Commits: runtime 4d64045; projeto 23f6b73. Sem push.
+
 # STATUS — fonte única de verdade (manter com ≤1 página, sobrescrever sempre)
 
 Atualizado: 2026-08-20 ~02h — PASSO 23 CONCLUÍDO (STREAMING DE CD LIBERADO)

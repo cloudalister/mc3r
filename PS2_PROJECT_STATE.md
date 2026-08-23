@@ -306,3 +306,14 @@ Leitura: o módulo de arquivo cria o semáforo de conclusão, emite a operação
 - **FASE 2 ACEITA** (fork `b9b40d2`): scheduler cooperativo determinístico atrás de `MC3_DETERMINISTIC=1` — "baton" determinístico sobre std::thread (arbitragem explícita por prioridade EE + ordem de criação; VBlank por idle, não relógio; watchdog por contagem de handoffs). **`21_probe_repeat 10 595 sched_v1`: 10/10 corridas no MESMO Stable PC `0x5a8908`, evidência válida em todas, zero stalls.** Modo padrão intacto (suíte 268/269, falha pré-existente). Design: `docs\FASE2_SCHEDULER_DESIGN.md`; resultado: `docs\RESULT_FASE2_SCHED_V1.md` (inclui a ressalva honesta da seção 5 sobre o `sched_off_regression` ter dado 1 PC também nesta sessão).
 - **O boot agora para SEMPRE em `0x5a8908`** — região `memHeap::Begin` (symbol port), o spin de 29/07: `beqz $v0` esperando `func_4FA398` (provider/zipFile) retornar !=0. Com determinismo, esse é O gate único do projeto, e cada experimento da Fase 1 vira prova de uma corrida.
 - Próximo passo ao retomar: voltar à Fase 1 com medição determinística — frente fileio/cdvd-completion (sid=5/`coreFileSignalSema`) e a cadeia `zipFile::zipOpen`→provider que o gate `0x5a8908` espera. Tudo pushado: mc3r `be9f323`, fork `b9b40d2`.
+
+## Checkpoint 2026-08-23 — Passo 30 MCMAN
+
+- Runtime commit local: 4d64045. Projeto commit local: 23f6b73. Sem push.
+- O trace separou PADMAN (0x80000100/101, mensagem libpad mismatch) de MCMAN (0x80000400).
+- Implementado dispatcher MCMAN sid=0x80000400, fno=0xfe, resposta 0x0c: resultado 0, versões 0x20a/0x20e, derivados do decomp de sceMcInit.
+- A corrida determinística de 500k confirmou mc3-memcard-rpc, saiu do PC 0x1b15xx e terminou em game-thread-return, PC 0x1a2408.
+- Validação: runtime OK, stale Missing=0/Stale=0, relink OK, suíte retry 278/278, probe 3x sem render.
+- Próxima fronteira: MCMAN fnos 0x14, 0x1 e 0xd ainda no fallback neutro; casar com sceMc* antes de implementar.
+- Sem imagem: gifPk*=0, gsPrims=0, gsPixels=0; M4 não atingido.
+- Artefatos: docs/RESULT_MEMCARD_30_V1.md, work/exports/longrun_timeline.md, tools/analyze_longrun.py.
