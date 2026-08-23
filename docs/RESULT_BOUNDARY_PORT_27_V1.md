@@ -223,3 +223,64 @@ O marco visual M4 **não** foi atingido: `gifPkTotal>0 && gsPrims>0` nunca ocorr
 - `work/logs/pass27_deterministic_100k_final.log`
 - `work/boot_probe/repeat_boundary27_20260823_010653.md`
 
+## Reavaliação pós-Passo 27 — próximo passo (2026-08-23)
+
+Investigação feita sobre o log determinístico preservado e o código retail/runtime, sem nova alteração de código. A conclusão anterior de que o próximo ponto estava genericamente em “`sceTtyWrite`/sincronização por semáforo” pode agora ser estreitada: o bloqueio imediato é o ciclo DECI2 de envio do TTY, que o runtime trata como sucesso sem executar os efeitos necessários.
+
+### Cadeia causal comprovada
+
+| Evidência | Leitura |
+|---|---|
+| O trace termina repetidamente em `pc=0x547a20`, `ra=0x547a2c` | É o laço de polling dentro de `sceTtyWrite` (`0x547900`) |
+| `sceTtyWrite` grava `1` em `0x6FE2DC`, chama `sceDeci2ReqSend` e repete `sceDeci2Poll` enquanto esse busy for diferente de zero | A saída depende de uma conclusão assíncrona DECI2; não é espera de semáforo |
+| `sceTtyInit` abre o protocolo `0x210` com estado `0x6FE2D0` e handler retail `0x547768` | O jogo já fornece estado e callback legítimos para concluir o envio |
+| O handler `0x547768`, no evento `3`, chama a operação DECI2 `-6` para enviar bytes e reduz o campo restante em `estado+4` | Retornar zero sem consumir bytes mantém o envio pendente |
+| O mesmo handler, no evento `4`, limpa `estado+0xC` somente quando `estado+4 == 0` | Essa é a escrita legítima que libera `sceTtyWrite` |
+| `ps2_syscalls::Deci2Call`, em `System.cpp:900`, ignora operação e parâmetros e sempre retorna `KE_OK` (`0`) | `open`, `reqsend`, `poll` e `ExSend` aparentam sucesso, mas nenhum handle/handler/fila avança e nenhum callback é chamado |
+
+O ciclo atual é, portanto:
+
+```text
+sceTtyWrite: busy=1
+  -> Deci2Call(op=3 / reqsend): retorna 0, não agenda envio
+  -> Deci2Call(op=4 / poll): retorna 0, não chama o handler
+  -> busy continua 1
+  -> volta a 0x547a20 até acabar o dispatch budget
+```
+
+Há uma segunda falha que apareceria mesmo se apenas o callback fosse ligado: a operação `-6` também retorna zero hoje. Nesse caso o handler seria executado, mas consumiria zero bytes, manteria `estado+4 > 0` e o evento `4` ainda não limparia o busy. O conserto precisa cobrir o ciclo mínimo inteiro, não só disparar o callback.
+
+### O semáforo 84 não é o bloqueio do TTY
+
+O `sid=84` pertence ao thread 5, iniciado em `entry=0x42b668`. O log mostra alternância contínua de `WaitSema:wake` e `SignalSema` com retornos em `0x398b28/0x398b50`: esse worker IPC está rodando e acordando, não parado aguardando um sinal ausente. Ele também não referencia o busy `0x6FE2DC` usado pelo TTY.
+
+Os frames em `0x42e738` anteriores ao plateau pertencem ao corpo de `debug_memory_fill` (`0x42e6f0`), não a uma rotina de saída de texto. A partir do tick 540, o PC principal fica estável em `sceTtyWrite`. Assim, não há evidência para injetar `SignalSema`; o caminho causal observado é DECI2.
+
+### Próximo passo recomendado: Passo 28 — conclusão DECI2/TTY
+
+Implementar no runtime um backend DECI2 mínimo e genérico para o fluxo realmente exercitado, mantendo estado por handle e usando o callback registrado pelo guest:
+
+1. `op=1` (`sceDeci2Open`): registrar protocolo, ponteiro de estado e handler, retornando um handle não negativo estável;
+2. `op=3` (`sceDeci2ReqSend`): marcar pedido de envio pendente para o handle;
+3. `op=4` (`sceDeci2Poll`): avançar o pedido invocando o handler guest com os eventos de envio/conclusão;
+4. `op=-6` (`sceDeci2ExSend`): aceitar os bytes pedidos e retornar a quantidade consumida, permitindo ao próprio handler zerar o restante e depois o busy.
+
+A invocação deve reutilizar o mecanismo já existente `rpcInvokeFunction`/`GuestExecutionScope`, não escrever diretamente em `0x6FE2DC`. Antes do probe, adicionar testes focados em `ps2_runtime_kernel_tests.cpp` para `open -> reqsend -> poll -> ExSend -> completion`, incluindo handle inválido e handler ausente. Um trace limitado sob o `MC3_BOOT_TRACE` já existente deve registrar operação, handle, quantidade e uma prévia limitada do payload TTY; isso confirma qual mensagem levou ao primeiro `sceTtyWrite` sem criar env-gate novo.
+
+Não fazer:
+
+- `WRITE32(0x6FE2DC, 0)` direto;
+- forçar `sceDeci2ReqSend` a falhar só para escapar do loop;
+- injetar `SignalSema`;
+- criar override específico de MC3 ou novo env-gate.
+
+### Aceite sugerido do Passo 28
+
+- testes novos provam registro de handler, consumo de bytes e callback de conclusão;
+- suíte completa permanece verde;
+- trace mostra `0x6FE2DC: 0 -> 1 -> 0` pelo handler retail `0x547768`;
+- a corrida determinística de 100k sai de `0x547a20` sem qualquer `bad=`;
+- registrar o próximo PC estável, novas leituras e `gifPk1/2/3`, `gsPrims`, `gsPixels`;
+- se `gifPkTotal>0 && gsPrims>0`, parar, confirmar 3x e reportar como marco visual.
+
+Não é necessário gastar outra corrida longa antes desse trabalho: trace e código já explicam deterministicamente o plateau atual. Isso resolve o bloqueio causal mais próximo, mas não garante tela por si só; após sair dele, o próximo plateau deve ser medido novamente.
