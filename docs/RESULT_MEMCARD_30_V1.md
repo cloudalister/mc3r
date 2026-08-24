@@ -83,3 +83,67 @@ deve ser implementado somente depois de capturar o caminho, endereço da tabela 
 resultado esperado no cliente.
 
 Artefato: `work/logs/14_run_boot_trace.log` e `work/logs/14_run_boot_trace.log.stderr`.
+
+## Continuação — MCMAN fno=0xd e próxima fronteira
+
+Data: 2026-08-24
+
+O trace retail confirmou o pacote de `sceMcGetDir`:
+
+- request `0x6faff0`, `port=0`, `slot=0`, `maxEntries=6`;
+- tabela de saída `0x7e0b40`;
+- caminho inline `/BASLUS-21355*` (palavras do guest: `0x5341422f`,
+  `0x2d53554c`, `0x35333132`, `0x2a35`).
+
+O comportamento já existente do stub host para diretório formatado sem
+correspondências é resultado `0`. O dispatcher MCMAN passou a espelhar essa
+semântica somente para esse protocolo: zera as 6 entradas solicitadas (64 bytes
+cada), grava resultado `0` e registra `emptyTable=1`.
+
+Validação dessa alteração:
+
+- runtime compilado e relink serial OK;
+- `find_stale.py`: Missing `0`, Stale `0`;
+- probe determinística `500000`: `fno=0xd` respondeu `result=0x0`,
+  `emptyTable=1`;
+- o PC ainda atingiu `bad=0x1a5278`, portanto a resposta do cartão não é mais
+  o bloqueio imediato;
+- depois, o trace fica em `pc=0x1a2408`; `gsPrims=0` e `gsPixels=0`.
+
+### Próxima fronteira comprovada
+
+`0x1a5278` é exatamente o fim registrado pela tabela Ghidra para
+`FUN_001a5238 (0x1a5238–0x1a5278)`, mas o artefato `native_analyzer` contém o
+corpo contínuo `sub_001A5238` até `0x1a55d0`, começando em `0x1a5278` com
+instrução válida. Portanto o próximo passo é portar essa fronteira como split
+extra dentro do owner conhecido, seguindo o mecanismo de `boundary_port.csv`.
+Não há evidência para implementar outro retorno MCMAN neste ponto.
+ 
+## Continuação — validação do split 0x1a5278
+
+Data: 2026-08-24
+
+Foi adicionada somente a entrada explícita `0x001A5278` em
+`work/exports/boundary_port.csv`. Não foi inventado delta, nome alpha ou
+heurística em `code_generator.cpp`; os metadados ficaram vazios porque a prova
+veio do owner gerado/native analyzer.
+
+Sanity: `586` configurados, `586/586` mapeados, delta efetivo `+1`. O gerado
+contém `case 0x1a5278`, `label_1a5278` e
+`runtime.registerFunction(0x1a5278, sub_001A5238_0x1a5238)`.
+
+Validação: `parallel_compile.py` terminou `15811/15811`, falhas `0`, em 2169 s;
+`find_stale.py` deu Missing `0`, Stale `0`; relink serial MSYS2 OK. A suíte
+deu `276/278` e depois `277/278`; restaram somente flakes conhecidas de VU0
+macro mappings e `sceGsSyncV`.
+
+No probe determinístico (`MC3_DISPATCH_BUDGET=500000`, 120 s),
+`bad=0x1a5278` apareceu uma vez e não repetiu. O novo loop dominante foi
+`bad=0x5b92d8` com `231` ocorrências. `gifPkTotal` nunca ficou positivo;
+`gsPrims` chegou a `5`, mas `gifPk1/2/3=0` e `gsPixels=0`, portanto o critério
+visual não foi atingido. O jogo terminou com `game-thread-return pc=0x1a2408`.
+
+Próxima fronteira comprovada: `0x5b92d8` está dentro de
+`sub_005B90D8 (0x5b90d8–0x5b99a8)`, com `jr $ra` e delay slot em `0x5b92dc`.
+O próximo passo é portar somente esse split, repetir o sanity `+1` e testar;
+não há base para alterar a semântica do cartão.
