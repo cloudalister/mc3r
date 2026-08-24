@@ -147,3 +147,26 @@ Próxima fronteira comprovada: `0x5b92d8` está dentro de
 `sub_005B90D8 (0x5b90d8–0x5b99a8)`, com `jr $ra` e delay slot em `0x5b92dc`.
 O próximo passo é portar somente esse split, repetir o sanity `+1` e testar;
 não há base para alterar a semântica do cartão.
+
+## Continuação — split 0x5b92d8 e novo avanço
+
+Data: 2026-08-24
+
+O entry point explícito `0x005B92D8` foi regenerado com sanity `587/587`
+mapeados. Após `Generate-PartialRegister.ps1`, recompilação do registro
+parcial e relink, o probe confirmou:
+
+- `bad=0x1a5278`: `0`;
+- `bad=0x5b92d8`: `0`;
+- novo `bad=0x5b9080`: `1` ocorrência;
+- término por `dispatch-budget-reached`, `pc=0x3afb30`, tick `5458`;
+- `gifPkTotal=0`, `gsPixels=0`; `gsPrims` apareceu em uma amostra, sem
+  critério visual completo.
+
+A compilação foi `15811/15811`, falhas `0`; stale `0/0`; relink serial OK.
+A suíte ficou `277/278`, somente a flake conhecida de VU0 macro mappings.
+
+Próxima fronteira: `0x5b9080` é instrução válida dentro do owner gerado
+`sub_005B8E08`, cujo range nativo é `0x5b8e08–0x5b90d8`. O próximo passo é
+portar somente esse split e repetir a mesma cadeia, incluindo a regeneração
+obrigatória do registro parcial antes do relink.
