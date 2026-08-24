@@ -148,6 +148,47 @@ Próxima fronteira comprovada: `0x5b92d8` está dentro de
 O próximo passo é portar somente esse split, repetir o sanity `+1` e testar;
 não há base para alterar a semântica do cartão.
 
+## Continuação — build incremental e split 0x5b9080
+
+Data: 2026-08-24
+
+O pipeline incremental foi corrigido. O problema era o gerador atualizar o
+mtime de todo o corpus, enquanto `find_stale.py` tratava isso como mudança real.
+Agora `tools/find_stale.py` e `tools/parallel_compile.py` usam
+`work/exports/compile_manifest.json`, com SHA-256 do C++ e chave de toolchain.
+`tools/seed_compile_manifest.py` cria o baseline somente depois de
+`Missing 0 / Stale 0`.
+
+Validação do conserto:
+
+- baseline atual: 15.811/15.811 objetos, falhas 0;
+- manifesto: 15.811 entradas;
+- após a regeneração, `find_stale.py`: Missing 0, Stale 0;
+- `parallel_compile.py`: `candidates: 0`, `to compile: 0`, manifesto preservado;
+- `register_functions.partial.cpp` continua em ciclo separado e foi recompilado
+  explicitamente antes do relink.
+
+O split `0x5b9080` foi regenerado, mapeado `588/588`, compilado e relinkado.
+Probe determinístico `500000`/120 s:
+
+- `bad=0x1a5278`, `0x5b92d8` e `0x5b9080`: zerados;
+- novo dominante: `bad=0x1a8e10` (2 ocorrências);
+- secundários observados: `bad=0x5cd0f8` (8) e `bad=0x5d3638` (2);
+- `gifPkTotal=0`, `gsPrims=0`, `gsPixels=0`;
+- encerramento: `game-thread-return pc=0x432b60`, tick `6058`.
+
+Fila proposta, cada lote com sanity `+1` e stop visual:
+
+1. `0x1a8e10`, owner `sub_001A8DA0 (0x1a8da0–0x1a8e28)`; esperado: zerar o
+   novo plateau imediato de 2 hits.
+2. `0x5cd0f8`, owner `sub_005CC8C8 (0x5cc8c8–0x5cd1c0)`; esperado: remover
+   8 hits e revelar a próxima fronteira dominante.
+3. `0x5d3638`, owner `sub_005D3428 (0x5d3428–0x5d3678)`; esperado: remover
+   2 hits restantes dessa região.
+
+Esses endereços são candidatos provados por instrução/owner gerado; ainda não
+foram adicionados ao CSV.
+
 ## Continuação — split 0x5b92d8 e novo avanço
 
 Data: 2026-08-24

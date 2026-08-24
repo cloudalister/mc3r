@@ -19,6 +19,10 @@ medir durante build).
 
 ## Economia de tokens (camadas de execução)
 
+O build incremental está documentado em `docs/INCREMENTAL_BUILD.md`. Depois de
+um baseline completo, usar o manifesto SHA-256; não assumir que um `find_stale`
+por mtime representa mudança real de código.
+
 - **Fable (coordenador)**: só pensa/revisa/decide — nunca executa tarefa longa.
 - **Sonnet**: handoffs que mudam código. É onde vale gastar.
 - **Haiku**: mecânica pura — rodar build/relink/probe, filtrar log em arquivo, grep — quando o

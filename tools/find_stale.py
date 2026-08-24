@@ -1,8 +1,23 @@
-import os, csv
+import os, csv, hashlib, json
 
 ROOT = r"E:\Games\Emuladores\Sony\mc3recomp"
 GEN = os.path.join(ROOT, "work", "generated", "ghidra")
 COMPILE = os.path.join(ROOT, "work", "compile", "ghidra")
+MANIFEST = os.path.join(ROOT, "work", "exports", "compile_manifest.json")
+COMPILE_KEY = "g++-cxx20-msse4.1-wall-generated-ghidra-kernel-v1"
+
+def sha256(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+try:
+    with open(MANIFEST, encoding="utf-8") as fh:
+        manifest = json.load(fh)
+except (FileNotFoundError, json.JSONDecodeError):
+    manifest = {"compile_key": "", "sources": {}}
 
 cpp_files = {}  # lower(base) -> (base, path)
 for f in os.listdir(GEN):
@@ -39,7 +54,11 @@ for key, (base, cpp) in cpp_files.items():
     obase, o, batch = entry
     o_mtime = os.path.getmtime(o)
     o_size = os.path.getsize(o)
-    status = "STALE" if o_mtime < cpp_mtime else "OK"
+    source_hash = sha256(cpp)
+    cached = manifest.get("sources", {}).get(base.lower(), {})
+    hash_ok = (manifest.get("compile_key") == COMPILE_KEY and
+               cached.get("sha256") == source_hash and o_size >= 200)
+    status = "OK" if hash_ok or o_mtime >= cpp_mtime else "STALE"
     if status == "STALE":
         stale.append((base, cpp, o, batch))
     rows.append((base, cpp, o, status, cpp_mtime, o_mtime, o_size))
@@ -47,15 +66,16 @@ for key, (base, cpp) in cpp_files.items():
 print("Missing:", len(missing))
 for m in missing:
     print("  MISSING:", m)
-print("Stale (mtime):", len(stale))
+print("Stale (hash/mtime):", len(stale))
 
 out_csv = os.path.join(ROOT, "work", "exports", "stale_objects.csv")
 os.makedirs(os.path.dirname(out_csv), exist_ok=True)
 with open(out_csv, "w", newline="", encoding="utf-8") as fh:
     w = csv.writer(fh)
-    w.writerow(["base", "cpp", "obj", "status", "cpp_mtime", "obj_mtime", "obj_size"])
+    w.writerow(["base", "cpp", "obj", "status", "cpp_mtime", "obj_mtime", "obj_size", "sha256"])
     for r in rows:
-        w.writerow(r)
+        base, cpp, obj, status, cpp_mtime, obj_mtime, obj_size = r
+        w.writerow(r + (sha256(cpp),) if obj else r + ("",))
 
 print("Wrote", out_csv)
 

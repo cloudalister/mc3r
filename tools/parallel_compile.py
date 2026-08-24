@@ -1,4 +1,4 @@
-import os, csv, subprocess, sys, time
+import os, csv, subprocess, sys, time, hashlib, json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ROOT = r"E:\Games\Emuladores\Sony\mc3recomp"
@@ -9,9 +9,34 @@ ARGS = ["-std=c++20", "-msse4.1", "-Wall", "-Wno-unused-variable", "-Wno-unused-
         "-I", os.path.join(ROOT, r"work\generated\ghidra"),
         "-I", os.path.join(ROOT, r"PS2Recomp\ps2xRuntime\include"),
         "-I", os.path.join(ROOT, r"PS2Recomp\ps2xRuntime\src\lib\Kernel")]
+MANIFEST = os.path.join(ROOT, r"work\exports\compile_manifest.json")
+COMPILE_KEY = "g++-cxx20-msse4.1-wall-generated-ghidra-kernel-v1"
 
-rows = list(csv.DictReader(open(os.path.join(ROOT, r"work\exports\stale_only.csv"), encoding="utf-8")))
-print("to compile:", len(rows), flush=True)
+def sha256(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+try:
+    with open(MANIFEST, encoding="utf-8") as fh:
+        manifest = json.load(fh)
+except (FileNotFoundError, json.JSONDecodeError):
+    manifest = {"compile_key": "", "sources": {}}
+
+all_rows = list(csv.DictReader(open(os.path.join(ROOT, r"work\exports\stale_only.csv"), encoding="utf-8")))
+rows = []
+skipped = 0
+for row in all_rows:
+    cached = manifest.get("sources", {}).get(row["base"].lower(), {})
+    if (manifest.get("compile_key") == COMPILE_KEY and
+            cached.get("sha256") == sha256(row["cpp"]) and
+            os.path.exists(row["obj"]) and os.path.getsize(row["obj"]) >= 200):
+        skipped += 1
+    else:
+        rows.append(row)
+print("candidates:", len(all_rows), "to compile:", len(rows), "hash-skipped:", skipped, flush=True)
 
 fail_log = os.path.join(ROOT, r"work\exports\parallel_compile_failures.log")
 failures = []
@@ -43,3 +68,15 @@ with open(fail_log, "w", encoding="utf-8") as fh:
     for r, rc, err in failures:
         fh.write("=== %s rc=%s\n%s\n" % (r["base"], rc, err))
         print("FAIL", r["base"], "rc=", rc, flush=True)
+
+if not failures and all_rows:
+    sources = {}
+    for row in all_rows:
+        if os.path.exists(row["obj"]) and os.path.getsize(row["obj"]) >= 200:
+            sources[row["base"].lower()] = {"sha256": sha256(row["cpp"]), "obj": row["obj"]}
+    os.makedirs(os.path.dirname(MANIFEST), exist_ok=True)
+    with open(MANIFEST, "w", encoding="utf-8") as fh:
+        json.dump({"compile_key": COMPILE_KEY, "sources": sources}, fh, indent=2, sort_keys=True)
+    print("Wrote hash manifest:", MANIFEST, "entries=", len(sources), flush=True)
+elif not failures:
+    print("No candidates; preserved existing hash manifest.", flush=True)
