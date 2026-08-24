@@ -189,6 +189,32 @@ Fila proposta, cada lote com sanity `+1` e stop visual:
 Esses endereços são candidatos provados por instrução/owner gerado; ainda não
 foram adicionados ao CSV.
 
+## Continuação — primeiro lote incremental real
+
+Data: 2026-08-24
+
+O lote `0x1a8e10` foi adicionado ao CSV e regenerado com `589/589` entry points
+mapeados. O build hash-aware identificou exatamente `1` owner stale e o
+compilou em `1 s`; não houve recompilação do corpus. O registro parcial foi
+regenerado/recompilado separadamente, seguido de relink.
+
+Probe determinístico `500000`/120 s:
+
+- `bad=0x1a8e10`: zerado;
+- novo dominante: `bad=0x5cd0f8` (8 ocorrências);
+- `bad=0x5d3638`: 2 ocorrências;
+- `gifPkTotal=0`, `gsPrims=0`, `gsPixels=0`;
+- encerramento: `game-thread-return pc=0x432b60`, tick `1698`.
+
+Durante a validação, o manifesto foi corrigido para fazer merge das entradas
+existentes; um lote não pode substituir as 15.811 fontes pelo seu subconjunto.
+O manifesto final foi re-semeado com `15811` entradas e `find_stale.py` voltou a
+`Missing 0 / Stale 0`.
+
+Próximo lote recomendado: `0x5cd0f8` no owner `sub_005CC8C8`; expectativa:
+remover 8 hits e revelar a próxima fronteira. Depois, `0x5d3638` em
+`sub_005D3428`, expectativa de remover 2 hits.
+
 ## Continuação — split 0x5b92d8 e novo avanço
 
 Data: 2026-08-24

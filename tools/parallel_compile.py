@@ -70,7 +70,7 @@ with open(fail_log, "w", encoding="utf-8") as fh:
         print("FAIL", r["base"], "rc=", rc, flush=True)
 
 if not failures and all_rows:
-    sources = {}
+    sources = dict(manifest.get("sources", {}))
     for row in all_rows:
         if os.path.exists(row["obj"]) and os.path.getsize(row["obj"]) >= 200:
             sources[row["base"].lower()] = {"sha256": sha256(row["cpp"]), "obj": row["obj"]}

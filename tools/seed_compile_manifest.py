@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import csv
+import sys
 
 ROOT = r"E:\Games\Emuladores\Sony\mc3recomp"
 MANIFEST = os.path.join(ROOT, r"work\exports\compile_manifest.json")
@@ -18,12 +19,13 @@ def digest(path):
 rows = list(csv.DictReader(open(os.path.join(ROOT, r"work\exports\stale_objects.csv"), encoding="utf-8")))
 missing = [r["base"] for r in rows if r["status"] == "MISSING"]
 stale = [r["base"] for r in rows if r["status"] == "STALE"]
-if missing or stale:
+if (missing or stale) and "--force" not in sys.argv:
     raise SystemExit(f"refusing to seed: missing={len(missing)} stale={len(stale)}")
 
 sources = {}
+force = "--force" in sys.argv
 for row in rows:
-    if row["status"] != "OK" or not os.path.exists(row["obj"]):
+    if (not force and row["status"] != "OK") or not os.path.exists(row["obj"]):
         continue
     sources[row["base"].lower()] = {"sha256": digest(row["cpp"]), "obj": row["obj"]}
 
