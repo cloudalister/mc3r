@@ -255,3 +255,32 @@ Probe determinístico `500000`/120 s:
 
 Próximo lote: `0x5d3638`, owner `sub_005D3428`, expectativa de eliminar os
 dois hits e revelar a próxima fronteira.
+
+## Continuação — lote grande de 16 fronteiras
+
+Data: 2026-08-24
+
+Foi aplicado um lote de 16 entry points, todos validados previamente como
+instrução válida dentro de owners gerados conhecidos. A regeneração confirmou
+`606/606` mapeados: delta de entry points exatamente `+16`; o build hash-aware
+marcou 15 owners, pois dois alvos (`0x5cd058` e `0x5cd068`) compartilham owner.
+Os 15 objetos foram compilados em 2 s, com registro parcial separado.
+
+Alvos do lote: `0x5d3638`, `0x4c53c8`, `0x4c17e0`, `0x4c3688`, `0x5dc148`,
+`0x5cd068`, `0x5cd058`, `0x4cfbf0`, `0x5d4578`, `0x4c96a0`, `0x5d8810`,
+`0x4bf7a8`, `0x4d6fc0`, `0x4d11a8`, `0x4c1a78`, `0x4cdbc8`.
+
+Validação:
+
+- `find_stale.py`: Missing 0, Stale 0;
+- relink serial: OK;
+- suíte: primeira `276/278`, retry `277/278`; somente flakes conhecidas de
+  `sceGsSyncV` e VU0 macro mappings;
+- probe determinístico `500000`/120 s: **nenhuma linha `bad=`**;
+- `gifPkTotal=0`, `gsPrims=0`, `gsPixels=0`;
+- encerramento: `game-thread-return pc=0x4fd5c0`, tick `6058`.
+
+Interpretação: o conjunto de plateaus conhecidos foi removido. O próximo
+passo recomendado é uma corrida longa determinística (`budget=5000000`, janela
+de 15 min) para medir progresso real e localizar a próxima fronteira de
+subssistema; não adicionar mais boundaries sem novo `bad` comprovado.
