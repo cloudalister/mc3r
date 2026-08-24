@@ -237,3 +237,21 @@ Próxima fronteira: `0x5b9080` é instrução válida dentro do owner gerado
 `sub_005B8E08`, cujo range nativo é `0x5b8e08–0x5b90d8`. O próximo passo é
 portar somente esse split e repetir a mesma cadeia, incluindo a regeneração
 obrigatória do registro parcial antes do relink.
+ 
+## Continuação — lote incremental 0x5cd0f8
+
+Data: 2026-08-24
+
+O lote `0x5cd0f8` foi regenerado como entry point `590/590`. O hash-manifest
+marcou exatamente um owner; `parallel_compile.py` compilou `1` objeto em `1 s`.
+O registro parcial foi regenerado/recompilado e o relink foi concluído.
+
+Probe determinístico `500000`/120 s:
+
+- `bad=0x5cd0f8`: zerado;
+- novo dominante: `bad=0x5d3638` (2 ocorrências);
+- `gifPkTotal=0`, `gsPrims=0`, `gsPixels=0`;
+- encerramento: `game-thread-return pc=0x4fd5c0`, tick `5814`.
+
+Próximo lote: `0x5d3638`, owner `sub_005D3428`, expectativa de eliminar os
+dois hits e revelar a próxima fronteira.
