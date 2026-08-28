@@ -117,3 +117,15 @@ comparavel as duas corridas de 2026-08-28 que provaram o bloqueio.
 
 Sem SignalSema injetado, sem env-gate novo, sem mudanca de scheduler/dispatcher/
 SIF, sem PCSX2, sem janela visivel e sem push.
+
+## Commits locais e limite da arvore suja
+
+- submodulo `mc3`: `8e5d233 fix(runtime): implement VIF0 normal DMA`;
+- repositorio externo: `6ad930a docs(vif0): record normal DMA result`.
+
+Os tres arquivos de runtime/teste e `PS2_PROJECT_STATE.md` ja continham mudancas
+acumuladas anteriores ao lote. Como as mudancas VIF0 cairam nos mesmos hunks, os
+commits locais tambem checkpointaram esse estado preexistente nesses quatro
+caminhos. Isso explica os stats grandes e impede chamar os commits de pequenos.
+Os demais arquivos modificados/untracked permaneceram fora do stage e nenhum
+push foi feito.
