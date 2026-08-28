@@ -1216,3 +1216,27 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   `work/logs/gfx_probe_20260828_vif0.log.stderr`.
 - Proximo lote: implementar VIF0 source-chain sem fingir conclusao; depois
   interpretar o pacote VIF0/VU0 e tratar os vaos Ghidra separadamente.
+
+## Checkpoint 2026-08-28 - VIF0 source-chain atravessado; render voltou a crescer
+
+- O canal DMA 0 agora interpreta a source-chain e transporta os dados reais
+  para o FIFO VIF0. TTE injeta os 8 bytes superiores do DMAtag antes do
+  payload; REFE/CNT/NEXT/REF/REFS/CALL/RET/END, TIE/IRQ e a pilha ASR/ASP sao
+  tratados. STR e D_STAT so concluem depois de uma chain terminal valida.
+- Suite completa verde em **300/300**, build oficial verde e fast relink
+  concluido. O partial runner foi renovado sem stub novo.
+- O probe real capturou duas chains `CHCR=0x144`, em `TADR=0x006CCCE0` e
+  `0x006CCD00`; cada uma processou um tag, entregou 1032 bytes e terminou com
+  `completed=1`. O antigo gate VIF0 foi atravessado.
+- Logo depois, render saiu do plateau anterior: `gifPk1 348558->348560`,
+  `gifPk2 136612->136981`, `gsPrims 703599->703668`, `gsPixels
+  256036663->257216311` e `dma 29420->29435`. Conforme o contrato, o runner foi
+  parado e o log preservado. Os contadores ficaram nesse novo plateau ate a
+  parada.
+- Zero `mc3-gfx-*`: ha evidencia nova de atividade grafica, mas ainda nao de
+  modelo 3D carregado/desenhado. O PC amostrado depois ficou em `0x41D188`.
+- Interpretacao de VIFcode/VU0 permanece TODO declarado. As regioes Ghidra
+  excluidas nao foram tocadas; houve `first-bad-pc=0x5CCE60` e warnings nas
+  lacunas ja conhecidas.
+- Evidencia completa: `docs/RESULT_VIF0_SOURCE_CHAIN_2026-08-28.md` e
+  `work/logs/gfx_probe_20260828_vif0_chain_final.log.stderr`.
