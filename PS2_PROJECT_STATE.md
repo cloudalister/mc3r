@@ -1460,3 +1460,35 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   `SetFrameModeGarage` (`0x001A7150`) e `SetFrameModeFrontend` (`0x001A71C8`);
   investigar `0x3451E8`; testar `-skipintro` e `-garage` isoladamente.
 - Detalhes: `docs/RESULT_GARAGE_RUN_2026-08-29.md`.
+
+## Checkpoint 2026-08-29 - 0x24A368 consertado; baseline anterior era artefato
+
+- `0x24A368` nao era endereco no meio de bloco: e **prologo de funcao**
+  (`nop` em `0x24a364`, `addiu $sp,$sp,-0x10` em `0x24a368`). O Ghidra fundiu duas
+  funcoes na faixa `0x24a2a8-0x24a3e0`. Consertado com `case`+`label`, mesma
+  classe do `0x5B92E0`; o `Generate-PartialRegister.ps1` emitiu o alias sozinho.
+- **Efeito:** `recover-pc` do dispatcher caiu de **71 para zero**, e as cinco
+  funcoes ausentes viraram zero — sem tocar nas outras quatro
+  (`0x5BB170/78`, `0x5BB220`, `0x5BD030`), que so eram alcancaveis pelo caminho
+  quebrado.
+- **CORRECAO DE BASELINE:** `gifPk1=348988` / `gsPrims=704397`, registrados antes
+  como plato de referencia, vinham de execucao com **71 chamadas de funcao
+  puladas**. Nao sao baseline valido. O honesto e `gifPk1=348558` /
+  `gsPrims=703599`, com execucao integra. Contador menor aqui significa MAIS
+  correcao, nao menos progresso.
+- Licao: nao caçar PC ausente isoladamente. Um conserto pode eliminar varios, e
+  um "ausente" pode ser sintoma de caminho errado, nao de trabalho a fazer.
+- `0x3451E8` **nao trava**: chega a `stage=0x003454c4` (fim da faixa) e retorna;
+  apenas 4 chamadas na corrida. Cadeia `FUN_001a32b0 -> FUN_00322fd8 -> 0x3451E8`,
+  que chama `uiGroup::SetActiveState` (`0x0041F550`). O `pc=0x322FFC` repetido e o
+  quadro externo amostrado enquanto a thread guest esta parada mais abaixo.
+- **Frente de boot args encerrada.** No ELF retail: `skipintro`/`PARAM_` = zero
+  ocorrencias; as 71 de `garage` sao nomes de layer numa tabela de assets;
+  `*(0x617F84)="cdrom0:\"` e constante compilada (nao vem de argv); o bloco
+  fallback `0x677080` esta em BSS, logo `argc` e sempre 0 no retail. O mecanismo
+  do Codex esta correto e sem regressao, mas nao ha uso retail para ele.
+- **Regra:** o MC.MAP do alpha e fonte de pistas, nunca de fatos sobre o retail.
+  Segunda vez que induz erro nesta semana.
+- Primeira corrida com janela visivel: mesmo estado final, ~33 ticks/s (contra 55
+  headless). `padmanStartPublishes=0` — o caminho de input segue nao exercitado.
+- Detalhes: `docs/RESULT_24A368_DISPATCHER_TRUTH_2026-08-29.md`.
