@@ -1428,3 +1428,35 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
 - **Nao provado:** os valores finais de `PARAM_skipintro`/`PARAM_garage` e o salto
   visual para a garagem. Foi provada a entrega ao parser, nao o efeito.
 - Detalhes: `docs/RESULT_BOOT_ARGS_SKIPINTRO_GARAGE_2026-08-29.md`.
+
+## Checkpoint 2026-08-29 - corrida com -skipintro -garage diverge, mas nao avanca
+
+- Argumentos entregues: `argc=3 argv=0x01ffff98` no trace. O mecanismo do crt0
+  funciona de ponta a ponta.
+- **Os argumentos mudam o comportamento**, mas a corrida trava MAIS CEDO que a
+  corrida sem argumentos. Nao e avanco.
+
+  | | sem args | com `-skipintro -garage` |
+  |---|---|---|
+  | PC final | `0x41D188` | `0x322FFC` |
+  | Funcoes ausentes | 5 distintas | zero |
+  | `gifPk1` | 348.988 | 348.558 |
+  | `gsPrims` | 704.397 | 703.599 |
+  | `gsPixels` | 257.216.311 | 256.036.663 |
+
+- Os contadores da corrida com argumentos sao exatamente o plato do teardown da
+  tela legal: ela para antes das transferencias VIF0 que a outra executa.
+- `-skipintro` nao pulou a tela legal; `End=1` continua acontecendo.
+- Trava em `0x322FFC`, o branch logo apos `jal func_3451E8` em
+  `FUN_00322fd8_0x322fd8`. O tempo esta dentro de `0x3451E8`, que nas corridas
+  anteriores retornava normalmente.
+- **Nao provado:** que `PARAM_skipintro`/`PARAM_garage` ficaram verdadeiros (os
+  valores finais nao foram lidos); que o jogo tentou entrar na garagem
+  (`0x001A7150` nao esta instrumentado); que o travamento e causado pelo modo
+  garagem. A divergencia e evidencia indireta de consumo pelo parser, nao prova
+  das flags.
+- Zero traces `mc3-gfx-*`. **Continua sem prova de modelo 3D de carro.**
+- Proximos passos: ler os valores finais das globais `PARAM_*`; instrumentar
+  `SetFrameModeGarage` (`0x001A7150`) e `SetFrameModeFrontend` (`0x001A71C8`);
+  investigar `0x3451E8`; testar `-skipintro` e `-garage` isoladamente.
+- Detalhes: `docs/RESULT_GARAGE_RUN_2026-08-29.md`.
