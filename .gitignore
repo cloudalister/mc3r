@@ -25,3 +25,7 @@ cmake-*-windows-x86_64/
 .ralph/.tmp/
 jdk21.zip
 jdk-21.0.12+8/
+
+# cache do python
+tools/__pycache__/
+__pycache__/

@@ -5,12 +5,12 @@ ROOT = r"E:\Games\Emuladores\Sony\mc3recomp"
 os.environ["PATH"] = r"C:\msys64\ucrt64\bin;" + os.environ["PATH"]
 GXX = r"C:\msys64\ucrt64\bin\g++.exe"
 
-ARGS = ["-std=c++20", "-msse4.1", "-Wall", "-Wno-unused-variable", "-Wno-unused-label", "-Wno-comment",
+ARGS = ["-std=c++20", "-O2", "-fno-strict-aliasing", "-msse4.1", "-Wall", "-Wno-unused-variable", "-Wno-unused-label", "-Wno-comment",
         "-I", os.path.join(ROOT, r"work\generated\ghidra"),
         "-I", os.path.join(ROOT, r"PS2Recomp\ps2xRuntime\include"),
         "-I", os.path.join(ROOT, r"PS2Recomp\ps2xRuntime\src\lib\Kernel")]
 MANIFEST = os.path.join(ROOT, r"work\exports\compile_manifest.json")
-COMPILE_KEY = "g++-cxx20-msse4.1-wall-generated-ghidra-kernel-v1"
+COMPILE_KEY = "g++-cxx20-O2-fnostrictaliasing-msse4.1-wall-generated-ghidra-kernel-v2"
 
 def sha256(path):
     digest = hashlib.sha256()

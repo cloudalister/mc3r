@@ -4,7 +4,7 @@ ROOT = r"E:\Games\Emuladores\Sony\mc3recomp"
 GEN = os.path.join(ROOT, "work", "generated", "ghidra")
 COMPILE = os.path.join(ROOT, "work", "compile", "ghidra")
 MANIFEST = os.path.join(ROOT, "work", "exports", "compile_manifest.json")
-COMPILE_KEY = "g++-cxx20-msse4.1-wall-generated-ghidra-kernel-v1"
+COMPILE_KEY = "g++-cxx20-O2-fnostrictaliasing-msse4.1-wall-generated-ghidra-kernel-v2"
 
 def sha256(path):
     digest = hashlib.sha256()
