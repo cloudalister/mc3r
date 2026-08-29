@@ -1331,3 +1331,35 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
 - Relink `fast` OK. `mc3_partial.exe` 2026-08-29 02:27, mais novo que a lib,
   zero stubs ausentes, cada string `mc3-gfx-*` agora com contagem 1 (era 2).
 - Detalhes: `docs/RESULT_ALPHA_GFX_TRACE_REMOVAL_2026-08-29.md`.
+
+## Checkpoint 2026-08-29 - build otimizado; -O0 nao era o gargalo
+
+- O projeto **nunca havia sido compilado com otimizacao**. O codigo gerado
+  (`tools/parallel_compile.py`) nao passava nenhuma flag `-O` e o CMake estava em
+  `Debug`. Corrigido para `-O2 -fno-strict-aliasing` e `RelWithDebInfo`, com
+  bump de `COMPILE_KEY` nas duas ferramentas para invalidar o manifesto.
+- Bug latente que o `-O0` escondia: `_mm_extract_epi32` (SSE4.1, `always_inline`)
+  usado para ler os registradores guest `__m128i` em `ps2_runtime.h:185`. O
+  `CMakeLists.txt` so tinha branch ARM64/NEON; faltava branch x86-64 com
+  `-msse4.1`. Qualquer build otimizado falhava com "target specific option
+  mismatch". Corrigido.
+- Recompilacao completa: 15.512 objetos, `failures=0`, 2378 s. Suite 300/300 sob
+  `-O2`. `libps2_runtime.a` 115 MB -> 67 MB; `mc3_partial.exe` 521 MB -> 284 MB.
+- **Equivalencia semantica confirmada**: o estado final do `-O2` e identico ao do
+  `-O0` — mesmo PC `0x41D188`, contadores identicos (`gifPk1=348988`,
+  `gifPk2=138800`, `gsPrims=704397`, `gsPixels=257216311`), mesmos PCs ausentes e
+  mesmas transferencias VIF0.
+- **Correcao de diagnostico:** eu havia afirmado que a lentidao era "em primeira
+  ordem `-O0`". Errado. Medindo o tick do `End=1`: `-O0` = 35.040 e 30.180;
+  `-O2` = 25.680. Ganho de **~20%**, nao de ordem de magnitude. O subagente
+  provou que o `-O0` existia; ninguem provou que ele dominava o tempo.
+- `ticks/s` foi descartado como metrica de velocidade do guest: o loop tem
+  `SetTargetFPS(60)` (`ps2_runtime.cpp:1009`), entao o tick e frame do host no
+  vsync. `-O0` = 55,8 e `-O2` = 54,0 ticks/s, ambos no teto.
+- **Gargalo real, ainda nao resolvido:** a tela legal precisa de 490 iteracoes de
+  script (490 frames = ~8 s no PS2 real) e consome 25.680 frames de host, ou seja
+  **~52 frames de host por frame de guest**, com o host sempre a 54-60 fps. O
+  problema e quanto trabalho de guest roda por frame. `MC3_DISPATCH_BUDGET` e so
+  condicao de parada, nao throttle. Hipotese nao provada: o guest cede controle
+  cedo demais por frame, em espera de VBlank/semaforo no scheduler.
+- Detalhes: `docs/RESULT_O2_BUILD_2026-08-29.md`.
