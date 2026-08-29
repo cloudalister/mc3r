@@ -1363,3 +1363,27 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   condicao de parada, nao throttle. Hipotese nao provada: o guest cede controle
   cedo demais por frame, em espera de VBlank/semaforo no scheduler.
 - Detalhes: `docs/RESULT_O2_BUILD_2026-08-29.md`.
+
+## Checkpoint 2026-08-29 - boot args retail pelo crt0
+
+- O override real do crt0 foi implementado: `mc3_partial.exe <elf> -skipintro -garage`
+  chega a `datArgParser::Init` retail `0x00428AC0` como `argc=3`, com
+  `argv[1]="-skipintro"` e `argv[2]="-garage"`. Nenhuma global `PARAM_*` e
+  escrita diretamente.
+- Layout provado do bloco apontado por `0x614400`: `+0` ID de semaforo do loader,
+  `+4` argc, `+8` vetor de ponteiros de 32 bits, seguido por strings referenciadas
+  e terminadas em NUL. Nao foi inventado sentinela `argv[argc]`.
+- Achado decisivo: `_start` zera `0x614400` na primeira instrucao. O runtime monta
+  o bloco antes do entry, mas publica o ponteiro durante o syscall `SetupThread`
+  `0x3C`, depois do clear de BSS.
+- Guarda sem argumentos intacta: parser recebeu `argc=0`,
+  `argv=0x00677084`; stdout das corridas deterministicas foi identico (53/53
+  linhas, zero diferencas).
+- Suite completa **303/303**. Fast relink OK, exe posterior a
+  `libps2_runtime.a`, manifesto parcial somente com cabecalho.
+- Nenhum `mc3-gfx-*` disparou. Os valores finais das globais `PARAM_skipintro` e
+  `PARAM_garage` nao foram instrumentados; esta provada a entrega exata ao parser,
+  nao o salto visual para garagem.
+- Commit local do submodulo: `3367091`. Sem push.
+- Evidencia completa:
+  `docs/RESULT_BOOT_ARGS_SKIPINTRO_GARAGE_2026-08-29.md`.
