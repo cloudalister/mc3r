@@ -1387,3 +1387,44 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
 - Commit local do submodulo: `3367091`. Sem push.
 - Evidencia completa:
   `docs/RESULT_BOOT_ARGS_SKIPINTRO_GARAGE_2026-08-29.md`.
+
+## Checkpoint 2026-08-29 - boot args entregues ao crt0 retail
+
+- O jogo tem atalho proprio: `datArgParser::Init` (retail `0x00428AC0`, batch_0036)
+  sobreviveu no binario e le `PARAM_skipintro`, `PARAM_garage`, `PARAM_qload`,
+  `PARAM_raceed`. O `main.cpp` so usava `argv[1]` como caminho do ELF; nada
+  repassava argv extra ao guest.
+- **Layout do bloco de boot args provado no disassembly** (`entry_0x1a0008.cpp`),
+  conferido de forma independente. `0x614400` e um slot de ponteiro, nao o bloco:
+
+  ```
+  0x1a01b8: lui   $v0, 0x61
+  0x1a01bc: addiu $v0, $v0, 0x4400    ; $v0 = 0x614400
+  0x1a01c0: lw    $v1, 0x0($v0)       ; v1 = *(0x614400)
+  0x1a01c4: beqz  $v1, fallback       ; zero -> bloco do ELF
+  0x1a01cc: addiu $v0, $v1, 0x4       ; override: v0 = ptr + 4
+  ...
+  0x1a01d8: lui   $v0, 0x67
+  0x1a01dc: addiu $v0, $v0, 0x7080    ; fallback = 0x677080
+  0x1a01e0: lw    $a0, 0x0($v0)       ; a0 = argc
+  0x1a01e8: addiu $a1, $v0, 0x4       ; a1 = argv
+  ```
+
+- Os dois caminhos **convergem no mesmo codigo** (`a0 = *(v0)`, `a1 = v0+4`), com
+  `v0` normalizado como "ponteiro para argc". Por isso os blocos tem formatos
+  diferentes: no fallback `0x677080` argc fica em `+0` e argv em `+4`; no override
+  `+0` e o id de semaforo do loader, argc em `+4` e argv em `+8`.
+- **Achado nao previsto:** `_start` toca `0x614400` logo na primeira instrucao
+  (`0x1a0008: lui $v0, 0x61; addiu $v0, $v0, 0x4400`). Montar o bloco antes do
+  entry e publicar o ponteiro nao funciona - o crt0 zera. A publicacao foi movida
+  para o syscall retail `SetupThread` (`0x3C`), depois do clear de BSS e antes do
+  crt0 consumir os argumentos. Isso nao estava em `RESULT_BOOT_ARGS_V1.md`.
+- Implementado por Codex em `installCrt0BootArguments` com bound check,
+  `translateAddress` protegido, rejeicao de argumento com `NUL` embutido e checagem
+  de overflow. Lista vazia grava `0` no slot, preservando o caminho retail.
+- Provas: `argc=3` (ELF, `-skipintro`, `-garage`) na entrada de `0x00428AC0`; sem
+  argumentos `argc=0` com fallback `argv=0x00677084` e stdout identico (53/53
+  linhas). Suite 303/303. Commits `3367091` (submodulo) e `add2e12` (externo).
+- **Nao provado:** os valores finais de `PARAM_skipintro`/`PARAM_garage` e o salto
+  visual para a garagem. Foi provada a entrega ao parser, nao o efeito.
+- Detalhes: `docs/RESULT_BOOT_ARGS_SKIPINTRO_GARAGE_2026-08-29.md`.
