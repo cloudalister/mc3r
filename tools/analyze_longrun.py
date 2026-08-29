@@ -2,7 +2,8 @@
 import argparse, bisect, csv, re
 from collections import Counter
 from pathlib import Path
-FRAME=re.compile(r"\[boot-trace:frame\] tick=(\d+).*?pc=0x([0-9a-fA-F]+).*?gifPk1=(\d+).*?gifPk2=(\d+).*?gifPk3=(\d+).*?gsPrims=(\d+).*?gsPixels=(\d+)")
+_NUM = r"(\d+)(?=\s|$)"
+FRAME=re.compile(rf"\[boot-trace:frame\] tick=(\d+).*?pc=0x([0-9a-fA-F]+).*?gifPk1={_NUM}.*?gifPk2={_NUM}.*?gifPk3={_NUM}.*?gsPrims={_NUM}.*?gsPixels={_NUM}")
 DISP=re.compile(r"\[boot-trace:dispatch-window\] total=(\d+).*?uniqueSample=(\d+).*?pc=0x([0-9a-fA-F]+).*?pcs=([^\r\n]*)")
 READ=re.compile(r"kind=(read(?:-bytes)?)\b.*?\blsn=0x([0-9a-fA-F]+)(?:.*?\bsectors=0x([0-9a-fA-F]+))?")
 def syms(p):
