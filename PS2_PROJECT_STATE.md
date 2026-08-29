@@ -1052,6 +1052,48 @@ Leitura: o módulo de arquivo cria o semáforo de conclusão, emite a operação
   concretos sao `gfxGetModel=0x1E6B40`, `gfxModel::Draw=0x1E5198`,
   `gfxGeometry::Draw=0x1E7158` e `gfxGeometry::LoadMod=0x1E8478`.
 
+## Checkpoint 2026-08-28 - 0x5B92E0 atravessado; cinco continuations fechadas em lote
+
+- Um boot headless de 20 minutos com o alias novo concluiu novamente a tela
+  legal e atravessou `0x5B92E0`. O runner permaneceu vivo ate o timeout; nao
+  houve novo crash fatal.
+- Depois da transicao foram observadas 27 continuations ainda nao registradas.
+  As cinco mais frequentes/ativas foram fechadas no mesmo lote:
+  `0x2B8768`, `0x38C558`, `0x222C08`, `0x5BA578` e `0x2A6448`.
+- Cada endereco foi adicionado como resume entry no owner que ja continha as
+  instrucoes correspondentes. Os objetos dos batches `0008`, `0016`, `0017`,
+  `0026` e `0060` compilaram; o gerador passou de 168356 para 168361 aliases
+  internos e o partial runner foi relinkado com sucesso.
+- Os PCs de geometria conhecidos sao continuations internas, nao entradas
+  isoladas. Os owners corretos para probes futuros sao `0x1E66E8`
+  (gfxGetModel), `0x1E8448` (LoadMod), `0x1E7118` (preparacao de geometria) e
+  `0x1E50E0` (draw do modelo). Ainda nao ha caller virtual de veiculo
+  comprovado, portanto nenhum desses owners foi forcado.
+- Evidencia principal: `work/logs/targeted_transition_probe_20260827.log`.
+  Sem SignalSema injetado, retorno forcado, gate semantico ou alteracao do
+  scheduler.
+
+## Checkpoint 2026-08-28 - todas as 27 continuations do lote fechadas; geometria espera frontend
+
+- As 22 continuations restantes do boot anterior foram auditadas e adicionadas
+  aos owners corretos, preservando a execucao dos delay slots nos helpers de
+  retorno. Com as cinco anteriores, todas as 27 ausencias observadas foram
+  fechadas.
+- Dez owners compilaram em paralelo. O registro passou de 168361 para 168383
+  aliases internos e o partial runner foi relinkado com sucesso.
+- Um boot de validacao concluiu novamente a tela legal. Depois de End=1, nenhum
+  dos 27 warnings antigos reapareceu e nenhum novo `Function at address ... not
+  found` foi observado no intervalo validado.
+- Foram instalados probes passivos nos owners `0x1E66E8` (gfxGetModel),
+  `0x1E8448` (LoadMod), `0x1E7118` (preparacao de geometria) e `0x1E50E0`
+  (draw). Nenhum deles executou antes ou imediatamente depois da transicao.
+  Isso comprova que a tela legal e seu video nao carregam geometria 3D de
+  veiculo por essa rota.
+- A proxima acao causal e input real do frontend apos a tela/title, usando o
+  mapeamento confirmado `Enter=Start` e `Numpad5=X`, para provocar selecao e
+  carregamento de modelo. Nao ha justificativa para forcar um owner de
+  geometria diretamente.
+
 ## Checkpoint 2026-08-28 - 0x5B92E0 atravessado; novo bloqueio em datStreamer::Close
 
 - Correcao de endereco importante: os quatro alvos de geometria anotados no
@@ -1240,3 +1282,52 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   lacunas ja conhecidas.
 - Evidencia completa: `docs/RESULT_VIF0_SOURCE_CHAIN_2026-08-28.md` e
   `work/logs/gfx_probe_20260828_vif0_chain_final.log.stderr`.
+
+## Checkpoint 2026-08-28 - Start real confirmado no runner nativo
+
+- A janela nativa chegou visualmente ao logo/aviso legal de MC3 Remix.
+- Um `Enter` real foi enviado ao runner. O trace confirmou a mudanca de
+  `startRequested=0` para `startRequested=1` e a entrada na transicao legal;
+  portanto o input do host, o pad virtual e o frontend estao conectados.
+- A tela continuou rolando o aviso legal por varios minutos. Um segundo Enter
+  nao pulou a animacao; o bloqueio observado e lentidao da sequencia, nao uma
+  funcao ausente nova.
+- Os probes `mc3-gfx-*` ainda nao dispararam neste intervalo. O teste foi
+  encerrado de forma controlada antes do menu; ainda nao ha prova de geometria
+  de carro.
+- No runner nativo, `Enter = Start` e `X = Cruz`. `Numpad 5 = Cruz` e apenas o
+  mapeamento do perfil PCSX2 informado pelo usuario.
+- Proximo lote: acelerar ou instrumentar o criterio de termino da transicao
+  legal sem alterar sua semantica; depois repetir o Start ate o primeiro frame
+  do menu e observar `gfxGetModel/LoadMod/Draw`.
+
+## Checkpoint 2026-08-29 - traces gfx em endereco alpha removidos
+
+- O Codex entregou VIF0 normal (`8e5d233`) e VIF0 source-chain (`9d5c405`), com
+  suite 299/299 e 300/300. Verifiquei os dois RESULT contra os logs: os numeros
+  batem. O PC saiu de `0x3A01C8` -> `0x3A0460` -> `0x41D188`.
+- **Os contadores de render voltaram a crescer** pela primeira vez desde o
+  teardown da tela legal, confirmado no frame final de
+  `work/logs/gfx_probe_20260828_vif0_chain_final.log.stderr`:
+  `gifPk2` 136612 -> 136981, `gsPrims` 703599 -> 703668,
+  `gsPixels` 256036663 -> 257216311. Isso e atividade grafica nova e real, mas
+  **nao prova modelo 3D**; zero traces `mc3-gfx-*`.
+- As 5 regioes nao analisadas foram fechadas (nao documentado em RESULT): os 7
+  PCs ausentes ganharam resume case em `sub_00501088`, `sub_005C2880` e
+  `sub_005CC8C8`.
+- **Defeito corrigido nesta sessao:** em 28/08 16:02 foram instrumentados os
+  owners dos enderecos do **alpha build** (`0x1E5198`, `0x1E6B40`, `0x1E7158`,
+  `0x1E8478`). O runner e retail `SLUS_213.55`, onde esses enderecos sao funcoes
+  sem nome e sem relacao com gfx. Um disparo ali imprimiria
+  `mc3-gfx-model-draw` para funcao errada, criando falsa evidencia de carro.
+  Removido por `work/scratch/remove_alpha_gfx_traces.py`; a instrumentacao
+  retail (`0x1EB998`, `0x1ED340`, `0x1ED930`, `0x1EEC50`) foi preservada.
+- **Achado colateral grave:** `find_stale.py` reportou `Stale: 0` logo apos a
+  edicao dos 4 arquivos. Os objetos tinham sido compilados em 16:02 sem
+  atualizar `compile_manifest.json`, entao o hash do `.cpp` original ainda
+  casava enquanto o `.o` continha o trace alpha. Corrigido removendo as 4
+  entradas do manifesto e recompilando. **Risco em aberto:** o manifesto pode
+  estar dessincronizado em outros objetos; auditoria de hash completa pendente.
+- Relink `fast` OK. `mc3_partial.exe` 2026-08-29 02:27, mais novo que a lib,
+  zero stubs ausentes, cada string `mc3-gfx-*` agora com contagem 1 (era 2).
+- Detalhes: `docs/RESULT_ALPHA_GFX_TRACE_REMOVAL_2026-08-29.md`.
