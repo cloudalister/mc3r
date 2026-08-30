@@ -4,7 +4,7 @@ ROOT = r"E:\Games\Emuladores\Sony\mc3recomp"
 GEN = os.path.join(ROOT, "work", "generated", "ghidra")
 COMPILE = os.path.join(ROOT, "work", "compile", "ghidra")
 MANIFEST = os.path.join(ROOT, "work", "exports", "compile_manifest.json")
-COMPILE_KEY = "g++-cxx20-O2-fnostrictaliasing-msse4.1-wall-generated-ghidra-kernel-v2"
+COMPILE_KEY = "g++-cxx20-O2-fnostrictaliasing-msse4.1-wall-generated-ghidra-kernel-v3-cop1fpu"
 
 def sha256(path):
     digest = hashlib.sha256()
@@ -56,9 +56,15 @@ for key, (base, cpp) in cpp_files.items():
     o_size = os.path.getsize(o)
     source_hash = sha256(cpp)
     cached = manifest.get("sources", {}).get(base.lower(), {})
-    hash_ok = (manifest.get("compile_key") == COMPILE_KEY and
-               cached.get("sha256") == source_hash and o_size >= 200)
-    status = "OK" if hash_ok or o_mtime >= cpp_mtime else "STALE"
+    # A COMPILE_KEY cobre o que o sha256 do .cpp nao ve: flags de compilacao e
+    # headers. O fallback de mtime nao pode sobreviver a uma troca de chave --
+    # senao a chave nao serve para nada, que era o caso: com dois headers
+    # alterados e a chave nova, 14.726 dos 15.831 objetos passavam como OK
+    # porque o .o era mais novo que o .cpp, e o link produzia um binario com
+    # metade dos objetos compilados contra a definicao antiga de R5900Context.
+    key_ok = manifest.get("compile_key") == COMPILE_KEY
+    hash_ok = (key_ok and cached.get("sha256") == source_hash and o_size >= 200)
+    status = "OK" if hash_ok or (key_ok and o_mtime >= cpp_mtime) else "STALE"
     if status == "STALE":
         stale.append((base, cpp, o, batch))
     rows.append((base, cpp, o, status, cpp_mtime, o_mtime, o_size))

@@ -10,7 +10,7 @@ ARGS = ["-std=c++20", "-O2", "-fno-strict-aliasing", "-msse4.1", "-Wall", "-Wno-
         "-I", os.path.join(ROOT, r"PS2Recomp\ps2xRuntime\include"),
         "-I", os.path.join(ROOT, r"PS2Recomp\ps2xRuntime\src\lib\Kernel")]
 MANIFEST = os.path.join(ROOT, r"work\exports\compile_manifest.json")
-COMPILE_KEY = "g++-cxx20-O2-fnostrictaliasing-msse4.1-wall-generated-ghidra-kernel-v2"
+COMPILE_KEY = "g++-cxx20-O2-fnostrictaliasing-msse4.1-wall-generated-ghidra-kernel-v3-cop1fpu"
 
 def sha256(path):
     digest = hashlib.sha256()
