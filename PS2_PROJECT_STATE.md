@@ -1589,3 +1589,49 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
 - Evidencia: `docs/RESULT_VIF1_VU1_PERF_2026-08-30.md` e logs
   `work/logs/measure_vif1_vu1_profile_r*.log.stderr` /
   `work/logs/measure_vif1_vu1_diag_gate_after_r*.log.stderr`.
+
+## Checkpoint 2026-08-30 - BUG DO SQRT: operando lido de fs em vez de ft
+
+- **Uma palavra errada no gerador quebrava todas as raizes quadradas do jogo.**
+  `code_generator.cpp:2074` emitia `FPU_SQRT_S(ctx->f[fs])`; o R5900 poe o
+  operando de `SQRT.S` em **ft**. A `RSQRT.S` da linha seguinte ja usava ft.
+- **Prova empirica:** em 131 codificacoes distintas de `sqrt.s` no corpus,
+  `fs = 0` em 100% delas e `ft` assume 18 valores. Se o operando fosse fs, o
+  jogo tiraria raiz do mesmo registrador nas 585 ocorrencias.
+- **Cadeia do congelamento**, cada elo com trace:
+  `mcLight::GetColor` (`0x00259D60`) calculava `sqrt(dx)` em vez de
+  `sqrt(dx²+dy²+dz²)`; com `dx` negativo isso da NaN -> `powf(NaN,1.0)` ->
+  `logf(NaN)` -> serie de Taylor cuja saida e `soma == soma_anterior`, que pelo
+  IEEE 754 nunca fecha com NaN -> **4.294.967.296 iteracoes** ate o contador
+  estourar.
+- **Isso explica o nao-determinismo desde agosto.** `dx = pos.x - luz.x` depende
+  de onde a camera esta quando a luz e avaliada: as vezes positivo, as vezes
+  negativo. Mesmo binario congelando em enderecos diferentes nunca foi ruido de
+  medicao, como `STATUS_2026-08-07_AUDIT.md` concluiu na epoca. Era a raiz.
+- Conserto: gerador corrigido + propagacao para arquivos ja gerados por
+  `work/scratch/fix_sqrt_operand.py` (le a codificacao no comentario e reescreve
+  o operando a partir dela). **221 arquivos, 323 instrucoes, 0 anomalias.** Nao
+  se re-rodou `04_run_recomp.bat` para nao apagar a instrumentacao acumulada.
+- **Efeito medido:**
+
+  | | antes | depois |
+  |---|---:|---:|
+  | NaN em powf/logf | presente | nenhum |
+  | `gsPrims` | 704.397 | **1.004.584** |
+  | `gsPixels` | 257.216.311 | **1.088.137.517** |
+  | `DrawSkinned` | nunca | **18 chamadas** |
+  | PC estavel | `0x41D188` (logf) | `0x1D3990` |
+
+- `0x1D3990` e `mcParticleFogMgr::DrawAllParticles` — particulas e nevoa, muito
+  mais adiante. `rmcModel::DrawSkinned` (modelos com esqueleto) nunca havia sido
+  alcancado.
+- **Nao provado:** que o jogo alcanca o menu; efeito em performance (os ~3 fps
+  tem outra causa ja medida); se outras instrucoes COP1 tem o mesmo problema de
+  campo. O dump de frame saiu preto por gatilho cedo demais (700k primitivas,
+  logo apos o teardown da tela legal) — nao e evidencia de cena preta.
+- **Licao de metodo:** o bug foi achado instrumentando pelo SINTOMA ("avise em
+  qualquer NaN"), nao seguindo a cadeia suposta. Horas foram gastas em
+  `FUN_001FADC0 -> powf` (camera), que estava saudavel com 2.203 chamadas
+  validas. Perseguir a corrida certa por sorte tambem custou 8 tentativas
+  falhas; instrumentar pelo sintoma tornou a reproducao desnecessaria.
+- Detalhes: `docs/RESULT_SQRT_OPERAND_BUG_2026-08-30.md`.
