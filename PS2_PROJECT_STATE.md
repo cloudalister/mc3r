@@ -1527,3 +1527,42 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   nunca fato sobre o retail; antes de afirmar causa, ir a fonte primaria; nao
   extrapolar de amostra de boot inicial.
 - Detalhes: `docs/RESULT_FIRST_IMAGE_2026-08-29.md`.
+
+## Checkpoint 2026-08-29 - camada rmc instrumentada; gargalo e o rasterizador
+
+- **Observacao direta do usuario na janela** (dado que nenhum trace fornecia):
+  a tela dá boot com quadradinhos verdes aparecendo, mostra a logo do jogo, e
+  entao o fade-out fica parado muito tempo sem completar o fade-in nem entrar no
+  menu. ~3 fps.
+- Isso REFUTA o "bug de apresentacao" que eu vinha perseguindo: a janela mostra
+  imagem. E reenquadra o travamento: **o fade nao esta travado, esta lento**. A
+  transicao precisa de 490 iteracoes de script + 27 ciclos de fade; a 3 fps isso
+  leva minutos. `End=1` de fato acontece (cinco vezes por corrida).
+- **Sete pontos da camada `rmc*` instrumentados** (todos retail_addr exatos e
+  registrados): `rmcModel::Draw` `0x2A9918`, `DrawCpv` `0x2A9A88`,
+  `DrawSkinned` `0x2A9BC0`, `rmcCarModel::rmcCarModel` `0x2F6410`,
+  `Init` `0x2F6C48`, `GetCar` `0x2F6BB0`, `vehModel::vehModel` `0x560E08`.
+  Traces colocados apos o switch de resume, para nao contar reentrada de
+  continuation.
+- **A corrida do lote rmc nao respondeu a pergunta dele**: terminou com
+  `padmanStartPublishes=0`, ou seja sem input, parada em `0x322FFC`. Zero traces
+  era o resultado esperado nessa condicao e NAO testa se o jogo carrega carro.
+  Repetir com Start pressionado.
+- **Gargalo quantificado:** `gsPixels` / tempo ate `End=1` =
+  **509.019 pixels/s**. Um rasterizador por software ingenuo em C++ faz 50-100M
+  px/s, entao estamos ~196x abaixo. A carga do jogo e modesta: 1,8 overdraws de
+  tela cheia por frame de guest. A ~522k pixels por frame isso da ~1 s por frame
+  de guest, batendo com os 3 fps observados.
+- Cadeia causal unificada: **rasterizador lento -> fade leva minutos -> nunca
+  entra no menu -> nunca carrega carro**. Nao sao tres frentes, e uma.
+- **Otimizacao aplicada** em `ps2_gs_rasterizer.cpp`: tres divisoes de ponto
+  flutuante (`1.0f/fabsQ(v0.q)`, `v1.q`, `v2.q`) eram recalculadas POR PIXEL
+  dentro dos lacos y/x, apesar de dependerem so dos vertices do triangulo.
+  Hoistadas para o setup do triangulo, junto com os seis produtos `v.s*invQ` e
+  `v.t*invQ`. De quatro divisoes por pixel para uma. Hoisting puro: mesma conta,
+  mesmo resultado. Suite 303/303.
+- Expectativa declarada antes de medir: isso NAO resolve os 196x. Tres divisoes
+  a ~25 ciclos sao ~75 ciclos, e a 500k px/s gastamos ~6.000 ciclos por pixel.
+  O valor do lote e calibrar a regua px/s para escolher o proximo alvo com
+  numero. Suspeitos na fila: `sampleTexture` por pixel, `fetch_add` atomico por
+  pixel em `writePixel`, e recalculo de endereco com swizzling a cada pixel.
