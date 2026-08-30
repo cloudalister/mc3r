@@ -1566,3 +1566,26 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   O valor do lote e calibrar a regua px/s para escolher o proximo alvo com
   numero. Suspeitos na fila: `sampleTexture` por pixel, `fetch_add` atomico por
   pixel em `writePixel`, e recalculo de endereco com swizzling a cada pixel.
+
+## Checkpoint 2026-08-30 - diagnóstico saturado removido do hot path VIF1/VU1
+
+- Subperfil interno de 3x300 s mostrou que os tempos publicados eram
+  **inclusivos e sobrepostos**: VIF inclui callbacks VU e DIRECT/GS; VU inclui
+  XGKICK/GS. Nao somar `vifUs + vu1Us` como fases exclusivas.
+- VIF classificado: 80,9% MSCAL/MSCNT downstream, 16,6% DIRECT downstream,
+  2,4% UNPACK e 0,1% controle. VU classificado: 42,0% helpers de diagnostico,
+  41,8% XGKICK/downstream, 5,1% upper Q/I, 4,5% memoria e 4,1% math/EFU.
+- Otimizacao semantica-neutra: copias/getenv/atomics/scans param apenas depois
+  dos tetos de trace (VU 256/192/128; VIF/GIF 16/24). Os mesmos tetos completos
+  apareceram nas tres corridas finais.
+- Medianas 3x300 s: VU1 `186,24 -> 60,39 us/prim` (-67,6%, dispersao final
+  3,1%); VIF1 `227,48 -> 92,66 us/prim` (-59,3%, dispersao final 1,7%). O
+  efeito supera a dispersao anterior de 12,8%/12,6%.
+- Suite completa `303/303`, build e fast relink verdes; exe posterior a lib e
+  strings de instrumentacao confirmadas dentro do exe.
+- Scheduler, rasterizador e os tres arquivos proibidos de logf/powf/expf nao
+  foram tocados neste lote. Sem push.
+- Commit local do submodulo: `27faf89` (`mc3`).
+- Evidencia: `docs/RESULT_VIF1_VU1_PERF_2026-08-30.md` e logs
+  `work/logs/measure_vif1_vu1_profile_r*.log.stderr` /
+  `work/logs/measure_vif1_vu1_diag_gate_after_r*.log.stderr`.
