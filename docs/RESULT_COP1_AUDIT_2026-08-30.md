@@ -14,6 +14,13 @@ A auditoria encontrou outras duas coisas, ambas fora da classe "campo de operand
    tem NaN nem infinito**. Esta é a classe de defeito que causou o congelamento de
    ontem. A correção do `sqrt` removeu uma instância; a classe continua aberta.
 
+> **Adendo, mesma noite.** Esta auditoria leu o *gerador* e presumiu que o corpus
+> correspondia a ele. Não correspondia. Uma segunda varredura, comparando o texto
+> gerado com o que o gerador atual emitiria, achou 450 de 451 `RSQRT.S` divergentes:
+> uma correção feita no gerador em 29/08 nunca foi propagada ao binário. O buraco não
+> estava no gerador nem no corpus, e sim entre os dois.
+> Ver `docs/RESULT_RSQRT_STALE_CORPUS_2026-08-30.md`.
+
 ## Como foi medido
 
 Duas varreduras independentes sobre os 43.741 arquivos gerados (1,2 GB), lendo a
@@ -105,7 +112,7 @@ certo, mas vale registrar o limite.
 |---|---|---|
 | NaN | **não existe** | existe |
 | infinito | **não existe** | existe |
-| overflow | satura em ±1,7014118e38 (`0x7F7FFFFF`) | vira `inf` |
+| overflow | satura em ±3,4028235e38 (`0x7F7FFFFF`) | vira `inf` |
 | `SQRT.S` de negativo | `sqrt(\|x\|)`, liga a flag de inválido | `NaN` |
 | denormais | zerados | preservados |
 | `C.UN`, `C.UEQ`, `C.ULT`… | nunca verdadeiras (não há NaN) | podem ser verdadeiras |
@@ -123,23 +130,20 @@ As 2.971 chamadas de `powf` registradas têm todas argumentos sãos (`f12=0.1`,
 `f13=373.183`…). O fogo de ontem está apagado. O que está aberto é a possibilidade de ele
 voltar por outra porta, e essa possibilidade é estrutural.
 
-## O que não foi feito, e por quê
+## O que foi decidido
 
-Nada foi alterado no gerador nem no runtime a partir desta auditoria.
-
-Trocar o modelo de valores da FPU muda o resultado de **toda** operação de ponto
-flutuante do jogo, e portanto muda todas as medições em andamento. Isso é decisão de
-escopo, não passo investigativo — fica para o usuário. A bateria de medição de hoje
-ocupa a máquina até por volta das 21h de qualquer forma, então não havia como recompilar
-antes disso.
-
-Duas frentes possíveis, de tamanhos bem diferentes:
+A escolha era entre duas frentes de tamanhos bem diferentes:
 
 - **Estreita** — só onde o hardware comprovadamente não pode produzir o valor que o
   emulador produz: `SQRT.S` de negativo, `RSQRT.S` de negativo, divisão por zero. Fecha a
   classe de defeito que já travou este jogo, e não toca na aritmética de `ADD`/`MUL`.
 - **Completa** — modelo `ps2Float` inteiro: saturação em `Fmax`, denormais zerados,
   comparações sem NaN. Fiel ao hardware, e muda todo número medido até aqui.
+
+O usuário escolheu a **estreita, mais o acumulador próprio**. Implementada em `7aa06d1`,
+junto com a correção do `RSQRT.S` que a segunda varredura desenterrou. A frente completa
+fica em aberto: ela invalida toda comparação com medição anterior, e isso é decisão que
+não se toma de passagem.
 
 ## Estado
 
@@ -148,3 +152,5 @@ Duas frentes possíveis, de tamanhos bem diferentes:
   a bateria mede.
 - Bateria de 7 corridas de 1800 s em andamento desde 17:29 →
   `work/exports/battery_day20260830.md`, reescrito a cada corrida.
+- Correção estreita da FPU + `RSQRT.S` + acumulador: `7aa06d1`, propagadas ao corpus, a
+  recompilar durante a noite.
