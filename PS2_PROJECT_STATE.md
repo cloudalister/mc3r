@@ -1492,3 +1492,38 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
 - Primeira corrida com janela visivel: mesmo estado final, ~33 ticks/s (contra 55
   headless). `padmanStartPublishes=0` — o caminho de input segue nao exercitado.
 - Detalhes: `docs/RESULT_24A368_DISPATCHER_TRUTH_2026-08-29.md`.
+
+## Checkpoint 2026-08-29 - PRIMEIRA IMAGEM DO JOGO
+
+- **A tela legal do Midnight Club 3 foi exportada em PNG a partir do
+  recompilado**, com logo, kanji, texto legal e Dolby legiveis
+  (`work/captures/frame_20260829_dump.png`). O motor grafico funciona ponta a
+  ponta: GIF -> VIF -> GS -> rasterizador -> framebuffer. `gsPrims`/`gifPk*` nao
+  eram trafego abstrato; sao a imagem correta.
+- Obtido com `MC3_FRAME_DUMP`, facilidade que **ja existia** no runtime
+  (`ps2_runtime.cpp:252`) e nao vinha sendo usada. Driver:
+  `work/scratch/Run-FrameDump.ps1`.
+- Os dumps por contexto (`_ctx0`/`_ctx1`) mostram o mesmo conteudo repetido ~4x
+  na horizontal e entrelacado: stride errado na leitura por contexto. Defeito
+  separado, nao afeta o frame de apresentacao.
+- **Cinco funcoes ausentes consertadas**, `recover-pc` de 71 -> 0, zero PCs
+  ausentes. `0x24A368` era prologo fundido pelo Ghidra; `0x5BB170`, `0x5BB178`,
+  `0x5BB220` e `0x5BD030` sao acessores-folha de 2-3 instrucoes, decodificados do
+  ELF e escritos a mao, com entradas em `functions_index.csv` e
+  `boundary_port.csv`.
+- **Input funciona.** Com janela visivel, `Enter` chega ao pad do guest
+  (`buttons=0x00000840 start=1`), ate 11 publicacoes numa corrida. Com Start o
+  jogo sai de `0x322FFC` e avanca ate `0x41D188`. Torna desnecessario o plano B
+  do `setPadOverrideState`.
+- **Apresentacao — em aberto.** O trace novo mostra a apresentacao recebendo
+  conteudo (`nonZeroPx` de 0 ate 142.556 de 286.720), entao a hipotese de "buffer
+  preto na origem" esta REFUTADA. Permanece sem explicacao: `displayFbp=0x0` em
+  toda a corrida enquanto `dispfb1` do GS chega a `0x11000`. Nao esta
+  estabelecido se a janela ainda fica preta no binario atual.
+- **Cinco diagnosticos meus foram derrubados nesta sessao**, todos por tratar
+  evidencia parcial como conclusao: `-O0` como gargalo, `-skipintro/-garage` como
+  atalho, `gsPrims=704397` como baseline, a correcao desse baseline, e a
+  apresentacao com buffer preto. Regras que ficam: o MC.MAP do alpha e pista e
+  nunca fato sobre o retail; antes de afirmar causa, ir a fonte primaria; nao
+  extrapolar de amostra de boot inicial.
+- Detalhes: `docs/RESULT_FIRST_IMAGE_2026-08-29.md`.
