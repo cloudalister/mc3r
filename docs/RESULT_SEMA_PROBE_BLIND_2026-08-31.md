@@ -220,3 +220,59 @@ o custo da instrumentação.
 
 Por isso os quatro tetos subiram de novo, para 200.000, antes da bateria de 1200 s: em execução
 longa os 20.000 se esgotam a ~40% do log.
+
+## 11. Bateria de 1200 s — o jogo passa da tela de carregamento
+
+Três execuções, rótulo `semalong`, tetos de semáforo em 200.000.
+
+**As três concluíram o segundo pedido e entraram no menu.** Reprodutível, 3 de 3:
+
+| | `deq2` | `done2` após | `menu-change` | `gsPrims` | `gsPixels` |
+|---|---:|---:|---:|---:|---:|
+| `semalong_r1` | tick 22.740 | 480 ticks (8,0 s) | 1 | 1.008.035 | 1.042.142.727 |
+| `semalong_r2` | tick 24.840 | 480 ticks (8,0 s) | 1 | 1.005.085 | 1.032.541.676 |
+| `semalong_r3` | tick 23.940 | 360 ticks (6,0 s) | 1 | 1.007.848 | 1.042.011.655 |
+
+Contra as de 420 s: `menu-change=0` e `gsPrims` ~690.000. **+46% de primitivas.**
+
+`mc3-menu-change` é o `mcMenuShell::ChangeState` — a função que a hipótese descartada nº 4 do
+handoff registrava como "nem é entrada no desfecho ruim". Ela é entrada aqui, uma vez por
+execução, e o PC final fica em `swfSCRIPTOBJECT::GetGlobal`, na camada de script da UI.
+
+### O que isso corrige na metodologia, e o que não corrige
+
+**Não** desmente a trava. A `catch_xfer_r2` observou 3.840 ticks após o `deq2` sem `done2`,
+oito vezes a folga que estas execuções precisaram. Aquela execução travou de verdade.
+
+**Corrige a contagem.** O marcador `busy=0x00000002` só discrimina ramo em execução que
+*chegou* ao `deq2`. Execução cortada antes disso produz log idêntico ao de uma travada — e
+cinco das seis execuções de 420 s nunca chegaram lá. Classificá-las como "ramo ruim" mistura
+"não chegou" com "travou".
+
+Refazendo a conta só com execuções de janela conclusiva (≥500 ticks após o `deq2`):
+
+| execução | veredito |
+|---|---|
+| `catch_xfer_r1` | bom |
+| `catch_xfer_r2` | **travou** (3.840 ticks sem `done2`) |
+| `semalong_r1`, `r2`, `r3` | bom |
+
+**Quatro bons, uma travada.** As outras sete execuções examinadas são inconclusivas, não ruins.
+A frequência do desfecho ruim vinha sendo superestimada por contar execução curta demais como
+evidência.
+
+### Confundimento que fica em aberto
+
+A bateria longa mudou **duas** variáveis ao mesmo tempo: duração 420 s → 1200 s e tetos de
+semáforo 20.000 → 200.000. A explicação por duração tem apoio mecânico — cinco das seis curtas
+nem alcançaram o `deq2`, e o `deq2` cai entre os ticks 22.700 e 24.800 enquanto as curtas
+terminam entre 19.400 e 22.600 — mas separar as duas exige uma bateria de 1200 s com os tetos
+antigos. Fica anotado, não afirmado.
+
+### O que a próxima sessão deve fazer com isto
+
+1. **Toda bateria daqui em diante precisa de pelo menos 1200 s por execução.** Abaixo disso a
+   execução termina antes do segundo pedido e o resultado não classifica nada.
+2. Reproduzir a travada da `catch_xfer_r2` com janela longa: é o único caso conclusivo de
+   trava e agora há instrumentação para observá-lo.
+3. A bateria de controle 1200 s × tetos antigos, para desfazer o confundimento acima.
