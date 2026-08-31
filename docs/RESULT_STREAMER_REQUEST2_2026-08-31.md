@@ -1,5 +1,32 @@
 # RESULT — a causa raiz: a segunda requisição de streaming nunca conclui — 2026-08-31
 
+> **Nomes reais** (coluna `alpha_name` do `retail_symbol_port.csv`, quarta coluna — a
+> segunda é só o `FUN_` do Ghidra):
+>
+> | endereço | nome |
+> |---|---|
+> | `0x320B38` | `mcFlash::Update(bool, bool, float)` |
+> | `0x320C60` | `mcFlash::UpdateLoading(bool)` |
+> | `0x42E8A0` | `datPaging::EndStream(datStreamerInfo&, bool)` |
+> | `0x430C90` | `datRscBuilder::EndStream(datStreamerInfo&, bool)` |
+> | `0x4323E8` | `datStreamer::Close(unsigned int)` |
+> | `0x398C60` | `ipcSleep(unsigned int)` |
+> | `0x4320E0` | `datStreamer::Read(unsigned, void*, unsigned, unsigned, ipcSemaTag*)` |
+> | `0x4225D8` | `uiMaster::Update(void)` |
+> | `0x33A710` | `mcMenuShell::AnyListsActive(bool)` |
+> | `0x339278` | `mcMenuShell::ChangeState(MenuStates)` |
+> | `0x259D60` | `mcLight::GetColor(const Vector3&, Vector3&)` |
+>
+> Em português: **o jogo trava na tela de carregamento**, esperando um recurso que nunca
+> termina de chegar, e por isso a troca para o menu nunca acontece.
+
+
+> **Hipótese descartada depois (2026-08-31, medida):** o laço de transferência do worker em
+> `0x431f98` (`s1 -= s0; bnez s1`, que só termina se o restante bater exatamente zero) não
+> é o culpado. Sonda ali dispara **zero** vezes nos dois desfechos — aquele caminho não é
+> executado.
+
+
 ## Resultado
 
 **O worker de streaming desenfileira duas requisições nos dois desfechos, e no desfecho
@@ -7,7 +34,7 @@ ruim conclui apenas a primeira.** A segunda fica pendente para sempre; o `busy` 
 de pool que ela ocupa nunca zera; a thread que espera esse `busy` dorme indefinidamente; e
 toda a fase do jogo que vem depois dela nunca começa.
 
-Separação perfeita em 5 corridas:
+Separação perfeita em 5 execuções:
 
 | marcador | ruim (3) | bom (2) |
 |---|---:|---:|

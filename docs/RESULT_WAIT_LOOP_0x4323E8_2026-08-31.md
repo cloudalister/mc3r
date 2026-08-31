@@ -1,5 +1,26 @@
 # RESULT — o fundo da bifurcação: espera por flag que nunca libera — 2026-08-31
 
+> **Nomes reais** (coluna `alpha_name` do `retail_symbol_port.csv`, quarta coluna — a
+> segunda é só o `FUN_` do Ghidra):
+>
+> | endereço | nome |
+> |---|---|
+> | `0x320B38` | `mcFlash::Update(bool, bool, float)` |
+> | `0x320C60` | `mcFlash::UpdateLoading(bool)` |
+> | `0x42E8A0` | `datPaging::EndStream(datStreamerInfo&, bool)` |
+> | `0x430C90` | `datRscBuilder::EndStream(datStreamerInfo&, bool)` |
+> | `0x4323E8` | `datStreamer::Close(unsigned int)` |
+> | `0x398C60` | `ipcSleep(unsigned int)` |
+> | `0x4320E0` | `datStreamer::Read(unsigned, void*, unsigned, unsigned, ipcSemaTag*)` |
+> | `0x4225D8` | `uiMaster::Update(void)` |
+> | `0x33A710` | `mcMenuShell::AnyListsActive(bool)` |
+> | `0x339278` | `mcMenuShell::ChangeState(MenuStates)` |
+> | `0x259D60` | `mcLight::GetColor(const Vector3&, Vector3&)` |
+>
+> Em português: **o jogo trava na tela de carregamento**, esperando um recurso que nunca
+> termina de chegar, e por isso a troca para o menu nunca acontece.
+
+
 ## Resultado
 
 **O desfecho ruim é uma thread presa num laço de espera em `func_4323E8`, aguardando o
@@ -57,14 +78,14 @@ jogo que parece funcionar, escondendo o defeito real. A pergunta certa é **quem
 mudar o `busy` dessa entrada de pool, e por que não muda**.
 
 Como `busy` transita `1 → 0 → 2` no desfecho bom, o produtor existe e funciona às vezes.
-Isso é consistente com conclusão por interrupção ou por DMA, que é território de corrida —
+Isso é consistente com conclusão por interrupção ou por DMA, que é território de execução —
 e casa com o não-determinismo ser de escalonamento, não de dado.
 
-## Repetição: separação perfeita em 5 corridas
+## Repetição: separação perfeita em 5 execuções
 
 `busy` alcançar `2` separa os dois desfechos sem exceção:
 
-| corrida | desfecho | valores de `busy` observados | maior `loop` |
+| execução | desfecho | valores de `busy` observados | maior `loop` |
 |---|---|---|---:|
 | r1 | ruim | `0`, `1` | 80 |
 | r2 | ruim | `0`, `1` | 15 |
@@ -73,7 +94,7 @@ e casa com o não-determinismo ser de escalonamento, não de dado.
 | r5 | bom | `0`, `1`, **`2`** | 16 |
 
 **5 de 5, sem sobreposição.** E repare que o número de iterações do laço *não* é o
-discriminador — a corrida ruim r2 girou menos (15) que a boa r4 (32). O que separa é
+discriminador — a execução ruim r2 girou menos (15) que a boa r4 (32). O que separa é
 exclusivamente o `busy` chegar a `2`.
 
 Isso dá um critério barato e binário para qualquer experimento futuro: se `busy=0x2`
@@ -91,7 +112,7 @@ aparece no log, o desfecho é bom.
 `FUN_00320b38` tinha instrumentação com teto de 64 emissões, esgotado antes da chamada que
 interessa. Os dois desfechos produziam 64 amostras idênticas terminando no mesmo estágio,
 o que lia como "esta função se comporta igual nos dois". Teto levantado para 4000, e a
-diferença apareceu na primeira corrida.
+diferença apareceu na primeira execução.
 
 Vale como regra: **instrumentação com teto mente por omissão.** Um rastro que termina no
 mesmo lugar nos dois lados pode ser evidência de igualdade ou de teto, e os dois casos são

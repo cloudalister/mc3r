@@ -94,18 +94,18 @@ observável hoje: a ordem que causaria dano não ocorre em nenhuma função gera
 
 ## Medição: o que já se sabe e o que ainda não
 
-**A primeira corrida da bateria de referência contradiz o número do handoff.** Em 1800 s,
+**A primeira execução da bateria de referência contradiz o número do handoff.** Em 1800 s,
 `gsPrims` = 703.599 e `gsPixels` = 256.036.663 — praticamente os valores **pré-correção**
 do `sqrt` (704.397 / 257.216.311), e não os pós (1.004.584 / 1.088.137.517). O PC
 dominante foi `0x322ffc`, 60 de 60 quadros, nem o `0x41D188` de antes nem o `0x1D3990` de
 depois.
 
-Uma corrida ainda não é distribuição, e faltam quatro. Mas já dá para dizer o que ela
+Uma execução ainda não é distribuição, e faltam quatro. Mas já dá para dizer o que ela
 custa: **o salto de +43%/+323% atribuído ao `sqrt` pode ter sido dispersão.** Era n=1 dos
 dois lados. O sumiço do `NaN` continua de pé — aquilo é qualitativo e reproduzível. O
 ganho de render é que está sob suspeita.
 
-Confusão possível que ainda não foi separada: a corrida de referência de ontem foi em
+Confusão possível que ainda não foi separada: a execução de referência de ontem foi em
 janela, e a bateria roda em `MC3_HEADLESS=1`. A variável só liga `FLAG_WINDOW_HIDDEN`
 (`ps2_runtime.cpp:1082`) e o contexto GL continua vivo, mas isso não foi medido — é
 hipótese, não conclusão.

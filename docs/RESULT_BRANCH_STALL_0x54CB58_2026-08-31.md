@@ -6,11 +6,11 @@
 > livelock em `FUN_0054cb58` como *o mecanismo* do desfecho ruim. Não é.
 >
 > Instrumentei o laço de `0x54cc08` com detecção de ciclo e rodei uma caça. Em quatro
-> corridas que caíram no desfecho ruim — contadores travados em 703.599, `mc3-menu-change`
+> execuções que caíram no desfecho ruim — contadores travados em 703.599, `mc3-menu-change`
 > ausente, os mesmos PCs de frame — a instrumentação **não disparou uma única vez**, e o
 > `thread-heartbeat` também não apareceu nenhuma vez. O laço nem é alcançado.
 >
-> O livelock que eu descrevi aconteceu numa corrida de 1800 s (`limpa3`). Nas de 550 s,
+> O livelock que eu descrevi aconteceu numa execução de 1800 s (`limpa3`). Nas de 550 s,
 > no mesmo desfecho, não acontece. Então é sintoma tardio ou estado à parte, não a causa.
 > Uma amostra virou tese cedo demais.
 >
@@ -24,7 +24,7 @@ Com o jogo **vivo**: `intc-stat-latch` e `gs-field-toggle` a 4.096, `mc3-camblen
 `mc3-mathf-logf`, `powf` e `expf` na casa dos 1.700–2.300, quadros continuam chegando. Não
 é travamento geral.
 
-O que não acontece, nunca, comparando corridas de mesma duração (550 s):
+O que não acontece, nunca, comparando execuções de mesma duração (550 s):
 
 | marcador | ruim | bom |
 |---|---:|---:|
@@ -34,7 +34,7 @@ O que não acontece, nunca, comparando corridas de mesma duração (550 s):
 | `mc3-42cc80` / `42ca90` / `42aaf8-progress` | 0 | 40 / 39 / 36 |
 
 `mc3-camblend-ratio` e `mc3-mathf-logf` aparecem **na mesma contagem** (1.708 numa das
-corridas), então o blend de câmera é quem chama `logf`. O desfecho ruim é o jogo preso no
+execuções), então o blend de câmera é quem chama `logf`. O desfecho ruim é o jogo preso no
 blend de câmera da intro, chamando a mesma matemática indefinidamente, sem nunca cruzar o
 portão que leva ao `mc3-menu-change`.
 
@@ -44,7 +44,7 @@ não termina".
 ## Registro do que foi descartado: o livelock de `FUN_0054cb58`
 
 O texto abaixo descreve o que foi observado em `limpa3` e continua factualmente correto
-para *aquela* corrida. Só não é a explicação do desfecho.
+para *aquela* execução. Só não é a explicação do desfecho.
 
 ```
 [boot-trace:thread-heartbeat] id=8 steps=2097152 pc=0x54cc08 ra=0x54d4cc
@@ -80,13 +80,13 @@ intercalam no meio umas das outras —
 ... gifPk1=[boot-trace:CreateSema] tid=1 init=1 ...
 ```
 
-— então duas corridas do **mesmo** desfecho divergem em 40.079 de 42.586 linhas. Pior: o
-estado observável por tick também não serve. Duas corridas do mesmo desfecho já divergem
+— então duas execuções do **mesmo** desfecho divergem em 40.079 de 42.586 linhas. Pior: o
+estado observável por tick também não serve. Duas execuções do mesmo desfecho já divergem
 no **tick 9**, em PC amostrado e em ordem de eventos de kernel. As threads correm entre si
 desde o primeiro décimo de segundo. Só o resultado final é determinístico.
 
 O que funcionou foi abandonar o tempo como eixo e comparar **quais eventos acontecem**.
-Marcadores presentes numa corrida e ausentes na outra:
+Marcadores presentes numa execução e ausentes na outra:
 
 | marcador | desfecho A | desfecho B |
 |---|---:|---:|
@@ -107,13 +107,13 @@ o que aparece é o primeiro `thread-heartbeat`.
 ## O que isto explica
 
 O não-determinismo que o projeto persegue desde agosto. Não é ruído de medição nem
-dispersão: é uma corrida entre threads sobre uma lista compartilhada, decidida de um jeito
+dispersão: é uma execução entre threads sobre uma lista compartilhada, decidida de um jeito
 ou de outro conforme o escalonamento. Por isso os contadores saem **idênticos até o último
 dígito** dentro de cada ramo — o resultado de cada ramo é determinístico; o que é
 sorteado é o ramo.
 
 Também explica por que comparação A/B no projeto vinha produzindo conclusão falsa. O
-`+43%/+323%` atribuído ontem à correção do `sqrt.s` era a corrida "antes" caindo no ramo
+`+43%/+323%` atribuído ontem à correção do `sqrt.s` era a execução "antes" caindo no ramo
 ruim e a "depois" no ramo bom, com os dois binários tendo os dois ramos.
 
 ## O que NÃO está provado
@@ -124,10 +124,10 @@ ruim e a "depois" no ramo bom, com os dois binários tendo os dois ramos.
 - **Não identifiquei a estrutura.** `FUN_0054cb58` e `sub_0054CCE8` não têm símbolo. A
   leitura de heap vem do padrão de código, não de nome.
 - **Não verifiquei se o ramo bom passa por estas funções.** Se passar, a diferença é só a
-  corrida; se não passar, há um desvio antes. Os frames não amostram lá dentro.
-- **n=1 para o ramo ruim neste binário.** Das 7 corridas da segunda bateria, só a `limpa3`
+  execução; se não passar, há um desvio antes. Os frames não amostram lá dentro.
+- **n=1 para o ramo ruim neste binário.** Das 7 execuções da segunda bateria, só a `limpa3`
   caiu nele.
-- **As corridas do ramo ruim do binário antigo não emitem `thread-heartbeat` nenhum**,
+- **As execuções do ramo ruim do binário antigo não emitem `thread-heartbeat` nenhum**,
   apesar de terem contadores idênticos (703.599 / 256.036.663) e o mesmo PC de frame
   (`0x322ffc`). Mesmo desfecho aparente, sinal de instrumentação diferente. Não
   investigado.

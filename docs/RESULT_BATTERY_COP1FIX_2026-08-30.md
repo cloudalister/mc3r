@@ -3,7 +3,7 @@
 ## Resultado
 
 **O que mudou não foi a média: foi qual desfecho o jogo escolhe.** O desfecho bom saiu de
-1 corrida em 7 para 6 em 7, e o próprio desfecho bom subiu de teto.
+1 execução em 7 para 6 em 7, e o próprio desfecho bom subiu de teto.
 
 | | antes (exe 05:49) | depois (exe 21:35) |
 |---|---|---|
@@ -11,7 +11,7 @@
 | `gsPrims` no desfecho bom | 1.004.584 | **1.173.155** (+16,8%) |
 | `gsPixels` no desfecho bom | 1.088.137.517 | **1.421.778.605** (+30,7%) |
 | desfecho ruim (703.599) | 5 de 7 | 1 de 7 |
-| corridas que encerram sozinhas | 1 de 7 | 6 de 7, entre 872 s e 1.098 s |
+| execuções que encerram sozinhas | 1 de 7 | 6 de 7, entre 872 s e 1.098 s |
 | `DrawSkinned` | 18 | 12 |
 | dump de frame | nunca capturou | **capturou na 1ª tentativa** |
 
@@ -21,7 +21,7 @@ A primeira bateria existiu para responder se o `+43%/+323%` atribuído ontem à 
 `sqrt.s` era efeito ou dispersão. A resposta foi nenhuma das duas: **o jogo tem desfechos
 discretos.**
 
-Antes (mesmo binário, 7 corridas):
+Antes (mesmo binário, 7 execuções):
 
 | desfecho | `gsPrims` | `gsPixels` | frequência |
 |---|---:|---:|---|
@@ -32,10 +32,10 @@ Antes (mesmo binário, 7 corridas):
 O desfecho A repetiu **idêntico até o último dígito** cinco vezes. Isso não é ruído de
 medição, é ramificação, e é determinístico dentro de cada ramo. E o desfecho B é
 exatamente o número que o handoff atribuiu à correção do `sqrt`, saído do mesmo binário
-das outras seis corridas. A corrida "antes" de ontem caiu em A, a "depois" caiu em B: os
+das outras seis execuções. A execução "antes" de ontem caiu em A, a "depois" caiu em B: os
 dois binários têm os dois desfechos, então **aquele ganho de render não existiu.**
 
-Depois (7 corridas):
+Depois (7 execuções):
 
 | desfecho | `gsPrims` | `gsPixels` | frequência |
 |---|---:|---:|---|
@@ -69,11 +69,11 @@ inferência, não medição. Separar exigiria um binário por mudança.
 - **O não-determinismo não acabou.** O desfecho A ainda apareceu uma vez em sete. O que
   escolhe o ramo continua desconhecido, e enquanto continuar, toda comparação A/B do
   projeto é sorteio. Com contadores bit a bit idênticos dentro de cada ramo, isso é
-  bissectável: comparar o trace de uma corrida A com o de uma B e achar o primeiro ponto
+  bissectável: comparar o trace de uma execução A com o de uma B e achar o primeiro ponto
   de divergência.
 - **`DrawSkinned` caiu de 18 para 12.** Sem explicação. Mais primitivas e menos chamadas
   de modelo com esqueleto ao mesmo tempo.
-- **As corridas encerram sozinhas** em 872–1.098 s, em vez de bater o timeout de 1.800 s.
+- **As execuções encerram sozinhas** em 872–1.098 s, em vez de bater o timeout de 1.800 s.
   Encerrar não é o mesmo que terminar bem; não foi investigado o que causa a saída.
 - **O frame capturado não é uma cena reconhecível.** É o primeiro dump não-preto do
   projeto: um facho amarelo/branco em diagonal com um estouro magenta, sobre um fundo

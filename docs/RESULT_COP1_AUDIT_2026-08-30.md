@@ -150,7 +150,7 @@ não se toma de passagem.
 - Auditoria: fechada, item 1 do handoff resolvido por evidência.
 - Instrumentação de phase timing: commitada (`c6891e9`), já estava dentro do binário que
   a bateria mede.
-- Bateria de 7 corridas de 1800 s em andamento desde 17:29 →
-  `work/exports/battery_day20260830.md`, reescrito a cada corrida.
+- Bateria de 7 execuções de 1800 s em andamento desde 17:29 →
+  `work/exports/battery_day20260830.md`, reescrito a cada execução.
 - Correção estreita da FPU + `RSQRT.S` + acumulador: `7aa06d1`, propagadas ao corpus, a
   recompilar durante a noite.

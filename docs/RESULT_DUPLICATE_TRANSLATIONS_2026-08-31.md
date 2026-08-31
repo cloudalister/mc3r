@@ -47,17 +47,17 @@ Certo:
 - **Custo de binário.** Um `mc3_partial.exe` de 278 MB carrega ~1 MB de código do jogo
   traduzido em dobro, mais o inchaço de código nativo correspondente.
 
-**Medido depois, com sondas nas duas cópias (3 corridas boas, 2 ruins):** as duas
-executam, na mesma corrida.
+**Medido depois, com sondas nas duas cópias (3 execuções boas, 2 ruins):** as duas
+executam, na mesma execução.
 
-| corrida | entradas em `a` (`sub_0033A710`) | entradas em `b` (`FUN_0033a838`) |
+| execução | entradas em `a` (`sub_0033A710`) | entradas em `b` (`FUN_0033a838`) |
 |---|---:|---:|
 | boa 1 | 2 | 4 |
 | boa 2 | 1 | 4 |
 | boa 3 | 1 | 2 |
 
 Nenhuma das duas é cópia morta. E a divisão de trabalho entre elas não é simétrica: em
-todas as três corridas boas, só a cópia `a` alcança o ponto de junção e faz a chamada
+todas as três execuções boas, só a cópia `a` alcança o ponto de junção e faz a chamada
 (`juncao a=1, b=0`; `chamada a=1, b=0`), enquanto a `b` é entrada mais vezes e nunca
 chega lá. As duas atendem endereços de entrada diferentes do mesmo corpo de código.
 
@@ -80,9 +80,9 @@ O que se sabe até agora, e sobreviveu a verificação:
    e quadros continuam — porém `mc3-menu-change` nunca dispara, e nada que dependa dele
    acontece: nem desenho de modelo, nem DMA VIF0, nem saída.
 2. **No desfecho ruim a função não é entrada em nenhuma das duas cópias.** Zero entradas
-   em `a` e em `b`, nas 2 corridas ruins. No bom, entra nas duas, nas 3 corridas boas.
+   em `a` e em `b`, nas 2 execuções ruins. No bom, entra nas duas, nas 3 execuções boas.
 3. **Os três portões nunca chegam a ser avaliados no desfecho ruim**, então nenhum deles
-   é a causa. E quando são avaliados, passam: `fieldE0=41` nas três corridas boas, contra
+   é a causa. E quando são avaliados, passam: `fieldE0=41` nas três execuções boas, contra
    a condição `!= 1`.
 
 Ou seja, o portão do `mc3-menu-change` é consequência, não causa. A divergência está
@@ -93,7 +93,7 @@ documento afirmativo.
 Detalhe de método que custou caro: instrumentar uma instrução não garante observá-la. A
 função é retomada pelo despacho no meio do corpo — PCs de retomada observados incluem
 `0x33a838`, `0x33a710`, `0x33a928`, `0x33ace4` e `0x33acf0`. Sondas em `0x33acac` ficaram
-mudas mesmo em corridas que comprovadamente executam a chamada quatro instruções depois,
+mudas mesmo em execuções que comprovadamente executam a chamada quatro instruções depois,
 porque o guest reentrava em `label_33accc`, entre as duas.
 
 Descartado no caminho, e registrado para não voltar: o livelock em `FUN_0054cb58` não é o

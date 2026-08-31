@@ -1,5 +1,26 @@
 # RESULT — a bifurcação dos dois desfechos, localizada em uma chamada — 2026-08-31
 
+> **Nomes reais** (coluna `alpha_name` do `retail_symbol_port.csv`, quarta coluna — a
+> segunda é só o `FUN_` do Ghidra):
+>
+> | endereço | nome |
+> |---|---|
+> | `0x320B38` | `mcFlash::Update(bool, bool, float)` |
+> | `0x320C60` | `mcFlash::UpdateLoading(bool)` |
+> | `0x42E8A0` | `datPaging::EndStream(datStreamerInfo&, bool)` |
+> | `0x430C90` | `datRscBuilder::EndStream(datStreamerInfo&, bool)` |
+> | `0x4323E8` | `datStreamer::Close(unsigned int)` |
+> | `0x398C60` | `ipcSleep(unsigned int)` |
+> | `0x4320E0` | `datStreamer::Read(unsigned, void*, unsigned, unsigned, ipcSemaTag*)` |
+> | `0x4225D8` | `uiMaster::Update(void)` |
+> | `0x33A710` | `mcMenuShell::AnyListsActive(bool)` |
+> | `0x339278` | `mcMenuShell::ChangeState(MenuStates)` |
+> | `0x259D60` | `mcLight::GetColor(const Vector3&, Vector3&)` |
+>
+> Em português: **o jogo trava na tela de carregamento**, esperando um recurso que nunca
+> termina de chegar, e por isso a troca para o menu nunca acontece.
+
+
 ## Resultado
 
 **Os dois desfechos se separam numa única chamada: `jal func_320B38` em `0x323024`.**
@@ -43,7 +64,7 @@ O PC do guest fica parado ali porque a thread está presa mais abaixo.
 
 ## O que sobra da fase, no desfecho ruim
 
-Só o blend de câmera. Chamadores distintos de `powf`, mesma duração de corrida:
+Só o blend de câmera. Chamadores distintos de `powf`, mesma duração de execução:
 
 | origem | bom | ruim |
 |---|---:|---:|
@@ -62,7 +83,7 @@ alvos variados (`0x420f38`, `0x33a838`, `0x33feb0`, `0x34ad68`…), dispara **ze
 ## Como foi encontrado
 
 Subindo a cadeia de chamadas pelo `$ra`, um degrau por vez, cada degrau custando uma
-batelada de corridas:
+batelada de execuções:
 
 ```
 func_339278 (mc3-menu-change)
@@ -93,8 +114,8 @@ O teto se esgotava antes da chamada que interessa. Levantado para 4000.
 Três, e vale registrar todas, porque cada uma parecia boa:
 
 1. **Livelock em `FUN_0054cb58`.** Duas threads girando em caminhada de lista encadeada.
-   Instrumentado com deteccão de ciclo: em quatro corridas do desfecho ruim a sonda não
-   disparou uma vez. O laço nem é alcançado. Vinha de uma única corrida de 1800 s.
+   Instrumentado com deteccão de ciclo: em quatro execuções do desfecho ruim a sonda não
+   disparou uma vez. O laço nem é alcançado. Vinha de uma única execução de 1800 s.
 2. **O blend de câmera não converge.** Roda igual nos dois desfechos, ciclando `s4` de 1 a
    4 com o ratio decaindo. A diferença é só que no ruim ele é a única coisa acontecendo.
 3. **O portão do `mc3-menu-change`.** Três condições (`estado==3` ou `campo4==7`, depois
@@ -113,7 +134,7 @@ Duas armadilhas custaram caro nesta madrugada, as duas específicas de recompila
 retomada por PC:
 
 - **Instrumentar uma instrução não garante observá-la.** A função é retomada pelo
-  despacho no meio do corpo. Sondas em `0x33acac` ficaram mudas em corridas que
+  despacho no meio do corpo. Sondas em `0x33acac` ficaram mudas em execuções que
   comprovadamente executam a chamada quatro instruções depois, porque o guest reentrava
   em `label_33accc`, entre as duas. Sonda confiável é em entrada de função ou em ponto de
   junção.
