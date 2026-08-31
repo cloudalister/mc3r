@@ -109,3 +109,47 @@ grep -c 'busy=0x00000002' run.stderr
 Com os tetos levantados, uma bateria com o mesmo protocolo mostra, na janela do segundo
 pedido, quem sinaliza o quê e quem fica bloqueado em qual sid — que é exatamente o dado que
 faltava para separar "worker não é escalonado" de "worker roda e não conclui".
+
+## 9. Inventário completo dos tetos — a auditoria que o handoff pediu
+
+Varredura dos 77 sítios de emissão `boot-trace:` em `PS2Recomp/ps2xRuntime/src`, cruzada com
+a contagem real em `catch_xfer_r2.log.stderr` (ramo ruim, dequeue nº 2 na linha 20.722 de
+20.877). O cruzamento importa: só o código dá falso positivo, porque guarda com escape
+(`|| changed`, `|| (n % 512) == 0`) não é teto rígido — `sceSifSetDma` tem `< 128u` no fonte e
+emitiu 1.059 vezes, `present-upload` tem `< 8u` e emitiu 74.
+
+**Dezesseis sondas atingiram o teto e estavam mudas na janela do segundo pedido:**
+
+| sonda | teto | última emissão | linhas de cegueira |
+|---|---:|---:|---:|
+| `CreateSema` | 128 | 2.726 | 17.996 |
+| `ee-timer2` | 128 | 3.510 | 17.212 |
+| `vblank-tick` | 512 | 4.221 | 16.501 |
+| `vif1-direct` | 128 | 6.319 | 14.403 |
+| `vu1-transform` | 192 | 7.349 | 13.373 |
+| `vu1-branch` | 256 | 8.753 | 11.969 |
+| `vif1-packet-write` | 256 | 9.649 | 11.073 |
+| `vu1-packet-write` | 256 | 10.720 | 10.002 |
+| `vu1-mulq` | 256 | 10.262 | 10.460 |
+| `vu1-vf20-write` | 256 | 11.003 | 9.719 |
+| `vu1-q-write` | 256 | 11.251 | 9.471 |
+| `intc-stat-latch` | 4.096 | 11.230 | 9.492 |
+| `gs-primitive` | 256 | 12.462 | 8.260 |
+| `vu1-xgkick` | 128 | 12.511 | 8.211 |
+| `dmac-start` | 32 | 12.542 | 8.180 |
+| `gs-field-toggle` | 4.096 | 15.264 | 5.458 |
+
+Mais as cinco de semáforo da seção 4, que naquele log ainda estavam em 512/128.
+
+Consequência prática: **toda a instrumentação de gráficos (VU1, VIF1, GS) e de interrupção
+está desligada na janela do segundo pedido de streaming.** Qualquer comparação entre ramos
+feita a partir desses marcadores, nessa fase da execução, está comparando silêncio com
+silêncio. Isso não invalida os contadores agregados de `frame` (`gsPrims`, `gifPk*`), que são
+lidos do estado e não da sonda.
+
+Só os quatro tetos de semáforo foram levantados. Os outros dezesseis ficam registrados aqui e
+devem ser levantados **um subsistema por vez, quando aquele subsistema for a pergunta** — subir
+todos de uma vez multiplica o log e torna a bateria mais lenta sem responder nada.
+
+Reproduzir o inventário: a varredura está descrita acima e é curta o bastante para refazer;
+o cruzamento com log é o que separa teto rígido de guarda com escape.
