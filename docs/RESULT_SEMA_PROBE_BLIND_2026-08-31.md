@@ -153,3 +153,70 @@ todos de uma vez multiplica o log e torna a bateria mais lenta sem responder nad
 
 Reproduzir o inventário: a varredura está descrita acima e é curta o bastante para refazer;
 o cruzamento com log é o que separa teto rígido de guarda com escape.
+
+## 10. Bateria com os tetos levantados — 6 × 420 s, rótulo `semawin`
+
+Primeira medição com as sondas de semáforo enxergando. O que ela estabelece e o que não.
+
+**Os tetos novos funcionam.** `SignalSema` emitiu 19.852 vezes contra as 512 de antes: o teto
+antigo escondia cerca de 8,8× da atividade de sinalização.
+
+**Seis de seis caíram no ramo ruim** (`busy=0x00000002` ausente em todas). Com o binário
+anterior a proporção observada foi 1 bom em 3. Amostras pequenas demais para afirmar que a
+instrumentação deslocou a corrida — 1/3 contra 0/6 não separa nada — mas fica registrado.
+
+**Só uma das seis chegou a ter um segundo dequeue.** As outras cinco terminam com `deq1`/
+`done1` e nada mais. Os 420 s acabam bem em cima do momento em que o segundo pedido sairia da
+fila: as execuções terminam entre os ticks 19.380 e 22.560, e o segundo dequeue, quando
+acontece, cai entre 19.380 e 22.320.
+
+### O controle que faltava: quanto tempo o desfecho bom precisa
+
+Medido em tick de jogo, não em linha de log — densidade de log difere entre execuções e
+comparar linhas seria enganoso.
+
+| execução | ramo | `deq2` | janela após `deq2` | `done2` |
+|---|---|---:|---:|---|
+| `catch_xfer_r1` | bom | tick 19.380 | — | **240 ticks (4,0 s)** |
+| `catch_xfer_r2` | ruim | tick 19.740 | **3.840 ticks (64 s)** | nunca |
+| `stall_semawin_r1` | ruim | tick 22.320 | **60 ticks (1,0 s)** | nunca |
+
+**O desfecho bom conclui o segundo pedido em 4 segundos de jogo.** A `catch_xfer_r2` observou
+64 segundos sem `done` — 16× a folga necessária. A trava do handoff é real e sobrevive ao
+controle.
+
+A `semawin_r1`, ao contrário, **não prova nada sobre conclusão**: um segundo de janela é um
+quarto do que o desfecho bom leva. Toda execução de 420 s está sujeita a isso.
+
+### O worker não está parado
+
+Na `semawin_r1` a thread do worker (tid=5) registrou **10.803 bloqueios de semáforo** ao longo
+da execução, com os sids ciclando pela faixa inteira e sendo realocados — padrão de
+cria-espera-sinaliza-libera por operação. Depois do segundo dequeue ela bloqueia em sete sids
+distintos e crescentes; para bloquear num sid novo, foi acordada do anterior.
+
+Isso enfraquece a hipótese principal do handoff, de que **a thread do worker não estaria sendo
+escalonada** depois do dequeue. Ela é escalonada e faz syscall o tempo todo. O que ela não faz
+é chegar ao `done`.
+
+Ressalva de força: a janela pós-dequeue nessa execução é de 1 segundo e cobre só sete
+bloqueios. O padrão está claro, o volume dentro da janela não.
+
+### Correção de uma atribuição minha
+
+Atribuí a janela curta da `semawin_r1` ao log maior. Os números não sustentam: `semawin_r1`
+chegou ao tick 22.380 em 420 s e `catch_xfer_r2` ao 23.580 no mesmo tempo, 5% de diferença. O
+que varia é **quando** o segundo dequeue ocorre (ticks 19.380, 19.740 e 22.320 nas três), não
+o custo da instrumentação.
+
+### Cobertura das sondas na janela, em `semawin_r1`
+
+| sonda | emitiu | cobre a janela |
+|---|---:|---|
+| `WaitSema:block` | 11.111 | sim, até a última linha |
+| `PollSema` | 949 | sim |
+| `SignalSema` | 19.852 | não, esgotou 3.430 linhas antes |
+| `WaitSema:wake` | 20.000 | não, esgotou |
+
+Por isso os quatro tetos subiram de novo, para 200.000, antes da bateria de 1200 s: em execução
+longa os 20.000 se esgotam a ~40% do log.
