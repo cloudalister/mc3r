@@ -1,10 +1,50 @@
-# RESULT — o que escolhe o desfecho: duas threads girando em lista encadeada — 2026-08-31
+# RESULT — o que escolhe o desfecho — 2026-08-31
 
-## Resultado
+> ## CORREÇÃO (01:30, mesma noite)
+>
+> **A tese central deste documento estava errada e está corrigida abaixo.** Eu li o
+> livelock em `FUN_0054cb58` como *o mecanismo* do desfecho ruim. Não é.
+>
+> Instrumentei o laço de `0x54cc08` com detecção de ciclo e rodei uma caça. Em quatro
+> corridas que caíram no desfecho ruim — contadores travados em 703.599, `mc3-menu-change`
+> ausente, os mesmos PCs de frame — a instrumentação **não disparou uma única vez**, e o
+> `thread-heartbeat` também não apareceu nenhuma vez. O laço nem é alcançado.
+>
+> O livelock que eu descrevi aconteceu numa corrida de 1800 s (`limpa3`). Nas de 550 s,
+> no mesmo desfecho, não acontece. Então é sintoma tardio ou estado à parte, não a causa.
+> Uma amostra virou tese cedo demais.
+>
+> O que sobrevive, e é reprodutível: **a caracterização do desfecho ruim pela ausência de
+> eventos** (a tabela mais abaixo), e o método que a produziu. O resto desta seção fica
+> como registro do que foi descartado.
 
-**O desfecho ruim é um livelock de duas threads em caminhada de lista encadeada**, nas
-funções vizinhas `FUN_0054cb58` e `sub_0054CCE8`. O jogo não fica "mais lento" no desfecho
-ruim: ele nunca troca de menu, nunca desenha modelo, nunca encerra.
+## O que o desfecho ruim é, de fato
+
+Com o jogo **vivo**: `intc-stat-latch` e `gs-field-toggle` a 4.096, `mc3-camblend-ratio`,
+`mc3-mathf-logf`, `powf` e `expf` na casa dos 1.700–2.300, quadros continuam chegando. Não
+é travamento geral.
+
+O que não acontece, nunca, comparando corridas de mesma duração (550 s):
+
+| marcador | ruim | bom |
+|---|---:|---:|
+| `mc3-menu-change` | 0 | 1 |
+| `mc3-rmc-model-draw` / `-drawcpv` | 0 / 0 | 33 / 33 |
+| `dmac-vif0` / `-chain` | 0 / 0 | 7 / 14 |
+| `mc3-42cc80` / `42ca90` / `42aaf8-progress` | 0 | 40 / 39 / 36 |
+
+`mc3-camblend-ratio` e `mc3-mathf-logf` aparecem **na mesma contagem** (1.708 numa das
+corridas), então o blend de câmera é quem chama `logf`. O desfecho ruim é o jogo preso no
+blend de câmera da intro, chamando a mesma matemática indefinidamente, sem nunca cruzar o
+portão que leva ao `mc3-menu-change`.
+
+**A pergunta certa passa a ser: o que libera o `mc3-menu-change`.** Não "por que a lista
+não termina".
+
+## Registro do que foi descartado: o livelock de `FUN_0054cb58`
+
+O texto abaixo descreve o que foi observado em `limpa3` e continua factualmente correto
+para *aquela* corrida. Só não é a explicação do desfecho.
 
 ```
 [boot-trace:thread-heartbeat] id=8 steps=2097152 pc=0x54cc08 ra=0x54d4cc
