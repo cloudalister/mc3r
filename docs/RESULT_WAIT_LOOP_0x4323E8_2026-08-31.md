@@ -60,11 +60,27 @@ Como `busy` transita `1 → 0 → 2` no desfecho bom, o produtor existe e funcio
 Isso é consistente com conclusão por interrupção ou por DMA, que é território de corrida —
 e casa com o não-determinismo ser de escalonamento, não de dado.
 
+## Repetição: separação perfeita em 5 corridas
+
+`busy` alcançar `2` separa os dois desfechos sem exceção:
+
+| corrida | desfecho | valores de `busy` observados | maior `loop` |
+|---|---|---|---:|
+| r1 | ruim | `0`, `1` | 80 |
+| r2 | ruim | `0`, `1` | 15 |
+| r3 | ruim | `0`, `1` | 80 |
+| r4 | bom | `0`, `1`, **`2`** | 32 |
+| r5 | bom | `0`, `1`, **`2`** | 16 |
+
+**5 de 5, sem sobreposição.** E repare que o número de iterações do laço *não* é o
+discriminador — a corrida ruim r2 girou menos (15) que a boa r4 (32). O que separa é
+exclusivamente o `busy` chegar a `2`.
+
+Isso dá um critério barato e binário para qualquer experimento futuro: se `busy=0x2`
+aparece no log, o desfecho é bom.
+
 ## O que ainda não está medido
 
-- **n=1 de cada lado** para os níveis mais profundos da cadeia. A comparação de `4323E8`
-  saiu de uma corrida ruim e uma boa. Os níveis de cima têm mais amostras (2 ruins e 3
-  boas), e todos concordam, mas o fundo precisa de repetição.
 - **Quem escreve em `busy`.** Não rastreado. É o próximo passo, e não é caro: uma sonda
   de escrita no endereço `0x6771f0 + offset do busy` diz quem toca nele e quando.
 - **O que `mask=0x10` e `current=2` significam.** Há aritmética de bitmask no laço que não
