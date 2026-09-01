@@ -385,3 +385,51 @@ Para fechar, falta uma execução travada capturada com os tetos em 200.000. A `
 (1200 s, tetos 200.000) deu bom 3 de 3 e não pegou trava. Com ~1 trava a cada 3 execuções
 conclusivas, uma bateria de 1200 s com os tetos altos deve capturar uma. Detector barato para
 saber se pegou, sem esperar o fim: `gsPrims` final igual a **703599**.
+
+## 14. O laço do worker, identificado: `DelayThread` em poll rápido
+
+Refinamento da seção 13, do mesmo log (`semactl_r1`), sem bateria nova.
+
+**Os 8.426 bloqueios da tid=5 vêm todos do mesmo sítio: `ra=0x5476b0`, que é
+`DelayThread +0xA8`.** 19.415 de 19.421 bloqueios registrados na execução inteira têm esse
+`ra` (os seis restantes são linhas truncadas pela intercalação). O runtime implementa
+`DelayThread` com um semáforo temporário, e é por isso que o `sid` **incrementa exatamente 1**
+em 93% das transições consecutivas, dando a volta no espaço de 256: cada iteração cria um
+semáforo novo.
+
+Cadência medida: **mediana de 61 bloqueios por tick**, em 143 ticks distintos. Não é um sleep
+longo — é poll com atraso curto, ~61 iterações por quadro.
+
+E não é I/O: na mesma janela houve **24** `mc3-cdvd-rpc` contra 8.473 bloqueios, cerca de 350
+bloqueios por operação de CD. O worker não está esperando o disco; está girando.
+
+### A cadeia causal, fechada
+
+O marcador do lado do `Close`, com a linha inteira:
+
+```
+mc3-4323e8-progress] stage=0x00432458 loop=16 block=0x00000001 index_v0=0x00000000
+  poolBase=0x006771e0 poolEntry=0x006771f0 busy=0x00000001 current=0x00000002
+  mask=0x00000010 flag=1 ra=0x00432458 sp=0x0019fc70
+```
+
+`busy=0x00000001` na entrada `0x006771f0` e **nunca zera**. O `sp=0x0019fc70` situa esse laço
+na pilha da thread principal, não na do worker — são dois laços distintos, em duas threads:
+
+1. **Worker (tid=5):** poll com `DelayThread`, ~61 vezes por quadro, sem convergir.
+2. **Thread principal:** `datStreamer::Close` polando `busy` na entrada do pool, que fica em 1.
+
+A ordem causal é essa: o worker não completa o segundo pedido, então `busy` não zera, então o
+`Close` não retorna. O laço da thread principal é **consequência**, não causa — e foi o que se
+vinha investigando como se fosse a causa.
+
+### O que ainda não se sabe
+
+**O que o worker está polando.** `WaitSema:block` registra `pc` e `ra` do kernel
+(`WaitSema`, `DelayThread`), não o quadro do jogo que chamou. Para isso é preciso sonda dentro
+do `datStreamer::Worker` (`0x431E00`–`0x4320E0`) nas arestas de retorno do laço — as duas cópias,
+pela armadilha nº 4 do handoff.
+
+Correção de leitura minha na seção 13: descrevi 234 sids "criados e destruídos" como se fossem
+do trabalho do worker. São semáforos temporários de `DelayThread`. O número de sids distintos
+não mede trabalho nenhum; mede quantas vezes o worker dormiu.
