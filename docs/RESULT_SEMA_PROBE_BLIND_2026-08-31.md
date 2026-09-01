@@ -683,3 +683,79 @@ seta, então o caminho `DetSchedMarkReadyWaitingOnSema` não roda.
 Sonda no `WaitSema` registrando a saída do `cv.wait` **antes** do fecho do
 `GuestExecutionReleaseScope`, e o valor de `sema->waiters` no momento do sinal. Isso separa os
 dois candidatos em uma bateria.
+
+## 19. A trava pós-menu é o token global de execução, não o semáforo
+
+Bateria `cvscope`, 4 × 1200 s, com três marcadores novos: `WaitSema:cvout` emitido **dentro**
+do `GuestExecutionReleaseScope`, logo após o `cv.wait` retornar; `WaitSema:scopeout` emitido
+**depois** do escopo fechar; e `waiters` lido sob o mutex no `SignalSema`.
+
+A r1 travou (`gsPrims=744333` congelado por 618 s). Os últimos eventos da thread principal:
+
+```
+WaitSema:block]  tid=1 sid=47 count=0 waiters=0 ra=0x398b28   <- ipcWaitSema
+WaitSema:cvout]  tid=1 sid=47 count=1 waiters=1               <- ACORDOU
+(nenhum WaitSema:scopeout para a tid=1, ate o fim do log)
+```
+
+**O lado do semáforo funcionou.** O sinal chegou, `count=1`, o predicado foi satisfeito, e o
+`cv.wait` retornou. A thread morre **entre o `cvout` e o `scopeout`** — isto é, dentro de
+`~GuestExecutionReleaseScope()`, que chama `PS2Runtime::reacquireGuestExecution`.
+
+Esse destrutor faz, por `depth` vezes:
+
+```cpp
+m_guestExecutionWaiters.fetch_add(1u, ...);
+m_guestExecutionMutex.lock();     // <-- aqui
+m_guestExecutionWaiters.fetch_sub(1u, ...);
+```
+
+`m_guestExecutionMutex` é um mutex **global** que serializa a execução do convidado, no estilo
+de um GIL. A thread principal fica presa nesse `lock()`.
+
+### Não é fome de lock
+
+A hipótese natural seria starvation: outra thread pegando e soltando o mutex em laço apertado.
+Os dados dizem que não. Depois do `cvout` da tid=1, nas 634 linhas restantes:
+
+| marcador | n |
+|---|---:|
+| `frame` | 619 |
+| `SignalSema` | 4 |
+| `WaitSema:wake` | 4 |
+| `WaitSema:cvout` / `:scopeout` / `:block` | 2 cada |
+
+**Todas as threads do convidado emudecem.** O que continua emitindo é o tracer de quadro, que
+roda do lado do host. As tid=5 e tid=8 completam um ciclo `cvout`→`scopeout` cada — ou seja,
+reobtêm o token — e depois somem.
+
+Ou seja: alguém reobteve o token de execução e não o soltou mais. Não é disputa, é retenção.
+
+### O que está estabelecido
+
+- A thread principal acorda do semáforo corretamente e trava reobtendo o token global.
+- Depois disso nenhuma thread do convidado progride; só o host segue.
+- A `pc` da linha de frame fica em `0x1a2760` com `activeThreads=7` até o fim.
+
+### O que não está
+
+**Quem** segura o token e **por quê**. As candidatas são as tid=5 e tid=8, que foram as últimas
+a reobtê-lo. Se uma delas entrou em laço do convidado que não faz syscall, ela segura o mutex
+indefinidamente. Existe uma contramedida — `shouldPreemptGuestExecution()` solta o token a cada
+64–100 arestas de retorno — então o caso interessante é um laço em que essa checagem não é
+alcançada.
+
+### Correções e ressalvas
+
+- A leitura de "laço em `mcGame::Execute`" (seção 16) e a hipótese do COP0 Count (seção 17)
+  estão ambas descartadas. O `pc` congelado em `0x1a2760` é a thread **parada**, e o ponto onde
+  ela parou é o retorno do `jal ageEndDraw` — mas a parada em si não é no jogo, é no runtime.
+- O `SignalSema` agora registra `waiters`. Nas linhas que inspecionei ele aparece com
+  `waiters=0`, mas eram sinais anteriores ao bloqueio da tid=1 — não confundir com o sinal que
+  de fato a acordou, cujo efeito se lê no `cvout` (`count=1 waiters=1`).
+
+### Próximo passo
+
+Sonda em `reacquireGuestExecution`: registrar quando a espera pelo `lock()` passa de um limiar,
+com o tid do esperador, e registrar em `releaseGuestExecution`/aquisição qual tid detém o token.
+Isso nomeia o retentor em uma bateria.
