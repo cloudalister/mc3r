@@ -964,3 +964,58 @@ linha de sucesso, não filtrar por uma palavra que aparece nos dois casos.
 
 `ownerpc2`, 8 × 1200 s, com o registro nos dois laços. A linha `guestexec-wait` deve agora
 trazer `ownerPc` real, nomeando a função em que a retentora entra e não sai.
+
+## 23. Correção de método: a assinatura sozinha não valia; a duração vale
+
+Bateria `holderpc`, 6 × 1200 s com a sonda corrigida: **nenhuma trava** (cinco sadias e uma
+com 62 s de plano, no limiar). Mas ela expôs um vício no meu critério.
+
+A assinatura que usei na seção 21 — thread com `guestexec-wait` e sem `got` posterior —
+**aparece também em execução sadia**. É esperado: ao matar o processo no fim do tempo, quem
+estiver esperando o token naquele instante fica com um `wait` sem par. Nas sadias `r1`, `r2`,
+`r4` e `r5` desta bateria ela aparece, e na única com plano alto não aparece.
+
+Refiz a verificação nas sadias do lote `holder` e a assinatura está lá também. **A conclusão
+da seção 21 foi tirada de um artefato de fim de execução.**
+
+### O que separa de verdade
+
+Não a presença da espera, e sim **quanto tempo ela dura**. Numa trava a thread fica esperando
+o resto da execução; numa sadia a espera é do último instante.
+
+| execução | `gsPrims` plano | espera do tid=1 | dono |
+|---|---:|---:|---|
+| `holder_r1` | 218 s | **219 s** | tid=5 |
+| `holder_r14` | 105 s | **106 s** | tid=5 |
+| `holder_r4` | 287 s | **288 s** | tid=8 |
+| sadias (7 de 14) | 0–6 s | 0 s | — |
+
+**As duas medidas casam com 1 segundo de erro, em três execuções independentes.** São grandezas
+obtidas por caminhos diferentes — uma do contador de primitivas, outra do relógio de espera do
+mutex — e coincidirem nessa precisão três vezes não é acaso. A conclusão sobrevive, com um
+critério melhor do que aquele com que foi tirada.
+
+Ressalvas honestas: a `holder_r2` travou 579 s e **não** exibe a espera longa, e a sadia
+`holder_r9` exibe 476 s de espera com dono `-1`. Nos dois casos a explicação provável é perda
+de linha por intercalação — o log é escrito sem trava e linhas somem. O critério tem falso
+negativo e falso positivo; o que o sustenta é a coincidência de três medições, não cada caso
+isolado.
+
+### Terceira camada da mesma armadilha
+
+Foi preciso ainda um filtro de threads reais. Linha corrompida cria `tid` fantasma
+(`tid=541`, `685`, `895`) com uma única espera e nenhum `got`, que o critério de duração lê
+como espera eterna. Só entram na conta threads que aparecem em pelo menos 20 linhas `got` bem
+formadas.
+
+Esta é a terceira vez nesta investigação que a intercalação do log estraga uma análise —
+primeiro fundindo campos, depois desequilibrando contagens, agora inventando threads. Qualquer
+análise nova deste log precisa, desde o início: casar linha inteira ancorada, decidir por
+ordem/duração e não por contagem, e filtrar tids por frequência.
+
+### O que ainda falta
+
+Uma trava capturada **com o `ownerPc` funcionando**. O lote `holder` tinha travas mas ainda não
+tinha a sonda; o `ownerpc` tinha a sonda pela metade (só o laço principal); o `holderpc` tem a
+sonda completa e validada — `netManagerThread::MainLoop`, `Stream::Open`, `zipHandle::Read`
+saem com nome — mas não travou.
