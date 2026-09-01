@@ -338,3 +338,50 @@ corroboração forte mas indireta.
 
 Os tetos voltaram para 200.000 depois do controle, já que ele mostrou que não alteram o
 desfecho e a observabilidade maior é útil. Lib reconstruída, exe relinkado.
+
+## 13. O que o worker faz durante a trava — livelock, não deadlock
+
+A `semactl_r1` tem `WaitSema:block` cobrindo parte da janela. Isso responde a pergunta central
+do handoff anterior.
+
+Bloqueios de semáforo entre `deq2` e `done2`:
+
+| execução | desfecho | bloqueios da tid=5 | sids distintos |
+|---|---|---:|---:|
+| `semactl_r2` | bom | **9** | 9 |
+| `semactl_r3` | bom | **18** | 18 |
+| `semactl_r1` | travou | **8.426** | 234 |
+
+**O desfecho bom serve o segundo pedido em 9 a 18 operações bloqueantes.** O travado faz 8.426
+e não chega ao fim — 500 a 900× mais, ciclando por 234 sids que são criados e destruídos.
+
+Isso é **livelock, não deadlock**: a thread do worker não está presa num semáforo nem deixando
+de ser escalonada. Ela executa milhares de ciclos espera/acorda e não converge. A hipótese
+principal do handoff anterior — "a thread do worker não está sendo escalonada" — está
+descartada.
+
+Taxa medida, por faixa de tick após o `deq2`: 1.240, 1.460, 1.398, 1.455, 1.446, 1.377
+bloqueios por faixa de 1.420 ticks. **Constante**, cerca de um por tick. Não é progresso lento
+que fosse terminar com mais tempo; é giro estável.
+
+### Quase-erro que vale registrar
+
+Os bloqueios da tid=5 cessam no tick 33.360 enquanto a execução segue até 67.140, e a leitura
+imediata seria "o worker gira 142 s e depois para de vez". **É a sonda cegando, não o worker
+parando.** A última emissão da tid=5 é a de número 19.936 — a última do log inteiro — contra o
+teto de 20.000. Os 563 s seguintes não foram observados.
+
+Detalhe de contagem que confunde: `grep -c` devolve 20.000 e a varredura por ocorrência devolve
+19.936. A diferença são emissões truncadas pela intercalação de threads, que o `grep` conta como
+linha e o regex estrito descarta. Para julgar teto, o número que vale é o do `grep`.
+
+### O que fica estabelecido e o que não
+
+- **Estabelecido:** por 8.520 ticks (142 s) após o `deq2`, o worker gira a taxa constante sem
+  convergir, e `done2` nunca sai até o tick 67.140.
+- **Não observado:** o que ele faz nos 563 s seguintes.
+
+Para fechar, falta uma execução travada capturada com os tetos em 200.000. A `semalong`
+(1200 s, tetos 200.000) deu bom 3 de 3 e não pegou trava. Com ~1 trava a cada 3 execuções
+conclusivas, uma bateria de 1200 s com os tetos altos deve capturar uma. Detector barato para
+saber se pegou, sem esperar o fim: `gsPrims` final igual a **703599**.
