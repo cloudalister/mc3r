@@ -848,3 +848,75 @@ mais parecidos, não menos, mas a explicação deixa de ser "esta função não 
 
 A estatística dos 28% continua de pé como fato do corpus, e continua sendo o risco estrutural
 que ela é. Só não aponta para estas duas funções.
+
+## 21. O retentor tem nome: a previsão confirma
+
+Lote `holder`, 14 × 1200 s. **Quatro travas, todas pós-menu** (`deq/done` 2/2 em todas as 14 —
+nenhuma trava de streaming desta vez). Taxa de 4 em 14, coerente com o histórico.
+
+Nas quatro, a assinatura prevista aparece: thread com `guestexec-wait` e sem `got` posterior, e
+a linha nomeia o dono.
+
+| execução | parada no lock | dono |
+|---|---|---|
+| r1 | tid=1 | **tid=5** |
+| r2 | tid=5 | **tid=8** |
+| r4 | tid=1 e tid=5 | **tid=8** nas duas |
+| r14 | tid=1 → dono 5; tid=5 → dono 8 | cadeia 1→5→8 |
+
+A r14 mostra a cadeia inteira: a thread principal espera a 5, que espera a 8. **A retenção é
+sempre da tid=5 ou da tid=8**, e a previsão registrada em `8fda69b` se cumpre.
+
+### O que a retentora estava fazendo
+
+Últimos eventos bem formados da tid=8 na r2, em ordem:
+
+```
+guestexec-wait]  tid=8 owner=5 ...      -> pede o token
+guestexec-got]   tid=8                  -> obtem
+WaitSema:scopeout] tid=8 sid=35 count=1
+WaitSema:wake]   tid=8 sid=35 ra=0x5476b0   (DelayThread)
+WaitSema:wake]   tid=8 sid=6  ra=0x398b28   (ipcWaitSema)
+SignalSema]      tid=8 sid=6 count=0->1 ra=0x398b50
+(nada mais)
+```
+
+Ela **pega o token, faz trabalho de semáforo, sinaliza, entra em código do convidado e não
+volta**. O token só é solto quando a função despachada retorna ou quando a thread faz syscall
+bloqueante — nenhuma das duas acontece.
+
+### O que foi descartado no caminho
+
+- **Não é primitiva bloqueante esquecida.** `WaitSema` (`Sync.cpp:422`) e `WaitEventFlag`
+  (`Sync.cpp:808`) têm `GuestExecutionReleaseScope`; a espera de vsync
+  (`Interrupt.cpp:501`) também. As bloqueantes soltam o token corretamente.
+- **Não é cessão que não cede.** O gerador emite `return;` dentro do
+  `if (shouldPreemptGuestExecution())`, devolvendo ao laço de despacho, que envolve cada
+  função em `GuestExecutionScope` — adquire antes de `fn(...)` e solta ao sair do escopo.
+  O mecanismo está correto.
+
+Sobra: a tid=8 está dentro de uma função do convidado que não retorna e não faz syscall.
+
+### Armadilha de análise que quase estragou o resultado
+
+A primeira leitura deu `tid=5114`, `tid=25265`, `tid=54124965` e `owner=-1` na maioria — e
+`owner=-1` era justamente o ramo que falsificaria a hipótese. **Era corrupção de parser**: o
+trace é escrito por várias threads sem trava e as linhas se intercalam no meio umas das outras,
+fundindo campos (`tid=5` mais o `126` de outra linha vira `tid=5126`).
+
+Duas correções foram necessárias, não uma:
+
+1. **Casar linha inteira, ancorada em início e fim.** Fragmento intercalado não casa e sai da
+   amostra. É a mesma disciplina do `find_divergence.py`.
+2. **Decidir por ordem, não por contagem.** Com linhas descartadas, `wait_n > got_n` deixa de
+   valer — sobra comparar a linha do último `wait` com a do último `got`. Contando, a r2
+   aparecia como "nenhuma thread parada"; por ordem, ela mostra a tid=5 parada com dono 8.
+
+O `owner=-1` que restou (r14, tid=15) é da linha 67.390 de 134 mil — evento antigo, não o
+deadlock final.
+
+### Próximo passo, já em execução
+
+Sonda `ownerPc`: o laço de despacho grava o PC de cada função que executa, por thread, e a
+linha `guestexec-wait` passa a carregar **onde o dono está**, não só quem é. Bateria `ownerpc`,
+7 × 1200 s, rodando.
