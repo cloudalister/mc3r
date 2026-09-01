@@ -920,3 +920,47 @@ deadlock final.
 Sonda `ownerPc`: o laço de despacho grava o PC de cada função que executa, por thread, e a
 linha `guestexec-wait` passa a carregar **onde o dono está**, não só quem é. Bateria `ownerpc`,
 7 × 1200 s, rodando.
+
+## 22. As threads criadas rodam por outro laço de despacho
+
+Bateria `ownerpc`, 7 × 1200 s: duas travas (692 s e 354 s de `gsPrims` plano). A assinatura da
+retenção reaparece — tid=1 e tid=5 paradas no lock, dono tid=8 — mas o campo novo saiu
+**`ownerPc=0x000000`** em todas, e `selfPc` só funcionou para a tid=1.
+
+Motivo: **há dois laços de despacho.** O de `ps2_runtime.cpp:2502`, que eu instrumentei, e o de
+`Thread.cpp:481`, por onde correm as threads criadas — exatamente as tid=5 e tid=8, que são as
+retentoras. A sonda estava no laço errado para o caso de interesse.
+
+Os dois usam `GuestExecutionScope` corretamente, cada um envolvendo a chamada da função
+recompilada. Não é aí o defeito.
+
+### O que o laço das threads já dizia, de graça
+
+`Thread.cpp` tem um detector de spin embutido: conta despachos consecutivos no mesmo `pc` e
+emite `[StartThread] id=N spinning at pc=0x...`. **Ele não dispara nenhuma vez nas execuções
+travadas.**
+
+Isso é informativo: a retentora **não está girando sobre despachos**. Se estivesse, o laço
+iteraria e o detector veria o mesmo `pc` repetido. Ela está presa **dentro de uma única chamada
+de função recompilada que nunca retorna** — e é por isso que o token nunca é solto, já que o
+escopo só fecha quando `step(...)` retorna.
+
+### Correção instalada
+
+O registro do `pc` despachado agora acontece nos dois laços. Detalhes que custaram tempo:
+
+1. A função de registro estava no **namespace anônimo** de `ps2_runtime.cpp`, o que lhe dá
+   linkage interna e a torna invisível para `Thread.cpp`. Movida para escopo global.
+2. A declaração `extern` estava em escopo de bloco **dentro de um namespace**, o que declara
+   `ps2_syscalls::Ps2RecordDispatchPc` — símbolo que não existe. Movida para escopo de arquivo.
+3. Nada disso passa por header: pôr a declaração em `ps2_runtime.h` obrigaria a recompilar os
+   15.831 arquivos do corpus por causa de uma função de diagnóstico.
+
+Um erro meu de processo: o `grep` que eu usava para checar o link casava com a palavra `ERROR`,
+então a cadeia seguia e o commit acontecia **com o exe não linkado**. O padrão certo é casar a
+linha de sucesso, não filtrar por uma palavra que aparece nos dois casos.
+
+### Bateria em curso
+
+`ownerpc2`, 8 × 1200 s, com o registro nos dois laços. A linha `guestexec-wait` deve agora
+trazer `ownerPc` real, nomeando a função em que a retentora entra e não sai.
