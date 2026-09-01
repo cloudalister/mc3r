@@ -823,3 +823,28 @@ Previsão registrada: nas travadas haverá pelo menos uma thread com `wait` sem 
 livre) a hipótese cai e o problema é no próprio mutex, não em retenção.
 
 Análise pronta em `work/scratch/analyze_holder.py`.
+
+### Correção à seção 20: o gerador está certo, e a função não tem laço
+
+Contei os branches para trás **reais**, descartando os `case 0x...: goto label_...` do
+despachante de retomada no topo de cada função — que meu primeiro teste contou como fluxo e
+não são:
+
+| função | branches para trás reais | cessões |
+|---|---:|---:|
+| `mcGame::Execute(void)` | 4 | 4 |
+| `datStreamer::Worker(void *)` | 3 | 3 |
+| `FUN_00322fd8` | 0 | 0 |
+| `sub_00322ED0` | 0 | 0 |
+
+**Batem exatamente.** O gerador aplica a regra corretamente; o `FUN_00322fd8` não recebe cessão
+porque não tem laço nenhum, não porque foi esquecido. A insinuação da seção 20 de que a
+ausência ali era suspeita está errada.
+
+O que isso muda: o `pc` parado em `0x322ffc` na trava de streaming **não é uma thread girando
+sem ceder** — é uma thread parada, igual à `0x1a2760` da trava pós-menu. Os dois quadros ficam
+mais parecidos, não menos, mas a explicação deixa de ser "esta função não cede" e volta a ser
+"alguém retém o token", com o retentor ainda sem nome.
+
+A estatística dos 28% continua de pé como fato do corpus, e continua sendo o risco estrutural
+que ela é. Só não aponta para estas duas funções.
