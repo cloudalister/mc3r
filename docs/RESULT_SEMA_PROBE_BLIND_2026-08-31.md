@@ -759,3 +759,67 @@ alcançada.
 Sonda em `reacquireGuestExecution`: registrar quando a espera pelo `lock()` passa de um limiar,
 com o tid do esperador, e registrar em `releaseGuestExecution`/aquisição qual tid detém o token.
 Isso nomeia o retentor em uma bateria.
+
+## 20. A preempção só existe em branch para trás dentro da função — 72% do corpus não tem nenhuma
+
+Investigação estática enquanto o lote roda.
+
+O gerador emite a cessão do token em uma condição única
+(`code_generator.cpp`, `emitInternalTarget`):
+
+```cpp
+if (target <= sourcePc && !isCallLikeEdge)
+{
+    ss << "if (runtime->shouldPreemptGuestExecution()) {";
+    ...
+}
+```
+
+Isto é: **branch para trás, interno à função, que não seja chamada.** Função sem branch para
+trás não recebe cessão nenhuma.
+
+Contagem no corpus compilado: **4.446 de 15.832 arquivos (28%) têm a checagem.** Os outros
+11.386 nunca soltam o token por conta própria — dependem de fazer syscall para cedê-lo.
+
+Nas funções centrais desta investigação:
+
+| função | checagens |
+|---|---:|
+| `datStreamer::Worker(void *)` | 3 |
+| `mcGame::Execute(void)` | 4 |
+| `datStreamer::Close(unsigned int)` | 1 |
+| **`FUN_00322fd8`** | **0** |
+| **`sub_00322ED0`** (chamador dele) | **0** |
+
+`FUN_00322fd8` é exatamente onde o `pc` da **trava de streaming** fica parado — `0x322ffc`,
+em 60 de 60 quadros amostrados na `semactl_r1`. Ele e o chamador somam 32 `goto` e nenhum
+branch para trás que o gerador reconheça, logo nenhuma cessão.
+
+### Hipótese unificadora, ainda não testada
+
+Se uma thread do convidado entra em laço cujo caminho não passa por nenhum branch para trás
+intra-função, ela **retém o mutex global de execução indefinidamente** e as demais param — que
+é exatamente o quadro medido na seção 19: todas as threads do convidado emudecem e só o tracer
+do host segue.
+
+Isso explicaria **as duas travas com um mecanismo só**, e não como dois defeitos separados:
+
+- **pós-menu:** a thread principal acorda do semáforo e trava tomando o token (medido).
+- **streaming:** o `pc` parado em `FUN_00322fd8`, função sem cessão, e o worker sem conseguir
+  rodar para concluir o pedido — o que deixaria o `busy` em 1 por consequência, não por causa.
+
+Ressalva séria: um laço que atravessa chamadas normalmente tem branch para trás em **alguma**
+função da cadeia. A ausência nessas duas não prova que a cadeia inteira não cede. E as duas
+travas podem continuar sendo coisas distintas.
+
+### O que o lote decide
+
+Bateria `holder`, 14 × 1200 s (~4h40), com `guestexec-wait` emitido **antes** do `lock()`,
+carregando o dono naquele instante. A assinatura é `wait` sem `got`, e a linha nomeia o
+retentor. Sondas confirmadas emitindo na primeira execução, com balanço casado.
+
+Previsão registrada: nas travadas haverá pelo menos uma thread com `wait` sem `got`, e o
+`owner=` apontará uma thread que não faz syscall desde então. Se o `owner` for `-1` (token
+livre) a hipótese cai e o problema é no próprio mutex, não em retenção.
+
+Análise pronta em `work/scratch/analyze_holder.py`.
