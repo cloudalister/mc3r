@@ -276,3 +276,65 @@ antigos. Fica anotado, não afirmado.
 2. Reproduzir a travada da `catch_xfer_r2` com janela longa: é o único caso conclusivo de
    trava e agora há instrumentação para observá-lo.
 3. A bateria de controle 1200 s × tetos antigos, para desfazer o confundimento acima.
+
+## 12. Controle de duração — 3 × 1200 s com os tetos antigos
+
+O confundimento da seção 11 desfeito. Binário idêntico ao da bateria de 420 s (tetos de
+semáforo em 20.000, não 200.000); a única variável que muda é a duração.
+
+| | `deq2` | janela após | `done2` | `menu-change` | `gsPrims` | desfecho |
+|---|---:|---:|---|---:|---:|---|
+| `semactl_r1` | tick 24.840 | **42.300 ticks (705 s)** | nunca | 0 | 703.599 | **travou** |
+| `semactl_r2` | tick 23.520 | — | 360 ticks (6,0 s) | 1 | 1.173.155 | bom |
+| `semactl_r3` | tick 23.220 | — | 300 ticks (5,0 s) | 1 | 1.120.554 | bom |
+
+**A duração era o driver, não os tetos.** Com os tetos antigos e 1200 s, duas de três alcançam
+o menu. O teto que eu levantei não teve papel no desfecho — o que também significa que a
+instrumentação mais pesada **não** está deslocando a corrida, ao contrário do que eu suspeitei
+na seção 10.
+
+**E a trava foi reproduzida com margem definitiva.** A `semactl_r1` rodou **42.300 ticks —
+705 segundos de tempo de jogo — após o segundo dequeue, sem `done2`.** O desfecho bom conclui
+em 300 a 480 ticks. São ~120× a folga necessária, contra os 8× do melhor caso anterior. Não há
+mais leitura alternativa possível: a trava é real e é indefinida.
+
+### Assinatura barata e exata do desfecho travado
+
+As três execuções travadas terminam em **`gsPrims=703599`**, o mesmo número até o último
+dígito. Nenhuma outra execução, de nenhuma bateria, chega nesse valor:
+
+| execução | `gsPrims` final | desfecho |
+|---|---:|---|
+| `catch_xfer_r2` | **703.599** | travou |
+| `stall_semawin_r1` | **703.599** | travou |
+| `stall_semactl_r1` | **703.599** | travou |
+| `catch_xfer_r1` | 732.894 | bom, cortado aos 420 s |
+| `semalong_r1..r3` | 1.005.085 – 1.008.035 | bom |
+| `semactl_r2..r3` | 1.120.554 – 1.173.155 | bom |
+
+O desfecho travado **congela** a renderização em 703.599 primitivas. O bom passa por esse valor
+e continua. Isso é discriminador melhor que o `busy=0x00000002`: é contador lido do estado, não
+sonda com teto, e não depende de a execução ter chegado a lugar nenhum específico — basta ela
+ter passado do ponto.
+
+A execução travada fica em `FUN_00322fd8 +0x24`; a boa, em
+`mcParticleFogMgr::DrawAllParticles +0xA4`.
+
+### Frequência do desfecho, refeita
+
+Só execuções com janela conclusiva:
+
+- **Boas: 6** — `catch_xfer_r1`, `semalong_r1/r2/r3`, `semactl_r2/r3`
+- **Travadas: 3** — `catch_xfer_r2`, `semactl_r1`, `semawin_r1`
+- **Inconclusivas: 6** — nunca chegaram ao segundo dequeue
+
+**Cerca de uma trava a cada três execuções conclusivas.** Não "5 de 7 ruins".
+
+Ressalva sobre a `semawin_r1`: a janela direta dela é de 60 ticks, curta demais para provar
+trava por observação. Está classificada como travada pela assinatura `gsPrims=703599`, que é
+corroboração forte mas indireta.
+
+### Estado da instrumentação
+
+Os tetos voltaram para 200.000 depois do controle, já que ele mostrou que não alteram o
+desfecho e a observabilidade maior é útil. Lib reconstruída, exe relinkado.
