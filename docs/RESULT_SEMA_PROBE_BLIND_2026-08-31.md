@@ -489,3 +489,57 @@ ou se alguma thread trava antes disso.
 Primeira medida barata para a próxima sessão: numa execução travada pós-menu, ver se
 `gifPk1/gifPk2` também congelam junto com `gsPrims` — se congelarem, o problema é antes do GS;
 se continuarem subindo, é no GS.
+
+## 16. A trava pós-menu: o laço principal do jogo para de submeter DMA
+
+Medida barata da seção 15, feita no log que já existia.
+
+Em `semahang_r1`, no tick ~25.920, **todos os contadores congelam no mesmo instante**:
+
+| contador | valor congelado |
+|---|---:|
+| `dma` | 29.583 |
+| `gifPk1` | 357.205 |
+| `gifPk2` | 140.157 |
+| `gsPrims` | 714.492 |
+| `gsPixels` | 280.453.755 |
+
+Numa execução sadia (`semahang_r2`) os cinco sobem juntos e continuamente.
+
+**O problema é antes do GS.** O DMA não é emitido — não há trabalho chegando. O pipeline de
+renderização não está quebrado, está sem alimentação. E os ticks seguem avançando até 67.320,
+ou seja, o emulador roda; quem parou foi o convidado.
+
+### Onde ele para
+
+O PC dominante nas execuções travadas pós-menu fica em `0x1A2760` e `0x1A2748`, presente em
+**60 de 60 quadros amostrados**. Os dois endereços caem em `mcGame::Execute(void) +0x3B8` e
+`+0x3A0` — 24 bytes de distância, o mesmo laço interno.
+
+O nome saiu pelo mesmo método do `datStreamer::Worker`: alpha `0x1A19D8`, 1156 bytes, contra
+1280 no retail, imediatamente antes de `mcGame::PreUpdate` (retail `0x1A28A8` / alpha
+`0x1A1E60`) nas duas builds. A diferença de tamanho é o que fez o port de símbolos recusar o
+par — **é a segunda função central desta investigação que estava sem nome exatamente por esse
+motivo**, o que sugere revisitar a regra de compatibilidade de tamanho do `port_symbols.py`.
+
+Registrado em `OVERRIDES` no `resolve_symbols.py`.
+
+### Estado das duas travas
+
+| | trava de streaming | trava pós-menu |
+|---|---|---|
+| onde | `datStreamer::Worker`, poll de `DelayThread` | `mcGame::Execute +0x3A0..0x3B8` |
+| sintoma | `done2` nunca sai, `busy` fica em 1 | DMA para, todos os contadores congelam |
+| valor de congelamento | fixo, 703.599 | variável (714.492, 800.606) |
+| ocorrências | 2 de 19 | 2 de 19 |
+
+São dois laços em duas funções diferentes, em fases diferentes da execução. Nada indica, por
+ora, que tenham a mesma causa.
+
+### Próximo passo para cada uma
+
+- **Streaming:** sonda dentro do `datStreamer::Worker` (`0x431E00`–`0x4320E0`) nas arestas de
+  retorno do laço, nas duas cópias traduzidas, para ver o que ele pola.
+- **Pós-menu:** desmontar `mcGame::Execute` em torno de `+0x3A0`–`+0x3B8` e identificar a
+  condição do laço. É o laço principal do jogo, então a condição provavelmente espera um
+  subsistema que parou — e o `dma` congelado diz que o produtor de display list é candidato.
