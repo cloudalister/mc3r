@@ -433,3 +433,59 @@ pela armadilha nº 4 do handoff.
 Correção de leitura minha na seção 13: descrevi 234 sids "criados e destruídos" como se fossem
 do trabalho do worker. São semáforos temporários de `DelayThread`. O número de sids distintos
 não mede trabalho nenhum; mede quantas vezes o worker dormiu.
+
+## 15. Existe uma segunda trava, depois do menu — e meu discriminador não a via
+
+Bateria `semahang`, 4 × 1200 s com os tetos em 200.000. **Não capturou trava de streaming**:
+as quatro fizeram `deq=2/done=2` e alcançaram o menu. Mas duas delas travaram assim mesmo.
+
+### O critério certo é o tempo plano, não o valor
+
+Afirmei na seção 12 que `gsPrims=703599` era discriminador do desfecho travado. **É
+discriminador da trava de *streaming*, não de trava em geral** — e me fez classificar duas
+execuções travadas como boas. O critério que serve é **há quanto tempo o `gsPrims` fica
+plano**: execução sadia cortada fica plana 0–6 s (só a cauda), execução travada fica 366–706 s.
+
+Reclassificando as 19 execuções de todas as baterias por esse critério:
+
+| veredito | n | característica |
+|---|---:|---|
+| saudável, cortada pelo limite de tempo | 15 | `gsPrims` ainda subindo no fim |
+| **travou no streaming** | 2 | `done2` nunca sai, congela em **703.599** |
+| **travou depois do menu** | 2 | `done2` sai, menu alcançado, congela em 714.492 e 800.606 |
+
+As duas travas de streaming (`catch_xfer_r2`, `semactl_r1`) congelam no mesmo número até o
+último dígito. A `semawin_r1` também terminou em 703.599 com `done=1`, coerente com essa trava,
+mas foi cortada 1 s depois e não prova nada sozinha — na seção 12 eu a contei como travada, o
+que era forçar a evidência.
+
+### A trava nova
+
+`semahang_r1` e `semahang_r4` completam o segundo pedido de streaming, entram no menu, e então
+a renderização **para**: `gsPrims` congela em 714.492 (tick 25.020) e 800.606 (tick 37.020) e
+fica plano por 706 s e 366 s. Os ticks continuam avançando — o emulador roda, as threads rodam,
+e o GS não recebe mais nada.
+
+O valor de congelamento **não** é fixo entre execuções, ao contrário da trava de streaming.
+Isso sugere um ponto de falha que depende de onde a execução estava, não de um estágio fixo.
+
+### Consequência para o que já estava escrito
+
+- O detector barato da seção 12 continua válido **para a trava de streaming** e só para ela.
+  Para triagem geral use tempo plano do `gsPrims` acima de ~60 s.
+- A contagem "6 boas, 3 travadas" da seção 12 não se sustenta: das 19 execuções, 15 foram
+  cortadas enquanto ainda progrediam — não são prova de sucesso, são inconclusivas quanto a
+  travar mais tarde. O que se pode afirmar é **4 travas em 19 execuções**, duas de cada modo.
+- A `semalong` e a `semactl` que contei como "alcançaram o menu" de fato alcançaram; nenhuma
+  delas travou dentro da própria janela. Isso continua de pé.
+
+### O que isso muda no plano
+
+A trava de streaming e a trava pós-menu são fenômenos distintos e precisam de investigação
+separada. A de streaming tem causa localizada (worker em poll de `DelayThread`, seção 14). A
+pós-menu não tem nada ainda: falta saber se o GS para de receber, se o produtor para de gerar,
+ou se alguma thread trava antes disso.
+
+Primeira medida barata para a próxima sessão: numa execução travada pós-menu, ver se
+`gifPk1/gifPk2` também congelam junto com `gsPrims` — se congelarem, o problema é antes do GS;
+se continuarem subindo, é no GS.
