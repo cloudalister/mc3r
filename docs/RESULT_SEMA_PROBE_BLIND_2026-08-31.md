@@ -543,3 +543,69 @@ ora, que tenham a mesma causa.
 - **Pós-menu:** desmontar `mcGame::Execute` em torno de `+0x3A0`–`+0x3B8` e identificar a
   condição do laço. É o laço principal do jogo, então a condição provavelmente espera um
   subsistema que parou — e o `dma` congelado diz que o produtor de display list é candidato.
+
+## 17. O laço da trava pós-menu mede tempo pelo COP0 Count, que o runtime nunca avança
+
+Análise estática do corpus, sem bateria.
+
+Os dois PCs quentes das execuções travadas pós-menu, desmontados:
+
+```asm
+0x1a2748:  jal   func_1A2938        # mcGame::PostUpdate(void)
+...
+0x1a2760:  b     0x1a2788           # incondicional
+0x1a2788:  addiu $a0, $zero, 0x3
+0x1a278c:  lw    $v1, 0x4($v0)
+0x1a2790:  bnel  $v1, $a0, 0x1a2848 # segue adiante só se [v0+4] == 3
+0x1a2798:  mfc0  $v0, Count         # <-- contador de ciclos do EE
+0x1a279c:  subu  $v0, $v0, $s3      # delta = Count - marca_anterior
+0x1a27a0:  bltz  $v0, 0x1a27b8
+0x1a27a8:  mtc1  $v0, $f2
+0x1a27ac:  cvt.s.w $f2, $f2         # delta vira float
+```
+
+Não é spin cego: é **cálculo de tempo decorrido**, num estado específico (`[v0+4] == 3`).
+
+### O defeito
+
+`ctx->cop0_count` aparece em **exatamente três lugares** em todo o `PS2Recomp`:
+
+| lugar | o que faz |
+|---|---|
+| `ps2_runtime.h:102` | a declaração |
+| `code_generator.cpp:1911` | `mfc0`: `SET_GPR_S32(ctx, rt, (int32_t)ctx->cop0_count)` |
+| `code_generator.cpp:1961` | `mtc0`: `ctx->cop0_count = GPR_U32(ctx, rt)` |
+
+**Nada no runtime jamais o incrementa.** Ele é zero-inicializado e só muda se o próprio
+convidado escrever nele. Logo `mfc0 $v0, Count` devolve sempre o mesmo valor, e o
+`subu $v0, $v0, $s3` da linha seguinte dá **delta zero em todo quadro**.
+
+Qualquer código do jogo que meça tempo por COP0 Count vê o tempo parado.
+
+### Por que isso não quebra o jogo inteiro
+
+O caminho só é alcançado quando `[v0+4] == 3`. O resto do jogo usa temporização por vsync,
+que funciona — daí a maioria das execuções progredir normalmente e renderizar mais de um
+milhão de primitivas. Quando a execução entra nesse estado 3, ela passa a depender de um
+relógio que não anda.
+
+Isso casa com o sintoma da seção 16: o laço principal continua girando e chamando
+`mcGame::PostUpdate`, mas o estado nunca avança, nada novo é submetido, e `dma`, `gifPk*`,
+`gsPrims` e `gsPixels` congelam todos no mesmo instante enquanto os ticks seguem.
+
+### Força da evidência
+
+**Verificado:** o runtime não avança `cop0_count`; o laço lê Count e deriva delta dele; os PCs
+quentes das duas execuções travadas pós-menu caem nesse trecho, em 60 de 60 quadros amostrados,
+contra 5–10 de 60 nas sadias.
+
+**Não verificado:** que zerar o delta seja *a* causa da trava. Falta confirmar que o estado 3 é
+onde as execuções travadas param, e que fazer o Count andar as destrava. É hipótese com apoio
+forte, não conclusão.
+
+### Como testar, e por que não fiz agora
+
+Fazer `cop0_count` avançar é mudança de comportamento que atinge **toda** temporização do jogo,
+não só este laço — é decisão de escopo, não passo investigativo. O teste barato que a precede:
+sonda no `0x1a2798` registrando o valor de `Count`, de `$s3` e do delta, para confirmar que o
+delta é sempre zero e que a execução travada fica ali.
