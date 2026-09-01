@@ -609,3 +609,77 @@ Fazer `cop0_count` avançar é mudança de comportamento que atinge **toda** tem
 não só este laço — é decisão de escopo, não passo investigativo. O teste barato que a precede:
 sonda no `0x1a2798` registrando o valor de `Count`, de `$s3` e do delta, para confirmar que o
 delta é sempre zero e que a execução travada fica ali.
+
+## 18. A hipótese do COP0 Count está falsificada — e a trava pós-menu ficou localizada
+
+Bateria `cop0gate`, 4 × 1200 s, com duas sondas em `mcGame::Execute`: uma no portão
+(`0x1a2788`, dispara nos dois ramos) e outra no trecho do Count (`0x1a2798`).
+
+A r1 caiu travada (PC dominante `0x1a2760` em 60/60 quadros, `gsPrims=800606`), as outras
+três sadias. Amostras:
+
+| execução | portão | trecho do Count |
+|---|---:|---:|
+| r1 (travada) | 7 | **0** |
+| r2, r3, r4 (sadias) | 18, 17, 21 | **0** |
+
+**O trecho do COP0 Count nunca executa.** O portão mostra por quê: `state=0x00000007` em toda
+amostra, das quatro execuções. O desvio exige `state == 3`, que nunca acontece.
+
+### Falsificada, e o que sobra de pé
+
+A previsão registrada era "delta sempre zero, `n` subindo nas travadas". O delta nunca foi
+calculado, então a hipótese **cai**.
+
+O que ela deixa confirmado: as amostras trazem `count=0x00000000` e `mark_s3=0x00000000` em
+todas as execuções. **`ctx->cop0_count` é de fato sempre zero** — o defeito da seção 17 é real
+e continua valendo como defeito. Só não é o que trava o jogo.
+
+E derruba junto a leitura de "laço em `mcGame::Execute`" da seção 16: o portão executa **7
+vezes** na execução travada inteira. Se o código roda 7 vezes e o PC fica lá 60 de 60 quadros,
+a thread não está girando — **está parada**.
+
+### Onde ela para, de verdade
+
+`ra=0x001a2760` nas amostras aponta o `jal` em `0x1a2758`, que é **`ageEndDraw(void)`**
+(`0x52D7C0`). E os últimos eventos da thread principal na execução travada:
+
+```
+WaitSema:block] tid=1 sid=44 ... ra=0x529690    <- gfxPipeline::BeginFrame +0xA0
+WaitSema:block] tid=1 sid=58 ... ra=0x398b28    <- ipcWaitSema +0x10   (ultimo)
+SignalSema]     tid=8 sid=58 count=0->1 ret=58  <- DEPOIS do bloqueio
+```
+
+Depois desse bloqueio, na linha 103.821 de 104.311: **zero wakes para a tid=1, zero eventos de
+qualquer tipo da tid=1**, e um `SignalSema` no mesmo sid vindo da tid=8.
+
+**A trava pós-menu é a thread principal bloqueada em `ipcWaitSema`, no caminho de desenho, com
+um sinal para aquele semáforo chegando depois e a thread nunca acordando.**
+
+### Correções de leitura, minhas
+
+1. `count=0->1` no `SignalSema` **não** é o defeito. É o comportamento normal de semáforo
+   contador: `SignalSema` faz `count++` e `cv.notify_one()`, e o esperador tem predicado
+   `count > 0 || deleted || forced || terminated` re-checado sob o mesmo mutex. Não é wakeup
+   perdido clássico. Cheguei a ler assim e estava errado.
+2. **Sid não é estável entre execuções.** Comparei o sid=58 da travada com o sid=58 de uma
+   sadia antes de notar que as linhas de `CreateSema` diferem (`attr=0x3` contra `0x620000`) —
+   são semáforos diferentes. Toda análise de sid tem de ficar dentro de uma execução.
+
+### Candidatos que sobram, nenhum verificado
+
+- Outro esperador consumiu o `count` antes da tid=1. O log do bloqueio diz `waiters=0` no
+  momento em que ela entrou, mas isso é registrado antes do `sema->waiters++`.
+- A tid=1 acordou do `cv` e ficou presa **depois**, no destrutor de
+  `PS2Runtime::GuestExecutionReleaseScope`, que envolve a espera e reobtém um token global de
+  execução do convidado. Isso explicaria não haver `WaitSema:wake` — ele é registrado depois
+  do escopo fechar.
+
+O escalonador determinístico está **fora**: depende de `MC3_DETERMINISTIC`, que a bateria não
+seta, então o caminho `DetSchedMarkReadyWaitingOnSema` não roda.
+
+### Próximo passo
+
+Sonda no `WaitSema` registrando a saída do `cv.wait` **antes** do fecho do
+`GuestExecutionReleaseScope`, e o valor de `sema->waiters` no momento do sinal. Isso separa os
+dois candidatos em uma bateria.
