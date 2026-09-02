@@ -1139,3 +1139,45 @@ também, porque a `MainLoop` roda o tempo todo. O que separa é o silêncio depo
   `netManagerThread`, thread que retém o token nas duas travas capturadas.
 - **Não verificado:** se a tradução dessa recursão está correta além da cessão; quantas funções
   do corpus têm o padrão; se a trava de streaming tem a mesma origem.
+
+## 26. A correção não resolveu: `ownerPc` não é onde a thread está
+
+Bateria `yieldfix`, 2 × 1200 s com a correção da aresta compilada e confirmada no binário
+(o manifesto confirma que o objeto veio da versão corrigida, e a função tem 2 cessões).
+
+**A trava reproduziu idêntica:** `yieldfix_r1`, 234 s de `gsPrims` plano, 235 s de silêncio,
+dono tid=8, `ownerPc=0x1F9610` — a mesma `netManagerThread::MainLoop +0x50`.
+
+### O erro de leitura
+
+`ownerPc` é o PC que o **despachante** procurou, ou seja, a função mais externa que a thread
+está executando. Chamadas dentro do código recompilado são chamadas C++ diretas, não passam
+pelo despachante. Então a thread pode estar **muitos quadros abaixo**, dentro de qualquer
+função da árvore de chamadas da `MainLoop`.
+
+Eu tratei "a função despachada é a `MainLoop`" como "a thread gira dentro da `MainLoop`". A
+evidência nunca disse isso. A aresta sem cessão que achei na `MainLoop` era real, mas não há
+nada que a ligue ao ponto onde a thread efetivamente trava.
+
+### O teste de mecanismo também estava mal desenhado
+
+Contei `guestexec-got` da tid=8 antes e depois: 30,6 / 17,8 / 22,8 por minuto contra
+14,3 / 34,3. Sem diferença, faixas sobrepostas. Mas o marcador só dispara em
+`reacquireGuestExecution`, depois de syscall bloqueante; a cessão corrigida passa por `return`
+ao despachante e por `enterGuestExecution`, **que não tem sonda**. O contador que escolhi não
+podia mostrar o efeito, existindo ele ou não.
+
+### O que fica
+
+- **A correção do gerador continua certa** por mérito próprio: aresta para trás emitida como
+  `goto` sem cessão é laço que não cede, e isso é defeito real em 27 funções. Fica aplicada.
+- **Ela não é a causa desta trava.** A causa continua desconhecida.
+- **O que se sabe da retentora:** tid=8, sempre; função despachada `netManagerThread::MainLoop`
+  ou `UpdateStatistics`; presa dentro de uma chamada que não retorna; nenhum syscall depois.
+
+### Próximo passo, agora com a sonda certa
+
+Falta o PC **de dentro** do convidado, não o do despacho. O contexto da thread (`ctx->pc`) é
+atualizado pelo código recompilado a cada instrução traduzida, então amostrá-lo do lado de fora
+— por exemplo, quem espera o token lê o `ctx` do dono — diz em que função a retentora está de
+verdade, e não só por onde ela entrou.
