@@ -1096,3 +1096,46 @@ função que chama a si mesma, ou que salta para trás por `jal`.
 Emitir a cessão sempre que `target <= sourcePc`, inclusive em aresta de chamada, já que nesse
 caso o gerador produz `goto` e não chamada. Antes de aplicar convém checar o item 1 acima: se a
 tradução da recursão estiver errada, ceder o token trata o sintoma e deixa o defeito.
+
+## 25. Bateria fechada: as duas travas são da mesma thread
+
+`holderpc` e `holderpc2`, 12 execuções ao todo, **2 travas**.
+
+Critério final, e o melhor até agora: **quanto tempo de jogo passa depois da última espera de
+token**. Numa trava o convidado emudece e os quadros continuam; numa sadia a última espera
+coincide com o corte e não há tempo depois.
+
+| execução | `gsPrims` plano | mudo depois | dono | `ownerPc` |
+|---|---:|---:|---:|---|
+| `holderpc2_r1` | 344 s | **344 s** | tid=8 | `netManagerThread::MainLoop +0x50` |
+| `holderpc_r6` | 62 s | **63 s** | tid=8 | `netManagerThread::UpdateStatistics +0x1E4` |
+| outras 10 | 0–5 s | 0–6 s | vários | — |
+
+As duas medidas são independentes — uma do contador de primitivas, outra do relógio de espera —
+e casam nas duas travas.
+
+**As duas retenções são da tid=8, e as duas caem no `netManagerThread`.** Isso restringe muito o
+alvo: não é um defeito espalhado pelo corpus, é uma thread específica que não devolve o token.
+
+Confirmação do defeito na `MainLoop` (`sub_001F95C0`): 2 arestas para trás, **1 delas vinda de
+`jal`**, e 1 cessão. A aresta de chamada é a que fica sem ceder.
+
+### Erro de script que atrasou a leitura
+
+O primeiro critério de duração pareava `wait` e `got` comparando **tick**, não ordem de linha.
+Quando os dois caem no mesmo tick — que é exatamente o caso no instante do travamento — o
+`got` anterior invalidava o `wait` seguinte e a trava aparecia como espera de 0 s. Foi o que fez
+a `holderpc2_r1` passar por sadia numa primeira leitura, e provavelmente também a
+`holder_r2` da seção 23. Parear por ordem; usar tick só para medir idade.
+
+### Ressalva que continua valendo
+
+Ver `ownerPc=0x1F9610` no fim de uma execução **não** indica trava: aparece em execuções sadias
+também, porque a `MainLoop` roda o tempo todo. O que separa é o silêncio depois.
+
+### Estado para decidir o próximo passo
+
+- **Causa provável, localizada:** aresta de chamada para trás sem cessão, em função do
+  `netManagerThread`, thread que retém o token nas duas travas capturadas.
+- **Não verificado:** se a tradução dessa recursão está correta além da cessão; quantas funções
+  do corpus têm o padrão; se a trava de streaming tem a mesma origem.
