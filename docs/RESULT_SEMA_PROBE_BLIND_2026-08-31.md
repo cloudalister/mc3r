@@ -1019,3 +1019,80 @@ Uma trava capturada **com o `ownerPc` funcionando**. O lote `holder` tinha trava
 tinha a sonda; o `ownerpc` tinha a sonda pela metade (só o laço principal); o `holderpc` tem a
 sonda completa e validada — `netManagerThread::MainLoop`, `Stream::Open`, `zipHandle::Read`
 saem com nome — mas não travou.
+
+## 24. Causa raiz da trava pós-menu: aresta de chamada para trás sem cessão
+
+Bateria `holderpc2`. A r1 travou (344 s de `gsPrims` plano) **com a sonda completa**, e os
+últimos eventos de execução do convidado são:
+
+```
+guestexec-got]  tid=8
+guestexec-wait] tid=5 owner=8 ownerPc=0x1f9610 selfPc=0x42b8c8 waiters=1 depth=1
+```
+
+Nada depois. `0x1F9610` é `netManagerThread::MainLoop(void) +0x50`, cuja entrada é `0x1F95C0`.
+A tid=8 entra nessa função e não sai, segurando o token de execução do convidado.
+
+### O defeito, no gerador
+
+`sub_001F95C0` tem **duas** arestas para trás e **uma só** cessão:
+
+| linha | aresta | cessão |
+|---|---|---|
+| 289 | `goto label_1f95e8` (laço comum) | **sim** |
+| 405 | `goto label_1f95c0` (entrada da função) | **não** |
+
+A da linha 405 vem disto:
+
+```c
+// 0x1f9670: 0xc07e570  jal  func_1F95C0     <- chamada da funcao para ela mesma
+ctx->pc = 0x1F9670u;
+SET_GPR_U32(ctx, 31, 0x1F9678u);             <- grava endereco de retorno
+ctx->pc = 0x1F95C0u;
+goto label_1f95c0;                           <- e salta para a entrada
+```
+
+E a regra do gerador, em `code_generator.cpp`:
+
+```cpp
+if (target <= sourcePc && !isCallLikeEdge)
+{
+    ... if (runtime->shouldPreemptGuestExecution()) { return; } ...
+    goto label_...;
+}
+else
+{
+    goto label_...;      // <- sem cessão
+}
+```
+
+**A exclusão `!isCallLikeEdge` é o defeito.** Ela existe para não ceder em chamada — o que faz
+sentido quando a chamada é uma chamada. Mas quando o alvo cai dentro da própria função, o
+gerador não emite chamada: emite `goto` para trás. O resultado é um **laço, com a cessão
+suprimida pela regra que supunha que ali não haveria laço**.
+
+Consequência: a thread gira dentro de `netManagerThread::MainLoop` sem nunca devolver o token,
+e todo o resto do convidado — inclusive a thread principal, no `ageEndDraw` — congela. Isso
+explica o quadro inteiro da seção 19 em diante: o semáforo funciona, a thread acorda, e morre
+esperando um token que o dono nunca solta.
+
+### Por que as seções anteriores não viam
+
+A contagem "branches para trás == cessões" da correção à seção 20 batia nas quatro funções que
+examinei porque nenhuma delas tinha aresta de chamada para trás. É um caso que só aparece em
+função que chama a si mesma, ou que salta para trás por `jal`.
+
+### O que isto ainda não estabelece
+
+- **Se a tradução dessa recursão está correta em si.** O `goto` para a entrada não empilha
+  quadro: o `ra` é gravado em `$31` mas a função reentra por cima do próprio estado. Se o
+  jogo esperava recursão de verdade, a semântica está errada além da cessão. Não verifiquei.
+- **Quantas funções do corpus têm o mesmo padrão.** A varredura ficou para depois para não
+  disputar I/O com a bateria em curso.
+- **Se a trava de streaming tem a mesma causa.** Nada aqui a liga a ela.
+
+### Correção candidata, não aplicada
+
+Emitir a cessão sempre que `target <= sourcePc`, inclusive em aresta de chamada, já que nesse
+caso o gerador produz `goto` e não chamada. Antes de aplicar convém checar o item 1 acima: se a
+tradução da recursão estiver errada, ceder o token trata o sintoma e deixa o defeito.
