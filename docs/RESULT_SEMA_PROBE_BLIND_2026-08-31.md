@@ -1181,3 +1181,42 @@ Falta o PC **de dentro** do convidado, não o do despacho. O contexto da thread 
 atualizado pelo código recompilado a cada instrução traduzida, então amostrá-lo do lado de fora
 — por exemplo, quem espera o token lê o `ctx` do dono — diz em que função a retentora está de
 verdade, e não só por onde ela entrou.
+
+## 27. O PC vivo também não discrimina — e por quê
+
+Bateria `livepc`, 6 × 1200 s, com o `ctx->pc` do dono sendo lido pelo esperador. Uma trava
+(r1, 72 s), e o campo novo saiu **`ownerLivePc=0x5469E0`**, que é `WaitSema`.
+
+Teste de especificidade, que faltou nas rodadas anteriores: esse mesmo valor aparece **1.287
+vezes na travada, 1.222 e 1.017 nas sadias**. Não discrimina nada.
+
+A causa é estrutural: `ctx->pc` é escrito pelo código recompilado a cada instrução traduzida.
+Quando a thread entra num stub do runtime, o campo **congela no endereço do syscall** e fica
+lá enquanto o C++ executa. Ler esse campo de fora responde "o dono está dentro de um syscall",
+que é verdade quase sempre, para qualquer thread.
+
+### O que isso ainda assim estabelece
+
+**A retentora não está girando em código do convidado.** Ela está parada dentro de um stub do
+runtime, e segura o token enquanto isso. Isso muda o alvo: não é laço traduzido, é caminho de
+runtime que bloqueia sem devolver o token.
+
+Reforça, aliás, o resultado negativo da seção 26 — a correção da aresta de cessão não podia
+resolver, porque o problema nunca esteve em laço de código gerado.
+
+### Terceira tentativa de localização, e o que ela usa
+
+`pc` congela no syscall, mas o `ra` do contexto do convidado nomeia **quem chamou** o syscall.
+Campo `ownerRa` adicionado e compilado.
+
+Antes de tratar qualquer valor dele como localização, o mesmo teste tem de ser feito: contar
+quantas vezes o endereço aparece em execução sadia. Duas vezes seguidas eu tomei por
+localização um campo que estava em toda parte — `ownerPc` na seção 24 e `ownerLivePc` aqui.
+
+### Alternativa, se o `ra` também não discriminar
+
+Deixar de inferir pelo último registro e detectar a retenção enquanto acontece: gravar o
+instante em que o token é adquirido e ter uma verificação periódica que dispare quando ele
+estiver retido por mais de alguns segundos, despejando dono, `pc`, `ra` e `sp` naquele momento.
+Isso separa retenção real de leitura de fim de log, que é a confusão que atrapalhou desde a
+seção 21.
