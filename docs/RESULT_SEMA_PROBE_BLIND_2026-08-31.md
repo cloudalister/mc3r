@@ -1220,3 +1220,49 @@ instante em que o token é adquirido e ter uma verificação periódica que disp
 estiver retido por mais de alguns segundos, despejando dono, `pc`, `ra` e `sp` naquele momento.
 Isso separa retenção real de leitura de fim de log, que é a confusão que atrapalhou desde a
 seção 21.
+
+## 28. Sonda interna do `WaitSema`: pronta, mas a trava não reproduziu
+
+O `WaitSema` agora publica, por thread, a etapa exata em que está: entrada, aquisição de
+`sema->m`, mutex de `info`, liberação/reaquisição do token global, espera no `cv`, desbloqueio
+do semáforo e espera por suspensão. A sonda só grava estado atômico; não acrescenta mutex,
+não muda a ordem dos locks e só fica ativa com `MC3_BOOT_TRACE=1`.
+
+O watchdog passou a imprimir `waitPhase` e `waitSid`. O antigo `waiters=0`, que era constante
+e podia parecer uma medição real, foi substituído por `tokenWaiters=unmeasured`.
+
+### Validação antes da medição
+
+- `ps2x_tests`: **309/309**.
+- Relink concluído; `mc3_partial.exe` de 02/09/2026 19:30:09, mais novo que
+  `libps2_runtime.a` de 19:25:05.
+- Todas as fases e o novo formato do watchdog foram encontrados dentro do executável.
+- O teste do JAL interno para trás estava defasado em relação à correção já presente no
+  gerador; a expectativa foi atualizada para exigir a cessão antes de reentrar no alvo.
+
+### Bateria `waitphase_20260902b`
+
+Cinco corridas headless, em série, até 600 s cada, sem `MC3_DETERMINISTIC` e sem
+`MC3_DISPATCH_BUDGET`. Critério de captura: mesma thread/fase/SID por três amostras crescentes
+e `heldMs >= 30000`.
+
+| corrida | maior retenção vista | amostra dentro do `WaitSema` | último `gsPrims` | último `gsPixels` |
+|---|---:|---|---:|---:|
+| r1 | 6.334 ms | nenhuma | 772.937 | 427.094.413 |
+| r2 | 25.289 ms | `sema-mutex-held`, 3.843 ms, recuperou | 703.566 | 255.807.287 |
+| r3 | 5.873 ms | nenhuma | 715.674 | 281.641.371 |
+| r4 | 8.628 ms | `sema-mutex-held`, 3.871 ms, recuperou | 714.658 | 281.502.331 |
+| r5 | 4.923 ms | nenhuma | 722.844 | 299.836.986 |
+
+Houve ainda uma corrida preliminar limpa de 584 s, encerrada apenas para reduzir a janela de
+20 para 10 minutos e aumentar o número de reinícios independentes.
+
+### Conclusão honesta
+
+**A trava não reproduziu.** As cinco corridas continuaram produzindo primitivas e pixels, e
+nenhuma fase interna do `WaitSema` ficou presa por 30 s. As duas passagens curtas por
+`sema-mutex-held` provam que a sonda observa o caminho certo, mas não autorizam acusar esse
+mutex: ambas se soltaram normalmente.
+
+O lote fica pronto em `tools/Catch-WaitSemaPhase.ps1`. Quando a retenção reaparecer,
+ele encerra a corrida na terceira confirmação e preserva o log que nomeia a fechadura exata.
