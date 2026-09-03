@@ -44,14 +44,29 @@ Os cinco contadores de transição sobem para `3/1/3/2/3` nos primeiros segundos
 
 ## Próximos alvos, em ordem
 
-1. **Tipo de pad (barato).** `ioPadStates=4,4,0,0` (`kPadTypeDigital`) contra
-   `ioPadAttachPhases=7,7,0,0`. Verificar se o frontend exige DualShock e descarta pad digital.
-2. **Máquina de estados do frontend (fundo).** O que a função de update espera para sair da
-   tela legal. Ancorar pela tabela de nomes em `0x497dfa` e por `0x1A5B08`/`0x1A71C8`/`0x1A78E0`.
+1. **O que o frontend faz com o input que recebe.** É o alvo real, e é o mais fundo.
+   Estabelecido hoje: o frontend **recebe** processamento de input (42 chamadas de
+   `uiInputUpdate@0x420F38` numa corrida de 20 min, pelo caminho `func_52D680` →
+   `sub_0052A388` → `ioInputUpdate@0x58EEB0`) e **não** transiciona. Entrar por
+   `0x420F38`/`0x58EEB0` e ver o que acontece com o pacote de pad depois de lido.
+2. **Ou: o frontend não espera input nenhum.** Hipótese irmã, igualmente viável — a tela legal
+   pode estar esperando um carregamento de assets do menu que nunca completa. Barata de separar
+   da anterior: instrumentar o que `EnterStateMC3Frontend` deixa pendente.
 3. **Janela preta.** O despejo usa as mesmas duas chamadas da apresentação e sai correto;
    a janela não. Só bloqueia *ver* o jogo, não a investigação.
 4. **Pausa de 35,9 s** vista na r4 da validação (recuperou sozinha, `gsPrims` plano nos ticks
    25380–25620). Item aberto, não urgente.
+
+## Becos sem saída fechados em 2026-09-03 (não repetir)
+
+| hipótese | como morreu |
+|---|---|
+| "a tela só espera alguém apertar Start" | 227 STARTs de toque e 272 de botão **segurado**, entregues com o frontend no ar. Zero transições. |
+| "o frontend recusa pad digital" | O `7` que libera o poll é o retorno do `ioPad::Attach`, não o campo `0x174`. `ioPadPollCalls=532`: o portão já estava aberto. |
+| "o jogo é só lento, a corrida é que era curta" | 45 min, tick 67.431: `uiInputUpdate` sobe linearmente, transições imóveis. A taxa é constante, não acelera. |
+| "a RAM baixa do runtime difere do console e fecha o portão" | `gateByte=0` em todas as amostras. Além disso o fluxo nem chega no byte. |
+| "o laço principal não lê o pad porque falta o objeto de `0x617BCC`" | Verdade para **aquele** bloco, que é específico do intro: `EnterStateMC3Frontend@0x1A5B08` não chama `sub_00364720` nem nenhum criador de camada. O frontend tem caminho de input próprio, e ele roda. |
+| "`-skipintro` pula a abertura" | As palavras não existem neste ELF (busca literal em 5.264.872 bytes). |
 
 ## Como medir
 
