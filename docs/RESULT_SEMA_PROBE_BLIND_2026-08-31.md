@@ -1266,3 +1266,30 @@ mutex: ambas se soltaram normalmente.
 
 O lote fica pronto em `tools/Catch-WaitSemaPhase.ps1`. Quando a retenção reaparecer,
 ele encerra a corrida na terceira confirmação e preserva o log que nomeia a fechadura exata.
+
+## 29. Lote de 30 minutos: quase-captura no corte da corrida 2
+
+Bateria `waitphase_20260903_30m`, 3 × 600 s, com o mesmo binário e os mesmos critérios da
+seção 28. Não houve captura formal de 30 s.
+
+| corrida | leitura útil | último `gsPrims` | último `gsPixels` |
+|---|---|---:|---:|
+| r1 | nenhuma fase interna longa; máximo global 4.317 ms | 771.787 | 425.914.765 |
+| r2 | tid=8, `sema-mutex-wait`, sid=253, 3.580 → 7.683 ms | 759.043 | 392.435.119 |
+| r3 | duas passagens recuperadas em `sema-mutex-held`, 3.440 e 3.152 ms | 515.403 | 188.705.347 |
+
+Na r2, `gsPrims` e `gsPixels` ficaram planos entre os ticks 30900 e 31320 enquanto cinco
+amostras consecutivas mostraram a tid=8 esperando o mutex do semáforo 253. A corrida atingiu
+o limite logo depois; portanto não sabemos se soltaria normalmente ou cresceria até a trava.
+
+**Leitura:** é a melhor quase-captura até agora, mas ainda não é prova para alterar o
+scheduler ou a implementação do semáforo.
+
+### Correções no coletor para o próximo lote
+
+- O parser agora exige a linha completa do watchdog. Isso rejeita linhas misturadas por
+  escrita concorrente; uma delas havia unido números e parecia falsamente uma retenção de
+  milhões de milissegundos.
+- Logs existentes fazem o script abortar, em vez de serem sobrescritos.
+- Se uma mesma espera interna estiver crescendo nos segundos finais, a corrida recebe 120 s
+  de graça. Isso evita cortar novamente uma evidência como a da r2.

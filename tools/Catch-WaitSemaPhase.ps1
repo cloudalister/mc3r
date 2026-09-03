@@ -4,6 +4,7 @@ param(
     [int]$Seconds = 1200,
     [int]$ConfirmHeldMs = 30000,
     [int]$SampleSeconds = 5,
+    [int]$GraceSeconds = 120,
     [string]$Label = 'waitphase'
 )
 
@@ -33,13 +34,16 @@ $env:MC3_HEADLESS = '1'
 Remove-Item Env:MC3_DETERMINISTIC -ErrorAction SilentlyContinue
 Remove-Item Env:MC3_DISPATCH_BUDGET -ErrorAction SilentlyContinue
 
-$pattern = '\[boot-trace:guestexec-stuck\].*owner=(\d+).*heldMs=(\d+).*waitPhase=([a-z-]+).*waitSid=(-?\d+)'
+$pattern = '\[boot-trace:guestexec-stuck\] owner=(\d+) heldMs=(\d+) dispatchPc=0x[0-9a-f]+ pc=0x[0-9a-f]+ ra=0x[0-9a-f]+ sp=0x[0-9a-f]+ waitPhase=([a-z-]+) waitSid=(-?\d+) tokenWaiters=unmeasured'
 $captured = $false
 
 for ($run = 1; $run -le $MaxRuns -and -not $captured; $run++) {
     $log = Join-Path $root ("work\logs\stall_{0}_r{1}.log" -f $Label, $run)
     $stdout = "$log.stdout"
     $stderr = "$log.stderr"
+    if ((Test-Path -LiteralPath $stdout) -or (Test-Path -LiteralPath $stderr)) {
+        throw "log ja existe; escolha outro Label para preservar a evidencia: $log"
+    }
     $process = Start-Process -FilePath $exe -ArgumentList @("`"$elf`"") `
         -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput $stdout -RedirectStandardError $stderr
@@ -51,9 +55,11 @@ for ($run = 1; $run -le $MaxRuns -and -not $captured; $run++) {
     $lastSignature = ''
     $lastHeldMs = 0
     $streak = 0
+    $deadlineSeconds = $Seconds
+    $graceApplied = $false
 
     try {
-        while (-not $process.HasExited -and $watch.Elapsed.TotalSeconds -lt $Seconds) {
+        while (-not $process.HasExited -and $watch.Elapsed.TotalSeconds -lt $deadlineSeconds) {
             Start-Sleep -Seconds $SampleSeconds
             $process.Refresh()
 
@@ -89,6 +95,14 @@ for ($run = 1; $run -le $MaxRuns -and -not $captured; $run++) {
                     "log=$stderr"
                     $captured = $true
                     break
+                }
+
+                if (-not $graceApplied -and $GraceSeconds -gt 0 -and
+                    $watch.Elapsed.TotalSeconds -ge ($Seconds - (2 * $SampleSeconds)) -and
+                    $phase -ne 'none' -and $heldMs -ge 3000 -and $streak -ge 3) {
+                    $deadlineSeconds += $GraceSeconds
+                    $graceApplied = $true
+                    "GRACA run=$run +${GraceSeconds}s owner=$owner heldMs=$heldMs waitPhase=$phase waitSid=$sid"
                 }
             }
 
