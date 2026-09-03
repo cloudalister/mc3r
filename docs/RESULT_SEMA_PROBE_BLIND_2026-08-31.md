@@ -1293,3 +1293,77 @@ scheduler ou a implementação do semáforo.
 - Logs existentes fazem o script abortar, em vez de serem sobrescritos.
 - Se uma mesma espera interna estiver crescendo nos segundos finais, a corrida recebe 120 s
   de graça. Isso evita cortar novamente uma evidência como a da r2.
+
+## 30. Captura: inversão de ordem de travas entre o token de execução e `sema->m`
+
+Bateria `waitphase_20260903_20m`, até 4 × 1200 s, mesmo binário da seção 29, com a janela
+dobrada porque a quase-captura anterior morreu no corte do relógio, não por soltura.
+
+**A corrida 2 travou e foi capturada.** `owner=8`, `waitPhase=sema-mutex-wait`, `waitSid=225`,
+30 amostras consecutivas com `heldMs` subindo de 3.268 ms a 33.290 ms, sempre com
+`pc=0x5469e0`, `ra=0x398b28` e `sp=0x856c00` idênticos — pilha parada, não é laço.
+
+A trava é real e não é só do token: nos mesmos ticks o quadro congelou de vez.
+
+| sinal | valor no congelamento |
+|---|---|
+| `gsPrims` | 994.196, imóvel até o fim do log |
+| `gsPixels` | 1.003.880.175, imóvel |
+| `dma` | 32.060, imóvel |
+| `activeThreads` | 7 |
+| `pc` do quadro | 0x1a2760 (laço ocioso) |
+
+### A cadeia, linha por linha
+
+O log da r2 (`work/logs/stall_waitphase_20260903_20m_r2.log.stderr`, a partir da linha 147533)
+fecha o ciclo sem espaço para interpretação:
+
+1. `[WaitSema:cvout] tid=1 sid=225 count=1 waiters=1` — a tid=1 acordou do `cv.wait`, o que
+   significa que o `cv` **já devolveu a ela o mutex do semáforo 225**.
+2. `[guestexec-wait] tid=1 owner=8 ...` — a tid=1 passa a esperar o token global de execução
+   do convidado, que está com a tid=8. Ela espera **segurando `sema225->m`**, dentro do
+   destrutor do `GuestExecutionReleaseScope`.
+3. Não existe nenhum `[WaitSema:scopeout] tid=1 sid=225` depois disso, em nenhum ponto do log.
+   O último `[guestexec-got] tid=1` é da linha 144985, anterior. A tid=1 nunca mais anda.
+4. A tid=8, de posse do token, chama `WaitSema(225)` e para em
+   `std::unique_lock<std::mutex> lock(sema->m)` — é exatamente o que a fase
+   `sema-mutex-wait` nomeia.
+
+Ciclo fechado: **tid=1 tem `sema225->m` e espera o token; tid=8 tem o token e espera
+`sema225->m`.** Nenhuma das duas cede, e o laço de quadro do hospedeiro continua tiquetaqueando
+por cima de um convidado morto — que é a assinatura que vinha sendo perseguida desde a seção 20.
+
+O comentário que já estava no código previa este desfecho com todas as letras: "se este sai e o
+`:scopeout` não sai, a thread acordou do cv e ficou presa reobtendo o token global". Saiu o
+`cvout`, não saiu o `scopeout`.
+
+### A causa
+
+`WaitSema` entra com o token na mão e pede `sema->m`: ordem **token → mutex**. O caminho de
+despertar fazia o inverso: `cv.wait` reobtém `sema->m` ao acordar e só depois o destrutor do
+escopo tenta reobter o token, ou seja **mutex → token**. Duas ordens opostas para os mesmos dois
+recursos é a definição de deadlock; só faltava a janela de tempo certa para as duas se cruzarem.
+
+O defeito não era do semáforo 225, nem da tid=8, nem do escalonador. Era da ordem.
+
+### A correção
+
+`guestCvWaitReleasingToken` (em
+`PS2Recomp/ps2xRuntime/src/lib/Kernel/Syscalls/Helpers/Runtime.h`) solta o mutex do objeto
+**antes** de o destrutor do escopo reobter o token, e só volta a pegá-lo com o token já na mão.
+Como isso abre uma janela sem o mutex, o predicado é reavaliado; se outra thread consumiu o
+recurso nesse intervalo, volta a esperar — o mesmo efeito de um despertar espúrio.
+
+Depois da correção, nenhum ponto do runtime bloqueia esperando o token com um mutex de objeto de
+sincronização na mão. A ordem global passa a ser sempre token → mutex.
+
+Os seis pontos que tinham a mesma inversão:
+
+| arquivo | ponto |
+|---|---|
+| `Sync.cpp` | `WaitSema` (mantém as marcas da sonda pelo gancho de estágio) |
+| `Sync.cpp` | `WaitEventFlag` |
+| `Thread.cpp` | espera do `TerminateThread` |
+| `Thread.cpp` | `SuspendThread` (auto-suspensão) |
+| `Thread.cpp` | `SleepThread` |
+| `Helpers/Runtime.h` | `waitWhileSuspended` |
