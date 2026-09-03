@@ -101,3 +101,47 @@ O trace de quadro ganhou tres campos novos: `stateObj`, `stateA404`, `stateBusy`
 `+0x405`). A pergunta que a proxima corrida responde e binaria: **`stateBusy` alguma vez chega a
 zero e fica?** Se ficar preso em nao-zero, o frontend esta parado numa transicao que nunca
 termina, e o alvo passa a ser o que essa transicao espera — nao o input.
+
+
+## Correcao do adendo: a guarda que vale e a de cima, nao o byte
+
+Medido: `gateObj=0x0 gateByte=0` em todas as amostras. O byte lido pelo ponteiro nulo e zero,
+entao a teoria de que a RAM baixa do nosso runtime diferia do console **esta errada**. Mas o
+byte tambem nao importa, porque o fluxo nunca chega nele. O bloco completo e:
+
+```
+0x1a2670  jal   func_364798         ; v0 = *(0x617BCC)  (controlador de intro)
+0x1a2678  beqz  $v0, 0x1a269c       ; NULO -> pula o bloco inteiro
+0x1a267c  addiu $v1, $zero, 0x1     ; delay slot: v1 = 1
+0x1a2680  jal   func_364798
+0x1a2688  jal   func_364AE0
+0x1a2690  jal   func_364798
+0x1a2698  lbu   $v1, 0x405($v0)     ; so executa com v0 NAO-nulo
+0x1a269c  sltu  $v1, $zero, $v1
+0x1a26a0  beqz  $v1, 0x1a26c0       ; -> jal func_52A388 (ioInputUpdate)
+0x1a26b0  jalr  metodo virtual +0xC, a1=0x11
+0x1a26b8  b     ...                 ; desvia POR CIMA do input
+```
+
+Com o ponteiro nulo, o `beqz` de `0x1a2678` cai em `0x1a269c` carregando `$v1 = 1` do delay
+slot. O `sltu` faz `1`, o `beqz` de `0x1a26a0` **nao** e tomado, e o jogo desvia por cima do
+`ioInputUpdate`. Ou seja:
+
+**Sem controlador de intro, este caminho nunca le o pad. Nao as vezes: nunca.**
+
+As 87 chamadas de `uiInputUpdate` que medimos vem do outro caminho — `func_52D680`, que o laco
+tambem invoca e que chama `sub_0052A388` por conta propria.
+
+### A pergunta que sobra
+
+`0x617BCC` e escrito por `sub_00364720` (aloca 0x440 bytes, roda o ctor `func_364440`, guarda o
+ponteiro) e zerado por `FUN_00364758`. Os contadores fecham: `introInitCalls=3`,
+`introClearCalls=3` — os tres filmes, criados e descarregados, sem sobra.
+
+O frontend, portanto, roda **sem** um objeto onde o laco principal espera um. A pergunta agora e
+se o `EnterStateMC3Frontend` deveria criar o seu (uma quarta chamada a `sub_00364720`, que nunca
+acontece) ou se o laco deveria estar em outro ramo quando nao ha camada.
+
+Chamadores conhecidos de `sub_00364720`: `sub_001A99E8`, `FUN_001a9a10`, `FUN_00364658`.
+`sub_001A99E8` grava a vtable `0x623940` no objeto e chama `func_1A8D28` — e um construtor de
+camada. Proximo passo: contar essas chamadas no trace e ver qual delas o frontend deixa de fazer.
