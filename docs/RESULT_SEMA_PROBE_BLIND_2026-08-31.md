@@ -1367,3 +1367,47 @@ Os seis pontos que tinham a mesma inversão:
 | `Thread.cpp` | `SuspendThread` (auto-suspensão) |
 | `Thread.cpp` | `SleepThread` |
 | `Helpers/Runtime.h` | `waitWhileSuspended` |
+
+## 31. Validação da correção: 4 × 20 min sem a trava, mas com uma pausa longa na r4
+
+Bateria `waitphase_20260903_fix`, mesmo protocolo da bateria que capturou a trava (4 × 1200 s,
+graça de 120 s, captura em `heldMs >= 30000` com três amostras crescentes da mesma assinatura),
+agora com o binário relinkado sobre a `libps2_runtime.a` corrigida.
+
+**`SEM_CAPTURA` nas quatro corridas.** Nenhuma reincidência da assinatura da seção 30: em nenhum
+momento apareceu `sema-mutex-wait` sequer uma vez — a fase em que a tid=8 tinha ficado presa por
+30 amostras seguidas.
+
+| corrida | maior retenção do token | fases internas vistas | `gsPrims` no corte |
+|---|---:|---|---:|
+| r1 | 5.742 ms | nenhuma (7 amostras `none`) | 703.566, subindo |
+| r2 | 11.255 ms | 2 passagens soltas por `sema-mutex-held` | 1.100.427, subindo |
+| r3 | 10.221 ms | 1 passagem solta por `sema-mutex-held` | 994.196, subindo |
+| r4 | 35.914 ms | 5 passagens por `sema-mutex-held` | 772.935, subindo |
+
+A r2 passou de 1,1 milhão de primitivas — mais longe do que chegou a corrida que travou
+(994.196, congelada ali).
+
+### A pausa da r4, dita sem enfeite
+
+A r4 teve uma amostra isolada de **35.914 ms** de retenção do token, com a tid=8 em
+`sema-mutex-held` no semáforo 6 — segurando o mutex, não esperando por ele. Nos mesmos ticks o
+`gsPrims` ficou plano em 715.674, dos ticks 25380 a 25620.
+
+**Ela se recuperou.** No tick 25800 o contador voltou a subir e seguiu até 772.935 no fim da
+corrida. As amostras seguintes do watchdog voltaram para a casa dos 3–6 s, ou seja, o token foi
+solto e retomado normalmente.
+
+Isso é diferente em espécie da trava da seção 30, que nunca soltava, tinha `heldMs` monotônico em
+30 amostras e deixava o quadro congelado até o fim do log. Mas é a maior pausa já medida, e não
+tem explicação fechada. Fica registrada como pendência própria, não como resíduo da trava.
+
+### Leitura honesta
+
+A trava capturada na seção 30 não reapareceu em 80 minutos de execução sob o mesmo protocolo que
+a produziu. Isso é forte, não é prova: a trava dependia de um cruzamento raro de tempo, e a única
+captura veio na quinta janela de 20 minutos que rodamos. A correção é justificada pela análise —
+duas ordens opostas sobre os mesmos dois recursos — e não apenas pela ausência de reincidência.
+
+Próximo alvo natural, agora que o convidado não morre mais nessa janela: verificar se a tela
+efetivamente passa do menu, e investigar a pausa longa da r4.
