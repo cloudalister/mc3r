@@ -254,3 +254,48 @@ acima) — suíte não rodou (regra do `WORKFLOW.md`: só medir/rodar suíte qua
 código tracked). `git status` no repo raiz e no submódulo `PS2Recomp` não mostram nada a
 commitar além deste RESULT doc; commit local deste arquivo será feito a seguir, sem push
 (regra do `WORKFLOW.md`).
+
+
+## Adendo 2026-09-03: `-skipintro` nao existe neste retail
+
+Varredura direta dos 5.264.872 bytes de `extracted_iso/SLUS_213.55` (busca literal, sem
+depender de simbolo):
+
+| termo | ocorrencias |
+|---|---|
+| `skipintro` | **0** |
+| `qload` | **0** |
+| `menuDebug` | **0** |
+| `garage` | 5+, mas todas dentro da tabela de nomes de estado |
+| `loadrecent` | 2, ambas em nomes de UI (`PM_AreYouSureLoadRecent`, `RE_LOADRECENTSLOT`) |
+
+As ocorrencias de `garage` estao todas na mesma tabela de `.rodata` (a partir de `0x497dfa`):
+
+```
+tune/city.loadTransition.city.conditions.ambients.frontend.garage.mc3frontend.movie.race.
+race editor.mix.tuneudio.vehInput...
+```
+
+Isso e a **tabela de nomes de estado** do `mcGameState`, nao uma lista de parametros de linha
+de comando. O `datArgParser::Init@0x428AC0` sobreviveu no binario, mas as palavras que o
+handoff esperava passar para ele nao estao em lugar nenhum do retail — elas vieram dos
+simbolos do build alpha (MC.MAP), nao deste ELF.
+
+**Consequencia pratica:** implementar o override do bloco em `0x614400` para entregar
+`-skipintro -garage` seria construir a maquinaria inteira para argumentos que nenhum codigo
+deste binario procura. O atalho da Rockstar existe no alpha; nao existe aqui.
+
+O layout do override, ja decodificado, fica registrado caso um dia sirva para outro argumento
+que exista de fato:
+
+```
+v1 = *(0x614400)
+v0 = (v1 != 0) ? (v1 + 4) : 0x677080
+a0 = *(v0)      // argc
+a1 = v0 + 4     // vetor de ponteiros para as strings
+```
+
+Ganho colateral da varredura: a tabela de nomes de estado esta localizada e legivel a partir de
+`0x497dfa`. Ela nomeia `frontend`, `garage`, `mc3frontend`, `movie`, `race`, `race editor` — o
+vocabulario da maquina de estados que hoje nao avanca da tela legal
+(`docs/RESULT_PAD_AUTOSTART_2026-09-03.md`).
