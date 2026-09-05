@@ -77,6 +77,11 @@ powershell -File tools\Catch-WaitSemaPhase.ps1 -MaxRuns 4 -Seconds 1200 -Label <
 rem foto do que está na tela (dispara ao passar de <N> primitivas)
 powershell -File work\scratch\Run-FrameDump.ps1 -Seconds 900 -Label <rotulo> -Headless -MinPrims 150000
 
+rem custo de render com dispersao medida (SEMPRE use isto para A/B de performance)
+powershell -File tools\Measure-RenderCost.ps1 -Label <rotulo> -Reps 3
+rem   piso de ruido medido em 2026-09-05: ~16% nas reguas de raster.
+rem   So aceite ganho que exceda a dispersao que o proprio script imprime.
+
 rem entregar START sem janela com foco (período em ms; 30 s de atraso por padrão)
 set "MC3_PAD_AUTOSTART=1500"
 set "MC3_PAD_AUTOSTART_DELAY_MS=45000"

@@ -632,3 +632,73 @@ confiavel e estes daqui nao sao.
 O acumulador de pixels **fica**: nao acrescenta invariante nenhum, faz estritamente menos
 trabalho que antes, e a semantica do contador esta preservada. Mas entra no registro como
 **sem ganho medido**, nao como otimizacao comprovada.
+
+
+## 18. A bancada, consertada: medir por janela de trabalho
+
+### Orcamento fixo tambem nao bastou
+
+`MC3_DISPATCH_BUDGET=1500000`, tres corridas do mesmo binario:
+
+| corrida | ns/pixel | us/prim | vif us/prim | pixels alcancados |
+|---|---:|---:|---:|---:|
+| r1 | 78,1 | 28,4 | 84,0 | 256 M |
+| r2 | 99,7 | 63,3 | 129,6 | 510 M |
+| r3 | 94,7 | 63,4 | 127,5 | 548 M |
+
+Dispersao de **23%** no custo por pixel e **55%** no custo por primitiva — mesmo binario, mesmo
+orcamento. O motivo esta na ultima coluna: o orcamento fixa **despachos do laco principal**, nao
+trabalho de render, e cada corrida alcancou uma **cena diferente**. Cena diferente, custo por
+pixel diferente, sem nada a ver com o codigo.
+
+Calibragem obtida de passagem: **~4.640 despachos por segundo**. Um orcamento de 1,5 M leva de
+454 s a mais de 900 s — a propria duracao varia 2x.
+
+### O que funciona: diferenca entre dois marcos de trabalho
+
+Os contadores do trace sao cumulativos. Tomando a **diferenca** entre dois marcos fixos de
+`gsPrims` (300 mil e 600 mil por padrao), normalizam-se de uma vez a cena e o custo de partida.
+Aplicado aos mesmos tres logs acima, sem rodar nada de novo:
+
+| corrida | ns/pixel | us/prim | vif us/prim |
+|---|---:|---:|---:|
+| r1 | 71,95 | 26,56 | 43,43 |
+| r2 | 71,07 | 26,24 | 41,49 |
+| r3 | 60,52 | 22,34 | 32,89 |
+
+| regua | dispersao no total da corrida | dispersao na janela |
+|---|---:|---:|
+| ns/pixel | 22,8% | **16,1%** |
+| us/prim | 55,3% | **16,1%** |
+| vif us/prim | 35,8% | **25,4%** |
+
+r1 e r2 concordam dentro de 1,2%; r3 e o outlier. **O piso de ruido da bancada e ~16%** para as
+reguas de raster. E o numero que faltava: qualquer ganho anunciado abaixo disso, com poucas
+corridas, e fantasia.
+
+### Ferramenta
+
+`tools/Measure-RenderCost.ps1`. Roda N repeticoes, recusa binario mais velho que a lib, recusa
+sobrescrever log existente, descarta linhas de trace corrompidas por escrita concorrente, e
+imprime mediana, min, max e dispersao de cada regua — com a regra no rodape.
+
+```bat
+rem dispersao do binario atual (o que e ruido)
+powershell -File tools\Measure-RenderCost.ps1 -Label base -Reps 3
+
+rem A/B: rode em A, relinke B, rode em B, compare MEDIANAS
+powershell -File tools\Measure-RenderCost.ps1 -Label depois -Reps 3
+```
+
+Nao precisa de `MC3_DISPATCH_BUDGET`: como a janela normaliza o trabalho, corridas de tempo fixo
+servem, desde que passem do marco alto.
+
+### O que isso faz com os resultados desta madrugada
+
+| mudanca | delta anunciado | veredito com piso de 16% |
+|---|---|---|
+| gate das varreduras (secao 15) | 242 -> 68 us/prim | **acima do ruido** (3,5x), mas medido com o metodo ruim; refazer com o novo |
+| pool de buffers (secao 16) | +8 a +16% | dentro do ruido, ja revertido |
+| contador de pixels em lote (secao 17) | +16 a +27% | dentro do ruido, mantido por mecanismo |
+
+Nenhum numero desta madrugada deve ser citado sem essa ressalva ate ser refeito com a janela.
