@@ -413,3 +413,73 @@ numeros e errada no denominador.
    microprograma termina no E-bit ou corre ate o teto.
 3. **Numero de chutes.** E do jogo, nao nosso, entao so cai por batching no nosso lado — ideia
    valida mas de risco alto, deixar por ultimo.
+
+
+## 13. O VU1 nao tem defeito: 88 ciclos por chute, zero estouros de orcamento
+
+Contadores `vu1Cycles` (ciclos executados pelo interpretador) e `vu1CapHits` (chutes que
+esgotaram os 65.536 ciclos de orcamento), acumulados localmente e somados uma vez por chute.
+Corrida `probe_vu1cycles_20260905`, 480 s, `MC3_PHASE_TIMING=1`.
+
+| medida | valor |
+|---|---:|
+| `vu1Mscal` | 92.140 |
+| `vu1Cycles` | 8.130.318 |
+| `vu1CapHits` | **0** |
+| `vu1Ms` | 18.168 |
+| `vifMs` | 30.351 |
+| `rasterMs` / `rasterCalls` | 3.687 / 125.442 |
+| `gsPixels` | 45.039.946 |
+
+- **88,2 ciclos por chute.** E o tamanho de um microprograma pequeno de transformacao.
+- **Zero estouros de orcamento.** Todo chute termina no E-bit.
+
+**Hipotese morta: "o microprograma corre ate o teto em vez de parar".** Nao corre. O
+interpretador do VU1 nao e o gargalo: 8,1 milhoes de ciclos, a algumas dezenas de nanossegundos
+cada, dao menos de meio segundo dos 18,2 s de `vu1Ms`. **Nao reabrir.**
+
+### Onde os 18,2 s de `vu1Ms` estao, entao
+
+`vu1Ms` e inclusivo do que o XGKICK dispara. Subtraindo o que esta medido:
+
+| fatia | valor | por chute |
+|---|---:|---:|
+| `vu1Ms` total | 18,2 s | 197 us |
+| interpretacao do VU1 (8,1 M ciclos) | < 0,5 s | < 5 us |
+| `rasterMs` (`drawPrimitive`) | 3,7 s | 40 us |
+| **restante: GIF/GS entre o XGKICK e o `drawPrimitive`** | **~14 s** | **~152 us** |
+
+Ou seja: o maior item dentro do escopo do VU1 nao e nem o interpretador nem o laco de pixels —
+e o **tratamento do pacote GIF e a preparacao de estado do GS** entre um e outro.
+
+### Ressalva honesta sobre a secao 11
+
+O peso relativo do rasterizador varia com o conteudo da tela. Nas duas corridas medidas:
+
+| corrida | `rasterMs / vifMs` | us por primitiva | ns por pixel |
+|---|---:|---:|---:|
+| `probe_isocache_20260905` (frontend) | 56% | 86 | 106 |
+| `probe_vu1cycles_20260905` (mais cedo) | 12% | 29 | 82 |
+
+A afirmacao da secao 11 de que o rasterizador e "56% do quadro" vale para a tela do frontend
+medida la, nao como constante do motor. O que se repete nas duas e a **ordem de grandeza dos
+custos unitarios**: dezenas de microssegundos por primitiva, ~100 ns por pixel, com ~120 mil
+chutes por corrida.
+
+## 14. Recomendacao final do encadeamento
+
+O gargalo nao tem um culpado unico: e **custo por primitiva espalhado por tres estagios** —
+parsing VIF1, tratamento de pacote GIF/estado GS, e rasterizacao — sobre um volume de ~120 mil
+chutes de uma primitiva cada. Nenhum deles tem defeito logico; todos tem folga de otimizacao.
+
+Ordem sugerida, por retorno medido:
+
+1. **Caminho GIF/GS entre XGKICK e `drawPrimitive`** (~152 us por chute nesta corrida). Maior
+   item dentro do escopo do VU1 e o menos investigado ate agora.
+2. **Rasterizador** (~29-86 us por primitiva, ~80-106 ns por pixel). Maior item na tela do
+   frontend; uma a duas ordens de grandeza de folga em relacao a tecnica.
+3. **VIF1 fora do VU1** (12,2 s de 30,4 s nesta corrida). Ja recebeu uma passada de otimizacao
+   em 30/08 que cortou 59%; ha precedente de que responde.
+
+**Nao mexer**: interpretador do VU1 (88 ciclos/chute), terminacao por E-bit, sincronizacao do
+parser VIF1, sono de thread, tabela de callbacks de input — todos medidos e limpos.
