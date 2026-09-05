@@ -1,4 +1,4 @@
-param([int]$Seconds = 900, [string]$Label = ('fe_writes_' + (Get-Date -Format 'yyyyMMdd_HHmmss')), [switch]$QuietBootTrace)
+param([int]$Seconds = 900, [string]$Label = ('fe_writes_' + (Get-Date -Format 'yyyyMMdd_HHmmss')), [switch]$QuietBootTrace, [switch]$TraceVuBudget)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $exe = Join-Path $root 'work\link\partial\mc3_partial.exe'
@@ -23,6 +23,11 @@ $env:MC3_BOOT_TRACE = if ($QuietBootTrace) { '0' } else { '1' }
 $env:MC3_HEADLESS = '1'
 $env:MC3_FE_WRITE_TRACE = '1'
 $env:MC3_PHASE_TIMING = '1'
+if ($TraceVuBudget) {
+    $env:MC3_VU1_BUDGET_TRACE = '1'
+    $env:MC3_VU1_BUDGET_DUMP = Join-Path $root "work\captures\vu1_$Label"
+    if (Get-ChildItem -Path "$($env:MC3_VU1_BUDGET_DUMP)_*.bin" -ErrorAction SilentlyContinue) { throw 'Existing VU1 capture' }
+}
 $env:MC3_PAD_AUTOSTART = '1500'
 $env:MC3_PAD_AUTOSTART_DELAY_MS = '45000'
 $env:MC3_PAD_AUTOSTART_HOLD_MS = '600000'

@@ -1652,3 +1652,20 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   permaneceu rodando. Resultado: `docs/RESULT_FRONTEND_WRITES_2026-09-05.md`.
 - Ferramentas: `tools/Probe-FrontendWrites.ps1`, `tools/Analyze-FrontendBoot.ps1` e
   `tools/diagnostics/FRONTEND_WRITE_PROBE.md`. Nenhuma instrucao guest alterada, sem push.
+
+## Checkpoint 2026-09-05 - VU1 FSAND corrigido (Astra)
+
+- Captura limitada a8 casos identificou entrada0x30/FNV0a669b31 repetindo0x2820..0x2868.
+  FSAND0x2c070002 escreviaVI1 em vez deVI7, apagando o contador do loop.
+- Corrigido somente FSAND (destino, VI0 e imediato12). Testes novos falharam antes
+  (311/313), passaram depois (313/313); loop reduzido encerra em10 ciclos, antes65536.
+  Runtime compilado/relinkado e strings/mtime/hashes conferidos. Commit721a97b.
+- Rodada corrigida901s:82 caps/89.339.312 ciclos, contra15.852 caps na corrida anterior901s.
+  Animacao18 vs21 anteriormente: NAO ha ganho deFPS provado. Frame700k ectx0 pretos.
+- Proximos8 caps sao outro codigo: entrada0x60/FNVa57d6e03, ITOP338, header0x1520
+  final zerado. XTOP eXITOP atualmente leemITOP; callback nao entregaTOP e MSCAL
+  nao faz latchTOP. Prioridade: capturarTOP/TOPS/ITOP/ITOPS/header na entrada e
+  testar esse contrato antes de alterar o fluxo VIF1->VU1. Nao pular trabalhozero.
+- Nenhum MC3 permaneceu rodando; sem push. Relatorio/reproducao/fontes/hashes em
+  `docs/RESULT_VU1_BUDGET_2026-09-05.md`. Parser efixture emtools/Analyze-VuBudget.ps1
+  e tools/Test-AnalyzeVuBudget.ps1. FSEQ/FSOR/FSSET nao alterados neste lote.

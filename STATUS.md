@@ -1,8 +1,12 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-05, sonda de escritas Astra** — o frontend progride muito
-devagar; o suposto reinício do contador não se confirmou. **Milhares de execuções do VU1
-atingem 65.536 ciclos na cena posterior ao boot**; essa é a pista atual.
+Atualizado: **2026-09-05, captura VU1 Astra** — identificado e corrigido um erro no
+**FSAND**, que zerava VI1 em vez de escrever em VI7 e prendia o bloco 0x2820..0x2868.
+O teste reduzido passou de atingir 65.536 ciclos a terminar em dez. **313/313 testes**.
+Rodada corrigida901s: **82 caps**, contra15.852 no probe anterior901s; sem prova de
+ganho de FPS (animação18 vs21). **Imagem pontual ainda preta; boot/menu não aceitos.**
+Próximo alvo: entradaVU1 **0x60**, header0x1520 zerado e contrato **XTOP/TOP vs XITOP/ITOP**.
+Ver `docs/RESULT_VU1_BUDGET_2026-09-05.md`.
 **10,4 s é VIF acumulado dividido por voltas, não duração total de quadro.**
 O diagnóstico de causa única ainda não está demonstrado. Ver
 `docs/RESULT_RENDER_AUDIT_2026-09-05.md` para correções e próximo experimento.
@@ -56,9 +60,10 @@ uma partição demonstrada de quadro real; **variam com a cena**.
 | VU1 fora do raster | 23% | — |
 | VIF1 fora do VU1 | 21% | — |
 
-Custos unitários, que se repetem nas duas: **~30-86 µs por primitiva**, **~60-106 ns por pixel**,
-**~120 mil chutes de VU1 por corrida**. O interpretador do VU1 em si é barato (88 ciclos por
-chute); o caro é o caminho **GIF/GS entre o XGKICK e o `drawPrimitive`** (~152 µs por chute).
+Custos históricos nessas corridas: **~30-86 µs por primitiva**, **~60-106 ns por pixel**,
+**~120 mil chutes de VU1 por corrida**. Os **88 ciclos por chute** descrevem a cena inicial,
+não a cena posterior: nela foram observadas milhares de chamadas atingindo 65.536 ciclos.
+O custo do caminho **GIF/GS entre o XGKICK e o `drawPrimitive`** não elimina essa nova pista.
 
 ## Fechado em 2026-09-03 (não reabrir)
 
@@ -102,18 +107,20 @@ escritas são inicialização e progresso normal, sem reinício. Isso não prova
 completo terminará; retira uma conclusão incorreta do caminho. Ver
 `docs/RESULT_FRONTEND_WRITES_2026-09-05.md` e `tools/diagnostics/FRONTEND_WRITE_PROBE.md`.
 
-**Nova prioridade: VU1 atingindo o orçamento.** No lote Astra, 15.852 chamadas chegaram
+**Origem da investigação do VU1 (antes da correção FSAND).** No lote Astra, 15.852 chamadas chegaram
 a 65.536 ciclos, consumindo 94,3% dos ciclos VU contabilizados. No log antigo de 30 min:
 30.169 chamadas, 96,8%. Foram usados blocos completos (271/577 amostras não zero).
-O contador também admite término normal exatamente no último ciclo; capturar PC de entrada/
-saída, E-bit e instruções das primeiras ocorrências antes de chamar isso de loop infinito.
+O contador também admite término normal exatamente no último ciclo. A captura posterior
+separou isso e encontrou o erro FSAND; restam82 caps de outra entrada no lote corrigido.
 Não é percentual de tempo de parede. A conclusão histórica de zero estouros só valia para
 a cena anterior; não elimina este caminho.
 
 ## Próximos alvos, em ordem
 
-0. **Capturar os primeiros limites VU1 da cena do frontend** (entrada/saída, E-bit,
-   microprograma e registradores VI), distinguindo fim normal de interrupção no orçamento.
+0. **Contrato TOP/TOPS/ITOP/ITOPS na entrada VU1 0x60.** XTOP e XITOP leem o mesmo
+   ITOP; o header em0x1520 está zerado na captura final. Registrar os quatro valores e
+   header ANTES da execução; testar o latch de TOP em MSCAL/MSCNT e separar as fontes.
+   O caso FSAND da entrada0x30 já foi corrigido e coberto por teste discriminante.
    Em paralelo conceitual, fechar tempo por volta real: parede, VIF e espera/execução.
    Não alterar scheduler. O gate de `GS::processGIFPacket` (`ps2_gs_gpu.cpp`) já foi
    relinkado no lote Astra; sua magnitude continua sem A/B validado.
@@ -126,7 +133,8 @@ a cena anterior; não elimina este caminho.
    que a técnica permite. Maior fatia na tela do frontend.
 4. **VIF1 fora do VU1.** Já respondeu a uma otimização em 30/08 (queda de 59%), então há
    precedente de que o estágio rende.
-5. **Janela preta.** O despejo em PNG sai correto e a janela não. Só bloqueia *ver* o jogo.
+5. **Imagem/apresentação.** Houve PNG legal correto historicamente, mas os dumps pontuais
+   recentes em700k primitivas também são pretos. Não reduzir tudo à janela do host.
 6. **Pausa de 35,9 s** vista na validação de 03/09 (recuperou sozinha). Aberto, não urgente.
 
 **Regra de trabalho para performance:** nenhuma otimização entra sem passar pelo

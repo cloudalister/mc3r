@@ -50,6 +50,9 @@ the standard scheduler; STATUS.md supersedes the old deterministic requirement i
 WORKFLOW.md. It attempts a framebuffer dump at 700,000 primitives.
 
 `-QuietBootTrace` disables the general boot trace while keeping writer events enabled.
+`-TraceVuBudget` captures the first eight VU1 budget-boundary exits and saves their
+code/final-data under a unique prefix. Read `docs/RESULT_VU1_BUDGET_2026-09-05.md`
+for semantics and use `tools/Analyze-VuBudget.ps1` for the bounded tail summary.
 The framebuffer dump and frame counters depend on the general trace and are absent in
 this mode. The runner stores a `.result.json` with elapsed wall time and aggregate
 process CPU/user/kernel times. Missing counters must never be interpreted as zero.
