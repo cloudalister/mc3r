@@ -483,3 +483,62 @@ Ordem sugerida, por retorno medido:
 
 **Nao mexer**: interpretador do VU1 (88 ciclos/chute), terminacao por E-bit, sincronizacao do
 parser VIF1, sono de thread, tabela de callbacks de input — todos medidos e limpos.
+
+
+## 15. Bug encontrado no arbitro do GIF: varredura de debug sem gate, em todo pacote
+
+`ps2_gif_arbiter.cpp`, em `submit()` e em `drain()`:
+
+```cpp
+if (s_debugCopyArbiterSubmitCount.load(...) < 24u) {
+    const bool hasCopyFrame  = containsU64(data, sizeBytes, 0x0000000002080000ull);
+    const bool hasCopySource = containsU64(data, sizeBytes, 0x00000002a8120800ull);
+    if ((hasCopyFrame || hasCopySource) && counter.fetch_add(1u, ...) < 24u) { ... }
+}
+```
+
+Parece limitado a 24 emissoes, mas **o contador so avanca quando ha acerto**. Sem acerto ele fica
+em zero para sempre, e as duas varreduras lineares do pacote inteiro rodam em **todo** pacote,
+indefinidamente — duas no `submit`, duas no `drain`, **quatro por pacote**, sobre ~120 mil a 350
+mil pacotes por corrida, no caminho mais quente do render. Ninguem le o resultado.
+
+Os nomes `MC3_COPY_ARB_SUBMIT` e `MC3_COPY_ARB_DRAIN` ja eram os das linhas emitidas e ja
+constavam na lista de variaveis do runtime: **o gate estava previsto e faltando**. Agora os dois
+blocos so entram com a variavel ligada, lida uma vez e guardada em `static const bool`.
+
+### Medicao, mesma receita (480 s, headless, `MC3_PHASE_TIMING=1`)
+
+| custo unitario | antes (`probe_vu1cycles`) | depois (`probe_arbgate`) | queda |
+|---|---:|---:|---:|
+| `vifMs` por primitiva | 242 us | **68 us** | 72% |
+| GIF/GS por pacote PATH1 (`vu1Ms - rasterMs`) | 233 us | **44 us** | 81% |
+| `rasterMs` por primitiva | 29,4 us | **21,5 us** | 27% |
+| `rasterMs` por pixel | 81,9 ns | **59,0 ns** | 28% |
+
+Trabalho realizado no mesmo tempo de parede, com o jogo no mesmo ponto de boot
+(`gsState=7`, `frontendTickCalls=1`, tick 23.040 contra 24.660):
+
+| medida | antes | depois |
+|---|---:|---:|
+| `gsPrims` | 125.442 | **703.599** |
+| `gifPk1` | 62.146 | **348.558** |
+| `gsPixels` | 45,0 M | **256,0 M** |
+
+### Ressalva honesta sobre a comparacao
+
+A variacao entre corridas neste projeto e grande: com binarios da mesma familia, a
+`probe_isocache_20260905` custou 153 us por primitiva e a `probe_vu1cycles_20260905` custou 242
+us. Medido contra a **melhor** base anterior em vez da imediatamente anterior, a queda fica em:
+
+| custo unitario | melhor base anterior | depois | queda |
+|---|---:|---:|---:|
+| `vifMs` por primitiva | 153 us | 68 us | 56% |
+| GIF/GS por pacote PATH1 | 61 us | 44 us | 28% |
+| `rasterMs` por pixel | 106 ns | 59 ns | 44% |
+
+Ou seja: o ganho e real e maior que a faixa de ruido observada, mas o numero honesto e
+**"entre 28% e 81% conforme a regua e a base"**, nao o melhor caso isolado. Uma comparacao
+definitiva exigiria relinkar o binario anterior e alternar as duas corridas, o que nao foi feito.
+
+**O jogo continua parando no mesmo lugar.** Isto e ganho de throughput, nao destrave: `gsState`,
+`frontendTickCalls` e a fase de boot sao identicos nas duas corridas.
