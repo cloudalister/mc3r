@@ -1635,3 +1635,20 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   validas. Perseguir a corrida certa por sorte tambem custou 8 tentativas
   falhas; instrumentar pelo sintoma tornou a reproducao desnecessaria.
 - Detalhes: `docs/RESULT_SQRT_OPERAND_BUG_2026-08-30.md`.
+
+## Checkpoint 2026-09-05 - escritas frontend e limites VU1 (Astra)
+
+- Revisado STATUS atual e progresso desde a sonda WaitSema: a inversao de locks ja estava
+  corrigida; nao foi reaberta. Um investigador economico conferiu o caminho da animacao.
+- O suposto ciclo `fe6AC 39 -> 0` nao aparece nas 887 amostras completas ordenadas do log
+  longcook: zero regressoes, ultimo/maximo40. Corrigida essa conclusao no STATUS.
+- Oito stores em quatro owners receberam sonda passiva. Compilados e relinkados; exe/lib
+  identificados por SHA. Corrida901s: 34 eventos,16 Updates, clipe119, timer0.528, campo21,
+  sem reinicio. Dump pontual preto; menu jogavel nao confirmado.
+- Achado prioritario: VU1 atingiu orcamento65536 em15.852 chamadas (94,3% dos ciclos
+  emulados). O log longo anterior ja continha30.169 (96,8%). Contagem corroborada em
+  centenas de blocos completos. Capturar PC/E-bit antes de afirmar loop infinito.
+- Controle quiet301s: somente construtor; insuficiente para medir ganho. Nenhum MC3
+  permaneceu rodando. Resultado: `docs/RESULT_FRONTEND_WRITES_2026-09-05.md`.
+- Ferramentas: `tools/Probe-FrontendWrites.ps1`, `tools/Analyze-FrontendBoot.ps1` e
+  `tools/diagnostics/FRONTEND_WRITE_PROBE.md`. Nenhuma instrucao guest alterada, sem push.

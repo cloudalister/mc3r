@@ -1,7 +1,9 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-05, auditoria Codex** — o jogo desenha e o frontend progride muito
-devagar. **10,4 s é VIF acumulado dividido por voltas, não duração total de quadro.**
+Atualizado: **2026-09-05, sonda de escritas Astra** — o frontend progride muito
+devagar; o suposto reinício do contador não se confirmou. **Milhares de execuções do VU1
+atingem 65.536 ciclos na cena posterior ao boot**; essa é a pista atual.
+**10,4 s é VIF acumulado dividido por voltas, não duração total de quadro.**
 O diagnóstico de causa única ainda não está demonstrado. Ver
 `docs/RESULT_RENDER_AUDIT_2026-09-05.md` para correções e próximo experimento.
 
@@ -87,23 +89,34 @@ chute); o caro é o caminho **GIF/GS entre o XGKICK e o `drawPrimitive`** (~152 
    dispersão com o mesmo binário. O que funciona é **janela de trabalho** (diferença entre dois
    marcos de `gsPrims`), implementada em `tools/Measure-RenderCost.ps1`. → seções 17-18.
 
-## Aberto em 2026-09-05 (a pista mais quente)
+## Aberto em 2026-09-05 (sonda de escritas e revisão do suposto ciclo)
 
-**`fe6AC` cicla, nao converge.** `mc3FeView::CanTransition@0x3224F8` exige
-`(s32)this+0x6AC < 0`. Numa corrida de 30 min (`probe_longcook_20260905`, 31 voltas da arvore do
-frontend) o campo sobe ate 39, volta a 0 e recomeca — **nunca fica negativo**, e as transicoes
-seguem em `3/1/3/2/3`. Rodar mais tempo nao termina a animacao.
+**O ciclo de `fe6AC` alegado na seção 19 do histórico não foi demonstrado.** Releitura
+cronológica de `probe_longcook_20260905`: **887 blocos completos, zero regressões, máximo e
+último valor 40**. O histograma não prova `39 → 0`; linhas corrompidas foram descartadas.
 
-`0x6AC` recebe `-1` em dois pontos de `mc3FeView::Update@0x322668` (`0x3226d8`, com
-`this+0x680[this+0x6B0]` nulo; `0x322ca4`, fim da animacao de camera). **Proxima medicao:
-instrumentar as escritas nesse campo (valor + PC de origem) numa corrida curta** — isso nomeia
-quem reinicia o ciclo, em uma medicao so. → `docs/RESULT_M3_TITLE_EXIT_2026-09-04.md` secao 19.
+Sonda passiva instalada em oito escritas de quatro owners, com objeto, origem, valor antigo/
+novo, clipe e timers. A corrida `fe_writes_astra_20260905` mostra o mesmo objeto e clipe,
+slot 10, **119 posições, duração 3**, timer avançando **0,033 por Update**. As primeiras
+escritas são inicialização e progresso normal, sem reinício. Isso não prova que o boot
+completo terminará; retira uma conclusão incorreta do caminho. Ver
+`docs/RESULT_FRONTEND_WRITES_2026-09-05.md` e `tools/diagnostics/FRONTEND_WRITE_PROBE.md`.
+
+**Nova prioridade: VU1 atingindo o orçamento.** No lote Astra, 15.852 chamadas chegaram
+a 65.536 ciclos, consumindo 94,3% dos ciclos VU contabilizados. No log antigo de 30 min:
+30.169 chamadas, 96,8%. Foram usados blocos completos (271/577 amostras não zero).
+O contador também admite término normal exatamente no último ciclo; capturar PC de entrada/
+saída, E-bit e instruções das primeiras ocorrências antes de chamar isso de loop infinito.
+Não é percentual de tempo de parede. A conclusão histórica de zero estouros só valia para
+a cena anterior; não elimina este caminho.
 
 ## Próximos alvos, em ordem
 
-0. **Fechar tempo por volta real**, separando parede, VIF e espera/execução do convidado.
-   Não alterar scheduler. Há outra varredura de debug sem gate em
-   `GS::processGIFPacket` (`ps2_gs_gpu.cpp`); preparar A/B isolado conforme auditoria.
+0. **Capturar os primeiros limites VU1 da cena do frontend** (entrada/saída, E-bit,
+   microprograma e registradores VI), distinguindo fim normal de interrupção no orçamento.
+   Em paralelo conceitual, fechar tempo por volta real: parede, VIF e espera/execução.
+   Não alterar scheduler. O gate de `GS::processGIFPacket` (`ps2_gs_gpu.cpp`) já foi
+   relinkado no lote Astra; sua magnitude continua sem A/B validado.
 1. **Refazer a medição do gate da seção 15** com `Measure-RenderCost.ps1`. O ganho anunciado
    (3,5x) veio do método ruim; o conserto se justifica pelo mecanismo, mas o número precisa ser
    refeito antes de ser citado.
@@ -132,7 +145,7 @@ o próprio script imprime.
 | "`-skipintro` pula a abertura" | As palavras não existem neste ELF (busca literal em 5.264.872 bytes). |
 | "ninguém está registrado para consumir o input" | A tabela de callbacks em `0x715D28` é BSS e é no-op **no console também**: zero escritores no corpus, zero no `.data`. |
 | "o `ipcSleep` da netManagerThread volta cedo e ela gira à toa" | 9 chamadas de `DelayThread` por segundo no processo inteiro, e `delayThreadCalls == setTimerAlarmCalls` em toda amostra. |
-| "o microprograma do VU1 corre até o teto de ciclos" | 88,2 ciclos por chute e **zero** estouros de orçamento em 92.140 chutes. |
+| "todo VU1 é barato porque houve zero estouros no teste inicial" | **Conclusão invalidada para o frontend:** os logs longos mostram milhares de chamadas no teto. Ver lote Astra; o zero era restrito ao trecho inicial. |
 | "o nosso VIF1 decodifica MSCAL a mais" | `MSCAL` é 9,1% dos comandos decodificados e `UNPACK` 27,5% — mistura de fluxo real. O jogo chuta mesmo uma vez por primitiva. |
 | "reaproveitar os buffers do árbitro do GIF" | Sem ganho medido; piorou dentro do ruído. Revertido. → seção 16. |
 
