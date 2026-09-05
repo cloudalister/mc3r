@@ -1,30 +1,56 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-03** — o jogo desenha, carrega assets e lê o controle. O que não anda é
-a **máquina de estados** (M3).
+Atualizado: **2026-09-05** — o jogo desenha, carrega assets, lê o controle e **não está
+travado**. Ele roda a **10,4 s por quadro**, e é isso que impede qualquer tela nova.
 
 ## 📌 Ponto de parada (retomar daqui)
 
-O boot chega até a **tela legal do frontend**, desenhada corretamente, e para ali.
-Os cinco contadores de transição sobem para `3/1/3/2/3` nos primeiros segundos e **congelam por
-38 mil ticks**, enquanto o render continua e o pad é lido 532 vezes.
+O boot chega à **tela legal do frontend**, desenhada corretamente, e fica nela. A causa **não** é
+lógica de menu nem falta de input: é custo por quadro.
+
+**A conta que fecha** (corrida de 900 s, `probe_isocache_20260905`):
+
+- O laço principal `sub_001A23A8` deu **13 voltas em 20 minutos** — uma a cada ~67 s.
+- `vifMs` = 134,9 s ÷ 13 voltas = **10,4 s por quadro**, e 13 × 10,4 s é o `vifMs` inteiro.
+  **O custo de uma volta do laço é o envio do quadro.** Não sobra tempo em nenhum outro lugar.
+- A animação de câmera do frontend **avança** (`fe6AC` percorre 0, 6, 8, 15, 21, 23) e precisa de
+  muitos quadros para terminar. A 10,4 s por quadro, ela não termina nunca.
+
+Despacho de estado, para orientação: tabela de saltos em `0x638120`, indexada por
+`mcGameState->state` (campo `+0x04`). Estado 7 = `mc3frontend` → braço `0x1A2718` → `func_1A32B0`.
+Medimos `gsState=7`, então cada volta chama a árvore do frontend exatamente uma vez.
 
 - Foto do estado atual: `work/captures/frame_autostart_20260903.png`
-- Entrada no frontend: `mcGameState::EnterStateMC3Frontend@0x1A5B08`, por volta do tick 6540
-- Vocabulário da máquina de estados (tabela de nomes em `.rodata`, a partir de `0x497dfa`):
-  `frontend`, `garage`, `mc3frontend`, `movie`, `race`, `race editor`
+- Vocabulário dos estados (`.rodata` a partir de `0x497dfa`): `frontend`, `garage`,
+  `mc3frontend`, `movie`, `race`, `race editor`
 
 ## Onde o projeto está, em 3 linhas
 
-- A montanha gráfica **foi vencida**: `gifPk1≈606k`, `gsPrims≈1M`, `gsPixels≈1G`, imagem legível.
-- A cadeia de input **fecha ponta a ponta**, inclusive headless (`MC3_PAD_AUTOSTART`).
-- Falta o jogo **decidir trocar de tela** — é o único bloqueio entre hoje e uma tela nova.
+- A montanha gráfica **foi vencida**: imagem legível, `gsPrims≈1M`, `gsPixels≈1G`.
+- Kernel, IOP, assets e input estão **todos limpos e medidos** — nenhum é o bloqueio.
+- O bloqueio é **performance**: ~68 mil primitivas por quadro, uma invocação de VU1 por
+  primitiva, três estágios caros por primitiva. É trabalho de otimização, não de caça a bug.
 
 ## A escada, medida (detalhe em `docs/CAMINHO_ATE_O_FRAME.md`)
 
 | M0 kernel | M1 IOP/SIF | M2 assets | M3 estados | M4 GIF | M5 GS | M6 present |
 |---|---|---|---|---|---|---|
 | ✅ | ✅ | ✅ | 🔨 **aqui** | ✅ | ✅ | ⚠️ PNG sai certo, **janela preta** |
+
+## Modelo de custo do quadro (a base de qualquer otimização)
+
+Réguas de fase são **inclusivas** (`vifMs` contém `vu1Ms`, que contém o raster do XGKICK); as
+fatias exclusivas saem por subtração. Os pesos **variam com a cena** — não trate como constante.
+
+| fatia exclusiva | corrida do frontend | corrida mais cedo |
+|---|---:|---:|
+| rasterizador | 56% do quadro | 12% |
+| VU1 fora do raster | 23% | — |
+| VIF1 fora do VU1 | 21% | — |
+
+Custos unitários, que se repetem nas duas: **~30-86 µs por primitiva**, **~60-106 ns por pixel**,
+**~120 mil chutes de VU1 por corrida**. O interpretador do VU1 em si é barato (88 ciclos por
+chute); o caro é o caminho **GIF/GS entre o XGKICK e o `drawPrimitive`** (~152 µs por chute).
 
 ## Fechado em 2026-09-03 (não reabrir)
 
@@ -42,20 +68,36 @@ Os cinco contadores de transição sobem para `3/1/3/2/3` nos primeiros segundos
    `skipintro`/`qload`/`menuDebug` = 0 ocorrências. Vieram dos símbolos do alpha.
    Não construir o override de `0x614400` para eles. → `docs/RESULT_BOOT_ARGS_V1.md`, adendo.
 
+## Fechado em 2026-09-04/05 (não reabrir)
+
+4. **A árvore do frontend roda 18 vezes em 20 min** — e é consequência do custo por quadro, não
+   causa. `gsState=7`, fila de comandos vazia, `mc3FeView` existe e sua animação avança.
+   → `docs/RESULT_M3_TITLE_EXIT_2026-09-04.md` seções 4-5.
+5. **Bug real corrigido: varredura de debug sem gate no árbitro do GIF.** `submit()` e `drain()`
+   varriam o pacote inteiro duas vezes cada, atrás de valores mágicos, sem ninguém ler — quatro
+   varreduras por pacote, 120 a 350 mil pacotes por corrida. O gate (`MC3_COPY_ARB_SUBMIT` /
+   `MC3_COPY_ARB_DRAIN`) estava previsto e faltando. → seção 15.
+6. **A bancada de medição não resolve menos de ~16%.** Tempo fixo e orçamento fixo dão 23-55% de
+   dispersão com o mesmo binário. O que funciona é **janela de trabalho** (diferença entre dois
+   marcos de `gsPrims`), implementada em `tools/Measure-RenderCost.ps1`. → seções 17-18.
+
 ## Próximos alvos, em ordem
 
-1. **O que o frontend faz com o input que recebe.** É o alvo real, e é o mais fundo.
-   Estabelecido hoje: o frontend **recebe** processamento de input (42 chamadas de
-   `uiInputUpdate@0x420F38` numa corrida de 20 min, pelo caminho `func_52D680` →
-   `sub_0052A388` → `ioInputUpdate@0x58EEB0`) e **não** transiciona. Entrar por
-   `0x420F38`/`0x58EEB0` e ver o que acontece com o pacote de pad depois de lido.
-2. **Ou: o frontend não espera input nenhum.** Hipótese irmã, igualmente viável — a tela legal
-   pode estar esperando um carregamento de assets do menu que nunca completa. Barata de separar
-   da anterior: instrumentar o que `EnterStateMC3Frontend` deixa pendente.
-3. **Janela preta.** O despejo usa as mesmas duas chamadas da apresentação e sai correto;
-   a janela não. Só bloqueia *ver* o jogo, não a investigação.
-4. **Pausa de 35,9 s** vista na r4 da validação (recuperou sozinha, `gsPrims` plano nos ticks
-   25380–25620). Item aberto, não urgente.
+1. **Refazer a medição do gate da seção 15** com `Measure-RenderCost.ps1`. O ganho anunciado
+   (3,5x) veio do método ruim; o conserto se justifica pelo mecanismo, mas o número precisa ser
+   refeito antes de ser citado.
+2. **Caminho GIF/GS entre o XGKICK e o `drawPrimitive`** (~152 µs por chute). Maior item dentro
+   do escopo do VU1 e o **menos investigado** — só foi aberto em 05/09.
+3. **Rasterizador** (~60-106 ns por pixel). Uma a duas ordens de grandeza de folga em relação ao
+   que a técnica permite. Maior fatia na tela do frontend.
+4. **VIF1 fora do VU1.** Já respondeu a uma otimização em 30/08 (queda de 59%), então há
+   precedente de que o estágio rende.
+5. **Janela preta.** O despejo em PNG sai correto e a janela não. Só bloqueia *ver* o jogo.
+6. **Pausa de 35,9 s** vista na validação de 03/09 (recuperou sozinha). Aberto, não urgente.
+
+**Regra de trabalho para performance:** nenhuma otimização entra sem passar pelo
+`Measure-RenderCost.ps1`, três corridas por binário, aceitando só o que exceder a dispersão que
+o próprio script imprime.
 
 ## Becos sem saída fechados em 2026-09-03 (não repetir)
 
@@ -67,6 +109,11 @@ Os cinco contadores de transição sobem para `3/1/3/2/3` nos primeiros segundos
 | "a RAM baixa do runtime difere do console e fecha o portão" | `gateByte=0` em todas as amostras. Além disso o fluxo nem chega no byte. |
 | "o laço principal não lê o pad porque falta o objeto de `0x617BCC`" | Verdade para **aquele** bloco, que é específico do intro: `EnterStateMC3Frontend@0x1A5B08` não chama `sub_00364720` nem nenhum criador de camada. O frontend tem caminho de input próprio, e ele roda. |
 | "`-skipintro` pula a abertura" | As palavras não existem neste ELF (busca literal em 5.264.872 bytes). |
+| "ninguém está registrado para consumir o input" | A tabela de callbacks em `0x715D28` é BSS e é no-op **no console também**: zero escritores no corpus, zero no `.data`. |
+| "o `ipcSleep` da netManagerThread volta cedo e ela gira à toa" | 9 chamadas de `DelayThread` por segundo no processo inteiro, e `delayThreadCalls == setTimerAlarmCalls` em toda amostra. |
+| "o microprograma do VU1 corre até o teto de ciclos" | 88,2 ciclos por chute e **zero** estouros de orçamento em 92.140 chutes. |
+| "o nosso VIF1 decodifica MSCAL a mais" | `MSCAL` é 9,1% dos comandos decodificados e `UNPACK` 27,5% — mistura de fluxo real. O jogo chuta mesmo uma vez por primitiva. |
+| "reaproveitar os buffers do árbitro do GIF" | Sem ganho medido; piorou dentro do ruído. Revertido. → seção 16. |
 
 ## Como medir
 
