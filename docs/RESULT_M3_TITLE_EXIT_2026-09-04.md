@@ -305,3 +305,51 @@ Medicao barata que separa as duas: contar quantas vezes o mesmo endereco de micr
 iniciado por quadro. Se um punhado de microprogramas responde por dezenas de milhares de
 execucoes, e reprocessamento nosso; se a contagem acompanha a variedade de pacotes, o jogo esta
 mesmo mandando tudo isso.
+
+
+## 9. Um inicio de microprograma VU1 por primitiva
+
+Contadores `vu1Mscal` e `vu1Mscnt` incrementados nos dois pontos de `ps2_vif1_interpreter.cpp`
+onde o VIF1 decodifica esses comandos. Corrida `probe_vu1kick_20260905`, 600 s, headless.
+
+| medida | valor |
+|---|---:|
+| `vu1Mscal` | 121.950 |
+| `vu1Mscnt` | **0** |
+| `gifPk1` (PATH1) | 60.795 |
+| `gifPk2` (PATH2) | 23.802 |
+| `gsPrims` | 122.715 |
+
+Razoes, estaveis ao longo da corrida (conferidas tambem em amostras intermediarias, 2,006):
+
+- `vu1Mscal / gifPk1` = **2,006** — dois inicios de microprograma por pacote PATH1 entregue.
+- `gsPrims / vu1Mscal` = **1,006** — **uma primitiva por inicio de microprograma.**
+
+### Hipotese morta: o `resume` do MSCNT
+
+`vu1Mscnt = 0` na corrida inteira. O caminho de retomada que
+`docs/RESULT_VIF1_VU1_PERF_2026-08-30.md` aponta como nao cronometrado **nao e usado por este
+jogo nesta tela**. Nao reabrir.
+
+### O que sobra, e e grande
+
+Um microprograma de VU1 existe para transformar um **lote** de vertices — dezenas a centenas de
+primitivas por `MSCAL`. Aqui ele e iniciado uma vez por primitiva desenhada, 121.950 vezes em
+600 s. Todo o custo fixo de uma invocacao (setup de TOP/ITOP, troca de buffer, entrada e saida
+do interpretador) esta sendo pago para desenhar **um triangulo**.
+
+Isso explica a aritmetica da secao 8 sem precisar de mais nada: 10,4 s por quadro divididos por
+~38.800 pacotes dao ~268 us por pacote, na mesma ordem dos 92 us/primitiva que a otimizacao de
+30/08 ja tinha medido para o escopo VIF1. O gargalo nao e por pixel nem por bit de dado: e
+**por chute**.
+
+### Como separar as duas explicacoes restantes
+
+1. **O jogo emite mesmo um `MSCAL` por primitiva.** Plausivel para um renderizador 2D de Flash
+   que troca estado por forma, ainda que extremo.
+2. **O nosso VIF1 decodifica `MSCAL` a mais.** Se o parser dessincroniza, dados de `UNPACK`
+   viram comandos.
+
+Medicao que decide, uma contagem so: total de comandos VIF1 decodificados por opcode. Num fluxo
+real a maioria esmagadora e `UNPACK`/`STCYCL`, com `MSCAL` esporadico. Se `MSCAL` for perto de
+metade de tudo que o parser ve, o defeito e nosso e esta na sincronizacao do fluxo.
