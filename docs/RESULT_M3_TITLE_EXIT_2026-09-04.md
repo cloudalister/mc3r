@@ -245,3 +245,63 @@ por esse caminho da zero — inclui `sub_0052A388` (o cronometro em volta do `io
 durante os 10 ms ou se fica de posse dele. Um `DelayThread` que nao cede explica, sozinho, tanto
 o 17% de `MainLoop` quanto a fome do laco principal — e o arquivo gerado de `0x547608` ja tem
 instrumentacao de timer de uma investigacao anterior, entao ha rastro para reaproveitar.
+
+
+## 8. O sono esta correto; a conta que fecha e outra
+
+### Hipotese morta: "o `ipcSleep` volta cedo demais"
+
+Contadores novos no trace de quadro (`delayThreadCalls`, `setTimerAlarmCalls`), sobre
+`DelayThread@0x547608` e `SetTimerAlarm@0x54D6A0` — as duas confirmadas como registradas na
+tabela de funcoes antes de confiar na contagem.
+
+Corrida `probe_sleepcount_20260905`:
+
+| tick | `delayThreadCalls` | `setTimerAlarmCalls` |
+|---:|---:|---:|
+| 1.560 | 365 | 365 |
+| 1.800 | 406 | 406 |
+| 1.860 | 413 | 413 |
+| 2.040 | 455 | 455 |
+
+Noventa chamadas em 480 ticks, ou seja **cerca de 9 por segundo no processo inteiro**. A
+`netManagerThread` sozinha pediria ~100/s se o sono de 10 ms estivesse voltando na hora, e
+milhares/s se voltasse cedo. Nove por segundo e o oposto do sintoma procurado.
+
+As duas contagens sao **identicas em toda amostra**: todo pedido de sono arma exatamente um
+alarme. O mecanismo (`CreateSema` -> `TimerUSec2BusClock` -> `SetTimerAlarm` -> `WaitSema` ->
+`DeleteSema`) esta integro. **Nao reabrir.**
+
+### A conta que fecha
+
+Corrida `probe_isocache_20260905`, 900 s, **13 voltas do laco principal**:
+
+| medida | total | por volta do laco |
+|---|---:|---:|
+| `vifMs` | 134.876 ms | **10,4 s** |
+| `gsPrims` | 881.956 | **67.843** |
+| `gifPk1` (PATH1, XGKICK do VU1) | 504.570 | 38.813 |
+| `gifPk2` (PATH2, DIRECT do VIF1) | 175.249 | 13.481 |
+| `dma` (chutes de canal) | 31.160 | 2.397 |
+
+`vifMs` dividido pelas voltas da **10,4 s por quadro**, e 13 x 10,4 s = 135 s, que e o `vifMs`
+inteiro. Ou seja: **o custo de uma volta do laco principal E o envio do quadro.** Nao sobra
+tempo em outro lugar do laco.
+
+E o volume por quadro e a anomalia: **67.843 primitivas e 38.813 pacotes PATH1 para uma tela de
+titulo parada.** Uma arte vetorial de Flash gasta alguns milhares de triangulos, nao setenta mil.
+O `swfSHAPE::Draw`/`swfINSTANCE::Update` aparecem no perfil, entao o desenho e mesmo do filme de
+titulo — a duvida e por que ele custa vinte vezes o esperado.
+
+### Alvo seguinte, com numero
+
+Descobrir se o convidado realmente emite 68 mil primitivas por quadro ou se o nosso lado
+reprocessa o mesmo pacote. O caminho PATH1 (XGKICK dentro do VU1) domina, e
+`docs/RESULT_VIF1_VU1_PERF_2026-08-30.md` ja registra que o escopo do VU1 inclui o `resume` do
+MSCNT sem cronometra-lo — e exatamente o tipo de lugar onde um microprograma reexecutado
+apareceria como volume extra sem aparecer como bug.
+
+Medicao barata que separa as duas: contar quantas vezes o mesmo endereco de microprograma VU1 e
+iniciado por quadro. Se um punhado de microprogramas responde por dezenas de milhares de
+execucoes, e reprocessamento nosso; se a contagem acompanha a variedade de pacotes, o jogo esta
+mesmo mandando tudo isso.
