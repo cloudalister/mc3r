@@ -573,7 +573,7 @@ divergindo de `m_queue.size()`, pronto para morder quem usar o segundo) e saldo 
 registro para ninguem tentar de novo achando que e dinheiro no chao.
 
 O que ficou desta rodada foi o gate da secao 15, esse sim medido, e o reparo de um byte NUL que
-o patch daquele gate havia gravado no lugar de ` `.
+o patch daquele gate havia gravado no lugar de `\0`.
 
 
 ## 17. O contador de pixels em lote, e o problema real: a bancada nao resolve 15%
