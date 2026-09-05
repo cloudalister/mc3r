@@ -574,3 +574,61 @@ registro para ninguem tentar de novo achando que e dinheiro no chao.
 
 O que ficou desta rodada foi o gate da secao 15, esse sim medido, e o reparo de um byte NUL que
 o patch daquele gate havia gravado no lugar de ` `.
+
+
+## 17. O contador de pixels em lote, e o problema real: a bancada nao resolve 15%
+
+`writePixel` batia num atomico **por pixel** (`g_gsPixels.fetch_add(1)`), 250 a 280 milhoes de
+RMW por corrida. Trocado por um acumulador `thread_local` despejado uma vez por primitiva, no
+fim de `drawPrimitive`. Semantica preservada: conta o pixel depois de scissor, alpha test e
+limite de VRAM; so fica atrasado em ate uma primitiva para quem le de outra thread, e a metrica
+ja e documentada como aproximada. (`AGRESSIVE_LOGS` foi verificado antes: esta `OFF` no cache do
+CMake, entao os dois blocos de log por pixel ja compilavam para `((void)0)`.)
+
+### Medicao, e o veredito pelo criterio fixado antes de olhar
+
+| corrida | codigo | `rasterMs` por pixel |
+|---|---|---:|
+| `probe_isocache` (900 s) | gate ausente | 106 ns |
+| `probe_vu1cycles` (480 s) | gate ausente | 81,9 ns |
+| `probe_arbgate` (480 s) | **gate corrigido** | 59,0 ns |
+| `probe_poolbuf` (480 s) | gate + pool de buffers | 68,3 ns |
+| `probe_pixaccum` (480 s) | gate + contador em lote | **75,2 ns** |
+
+O criterio era "claramente abaixo de 59 ns para contar como ganho". Deu 75,2. **Nao e ganho.**
+
+### O achado que importa desta rodada
+
+As tres ultimas corridas tem codigo que deveria ser neutro ou melhor entre si, e deram 59,0,
+68,3 e 75,2 ns por pixel — uma faixa de **27%** sem causa no codigo. Somando as cinco, a mesma
+regua varia de 59 a 106 ns.
+
+**A bancada nao tem resolucao para mudancas de 10-20%.** Toda conclusao de otimizacao tirada de
+uma corrida unica de tempo fixo, nesta madrugada, esta dentro do ruido — inclusive as quedas que
+eu atribui ao gate da secao 15. O que sustenta o gate nao e o delta medido, e o mecanismo: ele
+eliminou quatro varreduras lineares por pacote que rodavam sem ninguem ler o resultado.
+
+### Como consertar a bancada antes de otimizar mais
+
+O projeto ja tem a ferramenta e ela esta documentada no `STATUS.md`: **`MC3_DISPATCH_BUDGET`**.
+Corridas de tempo fixo param em pontos de trabalho diferentes; corridas de **orcamento fixo**
+param no mesmo ponto e podem ser comparadas. O comentario que introduziu essa variavel em
+`ps2_runtime.cpp` diz exatamente isso, com a medicao que motivou: "sob contencao do escalonador
+do host, o mesmo binario executa quantidades muito diferentes de trabalho em 8s".
+
+Protocolo sugerido para a proxima sessao de otimizacao:
+
+1. `MC3_DISPATCH_BUDGET` fixo, nao `-Seconds`.
+2. Tres corridas por binario, alternando A/B/A/B, nao A depois B.
+3. Comparar medianas, e so aceitar o que exceder a dispersao medida entre as tres do mesmo
+   binario.
+
+Isso e o que `docs/RESULT_VIF1_VU1_PERF_2026-08-30.md` fez em agosto — tres corridas por
+binario, dispersao reportada junto — e por isso aquele resultado (queda de 59% e 68%) e
+confiavel e estes daqui nao sao.
+
+### Estado do codigo
+
+O acumulador de pixels **fica**: nao acrescenta invariante nenhum, faz estritamente menos
+trabalho que antes, e a semantica do contador esta preservada. Mas entra no registro como
+**sem ganho medido**, nao como otimizacao comprovada.
