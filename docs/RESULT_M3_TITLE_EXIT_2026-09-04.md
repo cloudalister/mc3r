@@ -353,3 +353,63 @@ Isso explica a aritmetica da secao 8 sem precisar de mais nada: 10,4 s por quadr
 Medicao que decide, uma contagem so: total de comandos VIF1 decodificados por opcode. Num fluxo
 real a maioria esmagadora e `UNPACK`/`STCYCL`, com `MSCAL` esporadico. Se `MSCAL` for perto de
 metade de tudo que o parser ve, o defeito e nosso e esta na sincronizacao do fluxo.
+
+
+## 10. O parser esta certo: o jogo chuta o VU1 uma vez por primitiva
+
+Contadores `vif1Cmds` (todo comando VIF1 decodificado) e `vif1Unpacks` (grupo UNPACK,
+`opcode & 0x60`). Corrida `probe_vifmix_20260905`:
+
+| medida | valor |
+|---|---:|
+| `vif1Cmds` | 414.976 |
+| `vif1Unpacks` | 114.100 |
+| `vu1Mscal` | 37.940 |
+| `vu1Mscnt` | 0 |
+
+- `MSCAL / total` = **9,1%** — longe dos ~50% que denunciariam dessincronizacao.
+- `UNPACK / total` = 27,5%.
+- `UNPACK / MSCAL` = **3,0 unpacks por chute**.
+
+**Hipotese morta: "o nosso VIF1 decodifica MSCAL a mais".** A mistura tem a cara de um fluxo VIF
+real. O jogo emite mesmo um `MSCAL` por primitiva, com tres unpacks de dados cada — e o
+comportamento de um renderizador 2D de Flash que troca estado por forma desenhada. **Nao
+reabrir.**
+
+## 11. Modelo de custo do quadro, fechado
+
+As reguas de fase sao inclusivas (`vifMs` contem `vu1Ms`, que contem o raster do XGKICK), entao
+as fatias exclusivas saem por subtracao. Corrida `probe_isocache_20260905`, 900 s, 13 voltas:
+
+| fatia exclusiva | total | por quadro | do custo do quadro |
+|---|---:|---:|---:|
+| rasterizador | 76,1 s | 5,9 s | **56%** |
+| VU1 fora do raster | 30,8 s | 2,4 s | 23% |
+| VIF1 fora do VU1 | 28,0 s | 2,2 s | 21% |
+| **total (= `vifMs`)** | **134,9 s** | **10,4 s** | 100% |
+
+Custos unitarios, para orientar otimizacao:
+
+- **~86 us por primitiva** no rasterizador (881.956 primitivas em 76,1 s).
+- **~100 ns por pixel** (768 milhoes de pixels em 76,1 s). Um rasterizador em software afinado
+  fica em poucos ns por pixel; aqui ha uma a duas ordens de grandeza de folga.
+- **~253 us por chute de VU1** fora do raster (121.950 chutes). Um microprograma pequeno deveria
+  custar poucos microssegundos.
+
+### Correcao de uma leitura anterior
+
+Na secao 6 eu disse que o rasterizador era "9% do tempo" e portanto nao valia a pena. Os 9% eram
+sobre os 900 s de parede, que incluem tudo o que as outras threads fazem. **Sobre o custo de um
+quadro — que e o que trava o jogo — o rasterizador e 56%.** A conclusao anterior estava certa nos
+numeros e errada no denominador.
+
+## 12. Alvos, em ordem de retorno
+
+1. **Rasterizador, ~100 ns/pixel.** Maior fatia (56% do quadro) e a mais folgada em relacao ao
+   que a tecnica permite. Aqui esta o ganho de uma ordem de grandeza.
+2. **Custo fixo por chute de VU1, ~253 us.** Com 121.950 chutes por corrida, cada microssegundo
+   economizado vale 0,12 s. O caminho e `VU1Interpreter::execute` -> `run`, com orcamento de
+   65.536 ciclos por chute — medir quantos ciclos um chute realmente gasta diz se o
+   microprograma termina no E-bit ou corre ate o teto.
+3. **Numero de chutes.** E do jogo, nao nosso, entao so cai por batching no nosso lado — ideia
+   valida mas de risco alto, deixar por ultimo.
