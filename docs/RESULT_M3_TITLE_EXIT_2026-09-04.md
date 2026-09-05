@@ -542,3 +542,35 @@ definitiva exigiria relinkar o binario anterior e alternar as duas corridas, o q
 
 **O jogo continua parando no mesmo lugar.** Isto e ganho de throughput, nao destrave: `gsState`,
 `frontendTickCalls` e a fase de boot sao identicos nas duas corridas.
+
+
+## 16. Reaproveitar os buffers do arbitro: sem ganho, revertido
+
+Segunda tentativa na mesma etapa. `GifArbiter::drain()` terminava com `m_queue.clear()`,
+destruindo o `std::vector<uint8_t>` de cada pacote, e `submit()` alocava um novo por pacote —
+centenas de milhares de pares malloc/free por corrida. Troquei por uma fila que mantem a
+capacidade entre drenagens (`m_queueSize` marcando as entradas vivas, `assign` no lugar de
+`resize`, ordenacao so da faixa viva).
+
+Mesma receita, 480 s, contra a corrida `probe_arbgate`:
+
+| custo unitario | base (`arbgate`) | com pool (`poolbuf`) | delta |
+|---|---:|---:|---:|
+| `vifMs` por primitiva | 68,3 us | 76,6 us | +12% |
+| GIF/GS por pacote PATH1 | 43,8 us | 47,3 us | +8% |
+| `rasterMs` por pixel | 59,0 ns | 68,3 ns | +16% |
+
+Parte disso e conteudo: a corrida com pool desenhou 392 pixels por primitiva contra 364 da base,
+o que sozinho empurra os custos por primitiva para cima. Mas nada melhorou, e o custo por pixel
+— que independe disso — piorou 16%.
+
+**Leitura:** o ganho, se existe, esta abaixo da variacao entre corridas deste projeto (que ja
+mostrou 153 contra 242 us por primitiva com binarios da mesma familia). O alocador provavelmente
+ja devolvia o mesmo bloco, sendo um free/malloc do mesmo tamanho em sequencia.
+
+**Revertido.** Uma mudanca sem ganho medido que introduz um invariante novo (`m_queueSize`
+divergindo de `m_queue.size()`, pronto para morder quem usar o segundo) e saldo negativo. Fica o
+registro para ninguem tentar de novo achando que e dinheiro no chao.
+
+O que ficou desta rodada foi o gate da secao 15, esse sim medido, e o reparo de um byte NUL que
+o patch daquele gate havia gravado no lugar de ` `.
