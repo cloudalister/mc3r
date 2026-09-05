@@ -702,3 +702,60 @@ servem, desde que passem do marco alto.
 | contador de pixels em lote (secao 17) | +16 a +27% | dentro do ruido, mantido por mecanismo |
 
 Nenhum numero desta madrugada deve ser citado sem essa ressalva ate ser refeito com a janela.
+
+
+## 19. Corrida de 30 min: mais tempo nao termina a animacao — `fe6AC` cicla
+
+Corrida `probe_longcook_20260905`, 1800 s, headless, START segurado (274 publicados).
+
+| medida | valor |
+|---|---:|
+| `gsPrims` | 1.173.155 |
+| `gsPixels` | 1,42 G |
+| `gsState` | 7 |
+| `frontendTickCalls` | **31** |
+| transicoes | `3/1/3/2/3` — imoveis |
+
+Trinta e uma voltas da arvore do frontend, contra 13-18 nas corridas de 20 min: o binario atual
+avanca mais. E mesmo assim **nenhuma transicao**.
+
+### O achado: `fe6AC` nao converge, cicla
+
+`mc3FeView::CanTransition@0x3224F8` exige `(s32)this+0x6AC < 0`. A distribuicao do campo ao
+longo da corrida:
+
+```
+377x fe6AC=0    30x fe6AC=5    29x fe6AC=4    29x fe6AC=39
+27x fe6AC=34    26x fe6AC=38   25x fe6AC=6    25x fe6AC=2
+```
+
+Ele sobe ate pelo menos **39**, volta a **0**, e recomeca. **Nunca fica negativo.** Nas corridas
+anteriores tinhamos visto so a subida (0, 6, 8, 15, 21, 23) e concluido "avanca, so precisa de
+mais quadros". Com 30 minutos fica claro que **nao e progresso rumo ao fim: e um ciclo**.
+
+**Consequencia: a hipotese "a animacao termina se rodar mais tempo" esta enfraquecida.** Rodar
+mais nao levou a lugar nenhum, e o mecanismo observado e de reinicio, nao de conclusao.
+
+### Onde continuar
+
+`0x6AC` recebe `-1` em dois pontos de `mc3FeView::Update@0x322668`:
+
+- `0x3226d8`, quando `this+0x680[this+0x6B0]` e nulo;
+- `0x322ca4`, no fim da animacao de camera.
+
+Como o campo cicla em vez de chegar la, a pergunta e **quem o reinicia** antes de qualquer um
+desses dois pontos ser alcancado. Vale instrumentar as escritas em `this+0x6AC` (valor e PC de
+origem) numa corrida curta: isso nomeia o ciclo em uma medicao.
+
+### Nota de execucao
+
+O despejo de quadro estava armado em 1.500.000 primitivas e a corrida terminou em 1.173.155,
+entao **nao ha imagem nova desta corrida**. Para a proxima, armar em ~1.000.000.
+
+### Estado do gate novo (auditoria Codex, achado 4)
+
+`GS::processGIFPacket` (`ps2_gs_gpu.cpp:1156`) varria o pacote inteiro de 8 em 8 bytes atras de
+dois valores de debug, sem `break`, com o teto de 24 mensagens consultado so depois. Gate
+`MC3_COPY_GS_PACKET` aplicado, **biblioteca compilada, executavel nao relinkado** (havia jogo
+rodando). **Magnitude nao medida** — deve passar pelo `Measure-RenderCost.ps1`, tres corridas por
+binario, antes de qualquer afirmacao de ganho.

@@ -1,20 +1,24 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-05** — o jogo desenha, carrega assets, lê o controle e **não está
-travado**. Ele roda a **10,4 s por quadro**, e é isso que impede qualquer tela nova.
+Atualizado: **2026-09-05, auditoria Codex** — o jogo desenha e o frontend progride muito
+devagar. **10,4 s é VIF acumulado dividido por voltas, não duração total de quadro.**
+O diagnóstico de causa única ainda não está demonstrado. Ver
+`docs/RESULT_RENDER_AUDIT_2026-09-05.md` para correções e próximo experimento.
 
 ## 📌 Ponto de parada (retomar daqui)
 
-O boot chega à **tela legal do frontend**, desenhada corretamente, e fica nela. A causa **não** é
-lógica de menu nem falta de input: é custo por quadro.
+O boot chega à **tela legal do frontend**, desenhada corretamente, e fica nela.
+Há progresso lento de animação. As hipóteses de input abaixo já foram investigadas;
+isso não elimina todo possível defeito nem fecha a contabilidade de tempo.
 
-**A conta que fecha** (corrida de 900 s, `probe_isocache_20260905`):
+**A conta ainda incompleta** (corrida de 900 s, `probe_isocache_20260905`):
 
-- O laço principal `sub_001A23A8` deu **13 voltas em 20 minutos** — uma a cada ~67 s.
-- `vifMs` = 134,9 s ÷ 13 voltas = **10,4 s por quadro**, e 13 × 10,4 s é o `vifMs` inteiro.
-  **O custo de uma volta do laço é o envio do quadro.** Não sobra tempo em nenhum outro lugar.
+- O histórico reporta **13 voltas em 900 s (15 minutos)**. Inclui boot, portanto
+  nem 900/13 é uma medição de quadro em regime estável.
+- `vifMs` = 134,9 s ÷ 13 voltas = **10,4 s de VIF por volta**, usando totais da corrida.
+  Isso não explica os 900 s. A identidade inversa 13 × 10,4 não prova causalidade.
 - A animação de câmera do frontend **avança** (`fe6AC` percorre 0, 6, 8, 15, 21, 23) e precisa de
-  muitos quadros para terminar. A 10,4 s por quadro, ela não termina nunca.
+  muitos quadros para terminar. Não foi observada sua conclusão nas corridas citadas.
 
 Despacho de estado, para orientação: tabela de saltos em `0x638120`, indexada por
 `mcGameState->state` (campo `+0x04`). Estado 7 = `mc3frontend` → braço `0x1A2718` → `func_1A32B0`.
@@ -27,9 +31,9 @@ Medimos `gsState=7`, então cada volta chama a árvore do frontend exatamente um
 ## Onde o projeto está, em 3 linhas
 
 - A montanha gráfica **foi vencida**: imagem legível, `gsPrims≈1M`, `gsPixels≈1G`.
-- Kernel, IOP, assets e input estão **todos limpos e medidos** — nenhum é o bloqueio.
-- O bloqueio é **performance**: ~68 mil primitivas por quadro, uma invocação de VU1 por
-  primitiva, três estágios caros por primitiva. É trabalho de otimização, não de caça a bug.
+- Há correções e hipóteses eliminadas em kernel, IOP, assets e input; isso não prova ausência de defeitos.
+- Há custo gráfico alto. ~68 mil primitivas por volta é uma razão entre totais, ainda sem
+  delimitar quadros reais. Prioridade: fechar a medição e testar desperdícios concretos.
 
 ## A escada, medida (detalhe em `docs/CAMINHO_ATE_O_FRAME.md`)
 
@@ -40,7 +44,9 @@ Medimos `gsState=7`, então cada volta chama a árvore do frontend exatamente um
 ## Modelo de custo do quadro (a base de qualquer otimização)
 
 Réguas de fase são **inclusivas** (`vifMs` contém `vu1Ms`, que contém o raster do XGKICK); as
-fatias exclusivas saem por subtração. Os pesos **variam com a cena** — não trate como constante.
+subtrações exigem o mesmo caminho e janela. `rasterMs` global inclui outros PATHs, então
+`vu1Ms-rasterMs` não isola GIF/GS. Os pesos abaixo são o modelo histórico, ainda não
+uma partição demonstrada de quadro real; **variam com a cena**.
 
 | fatia exclusiva | corrida do frontend | corrida mais cedo |
 |---|---:|---:|
@@ -81,8 +87,23 @@ chute); o caro é o caminho **GIF/GS entre o XGKICK e o `drawPrimitive`** (~152 
    dispersão com o mesmo binário. O que funciona é **janela de trabalho** (diferença entre dois
    marcos de `gsPrims`), implementada em `tools/Measure-RenderCost.ps1`. → seções 17-18.
 
+## Aberto em 2026-09-05 (a pista mais quente)
+
+**`fe6AC` cicla, nao converge.** `mc3FeView::CanTransition@0x3224F8` exige
+`(s32)this+0x6AC < 0`. Numa corrida de 30 min (`probe_longcook_20260905`, 31 voltas da arvore do
+frontend) o campo sobe ate 39, volta a 0 e recomeca — **nunca fica negativo**, e as transicoes
+seguem em `3/1/3/2/3`. Rodar mais tempo nao termina a animacao.
+
+`0x6AC` recebe `-1` em dois pontos de `mc3FeView::Update@0x322668` (`0x3226d8`, com
+`this+0x680[this+0x6B0]` nulo; `0x322ca4`, fim da animacao de camera). **Proxima medicao:
+instrumentar as escritas nesse campo (valor + PC de origem) numa corrida curta** — isso nomeia
+quem reinicia o ciclo, em uma medicao so. → `docs/RESULT_M3_TITLE_EXIT_2026-09-04.md` secao 19.
+
 ## Próximos alvos, em ordem
 
+0. **Fechar tempo por volta real**, separando parede, VIF e espera/execução do convidado.
+   Não alterar scheduler. Há outra varredura de debug sem gate em
+   `GS::processGIFPacket` (`ps2_gs_gpu.cpp`); preparar A/B isolado conforme auditoria.
 1. **Refazer a medição do gate da seção 15** com `Measure-RenderCost.ps1`. O ganho anunciado
    (3,5x) veio do método ruim; o conserto se justifica pelo mecanismo, mas o número precisa ser
    refeito antes de ser citado.
