@@ -159,3 +159,89 @@ O dado de 03/09 já aponta para a segunda: `ioPadPollCalls=576` contra `frontend
 mesma ordem de grandeza de ticks. Confirmar contando uma entrada por iteração do laço principal
 `sub_001A23A8` e comparando com os dois.
 
+
+
+## 6. Perfil amostral do convidado (2026-09-05): quem come a maquina
+
+Instrumentacao nova em `ps2_runtime.cpp`: a cada quadro do hospedeiro registra-se em qual funcao
+esta o dono do token de execucao, por endereco de despacho, e as oito mais frequentes saem em
+`[boot-trace:guest-profile]` a cada 1800 ticks. Passivo: so conta e imprime.
+
+Resolucao de endereco para funcao pelo intervalo dos arquivos gerados
+(`work/generated/ghidra/*_0xADDR.cpp`) cruzada com `work/exports/retail_symbol_port.csv`.
+
+### Regime estavel, ja em `gsState=7` (corrida `probe_isocache_20260905`, 538 amostras)
+
+| endereco | funcao | amostras | fatia |
+|---|---|---:|---:|
+| `0x42b8c8` | `FUN_0042b868` — servico de streaming de assets | 130 | 24% |
+| `0x1f9610` | **`netManagerThread::MainLoop`** | 92 | 17% |
+| `0x1faf30` | **`netManagerThread::UpdateStatistics`** | 33 | 6% |
+| `0x20d284` | `swfINSTANCE::Update` | 28 | 5% |
+| `0x4f94b4` | `zipHandle::Read` | 20 | 4% |
+| `0x39923c` | `Stream::Open` | 20 | 4% |
+| `0x1f9e98` | **`netManagerThread::Update`** | 14 | 3% |
+
+`FUN_0042b868` nao tem simbolo, mas o que ela chama a identifica sem duvida:
+`datStreamer::GetBaseSector` (3x), `datPage::Load`, `ipcWaitSema`, `ipcSignalSema`, `ipcSleep`,
+`coreBootedFromDisc`.
+
+**As tres funcoes de `netManagerThread` somam 26% do tempo de convidado — num jogo rodando
+offline, sem rede.** Junto com o streamer, sao metade da maquina.
+
+O laco de `netManagerThread::MainLoop@0x1F95C0` e:
+
+```
+0x1f95d0  jal ipcWaitSema(this+0x4158)
+0x1f95dc  beqz this+0x4160 -> sai
+0x1f9608  jalr vtable+0x7C
+0x1f9610  jal ipcCriticalSection::Exit
+0x1f9618  jal ipcSleep(0xA)          ; 10 -> DelayThread(10000 us)
+0x1f9630  bnel this+0x4160, volta
+```
+
+Ele deveria dormir 10 ms por volta. Aparecer como **dono do token** em 17% das amostras
+significa que nao esta dormindo de verdade — ou dorme sem ceder o token.
+
+### O streaming avanca; nao e retentativa
+
+Os setores lidos sobem em sequencia (`0x197fb5 -> 0x197ff6 -> 0x198037 -> 0x198078 ->
+0x1980b9 -> 0x1980fa`, de 0x41 em 0x41). O jogo esta carregando de verdade. Cuidado com a
+contagem: o `lsn=` do log tem teto (638 linhas nas duas corridas, identico), entao **nao serve
+para estimar taxa de leitura**.
+
+### Cache de handle da ISO: implementado, medido, sem ganho
+
+`readHostRange` (`Kernel/Stubs/Helpers/Support.h`) abria e fechava a ISO de 3,4 GB a **cada**
+leitura de setor. Trocado por um handle mantido aberto, com mutex e `clear()` antes de cada
+`seekg` (sem isso uma leitura curta liga `eofbit` e a ISO passa a devolver zeros).
+
+| regua (900 s, headless, `MC3_PHASE_TIMING=1`) | antes | depois |
+|---|---:|---:|
+| tick final | 43.200 | 41.460 |
+| voltas do laco principal | 14 | **13** |
+| `gsPrims` | 901.680 | 881.956 |
+| `guestExecMs` | 510.117 | 513.684 |
+| `vifMs` / `vu1Ms` / `rasterMs` | 146.313 / 119.878 / 85.307 | 134.876 / 106.898 / 76.056 |
+
+**Sem ganho no que importa.** A correcao fica por ser desperdicio real no caminho mais quente,
+mas nao e o gargalo — e coerente com o perfil, onde `sceCdRead` responde por ~6% das amostras.
+
+### Defeito registrado de passagem: `cop0_count` nunca avanca
+
+`ctx->cop0_count` (`ps2_runtime.h:102`) e declarado e lido pelo codigo gerado (`mfc0 $v0, Count`
+vira `SET_GPR_S32(ctx, 2, ctx->cop0_count)`), mas **nenhum ponto do runtime escreve nele**. Logo
+`mfc0 Count` devolve sempre a mesma coisa, e toda medicao de tempo decorrido feita pelo convidado
+por esse caminho da zero — inclui `sub_0052A388` (o cronometro em volta do `ioInputUpdate`) e
+`lowPsxGfx::SendBuffer`.
+
+**Nao e a causa da lentidao**: nenhuma das funcoes quentes (`netManagerThread::MainLoop`,
+`FUN_0042b868`, `UpdateStatistics`) le `Count`. Fica anotado como defeito proprio.
+
+## 7. Alvo seguinte
+
+`netManagerThread` come 26% da maquina dormindo mal. Verificar o que `ipcSleep(10)` ->
+`DelayThread@0x547608` faz no nosso runtime: se ele cede o token de execucao do convidado
+durante os 10 ms ou se fica de posse dele. Um `DelayThread` que nao cede explica, sozinho, tanto
+o 17% de `MainLoop` quanto a fome do laco principal — e o arquivo gerado de `0x547608` ja tem
+instrumentacao de timer de uma investigacao anterior, entao ha rastro para reaproveitar.
