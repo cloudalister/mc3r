@@ -60,6 +60,10 @@ See `docs/RESULT_VIF_INPUTS_2026-09-05.md` for binary-layout and provenance limi
 `-FrameDumpMinPrims <positive-count>` selects a later one-shot image threshold;
 the default remains700000. Compare later thresholds in separate labeled runs.
 A black one-shot image does not establish that all subsequent frames are black.
+`-TraceWait` enables `MC3_WAIT_PROFILE=1`: per-thread acquisition/reacquisition,
+completed token holds and hold overlap with main-thread waits. Its output works
+independently of the general boot trace. Use `tools/Analyze-WaitProfile.ps1`;
+see `docs/RESULT_WAIT_OWNERS_2026-09-05.md` for coverage and snapshot limitations.
 The framebuffer dump and frame counters depend on the general trace and are absent in
 this mode. The runner stores a `.result.json` with elapsed wall time and aggregate
 process CPU/user/kernel times. Missing counters must never be interpreted as zero.

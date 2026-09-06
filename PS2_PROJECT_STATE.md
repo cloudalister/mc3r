@@ -1692,3 +1692,24 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
   uma imagem posterior; depois medir intervalos reais do frontend. Parametro
   implementado e validado sintaticamente/limites; essa rodada posterior ainda NAO
   foi executada. Relatorio:docs/RESULT_VIF_INPUTS_2026-09-05.md.
+
+## Checkpoint 2026-09-06 - espera atribuida por dono (Astra)
+
+- Runtime54a3c97 adiciona MC3_WAIT_PROFILE: waits iniciais/reaquisicoes, holds
+  externos completos e intersecao com espera da principal tid1. Normal scheduler,
+  instancia unica, opt-in; nenhum novo lock/decisao de escalonamento. Suite317/317.
+- Primeira rodada caiu460,73s. WER PID6248 C0000005 RVA0b49e8e6, addr2line
+  LiveGuestPcOf:1142; log mostra thread7 terminando. O diagnostico antigo lia um
+  contexto sem proteger sua vida. Runtime478fb98 remove ponteirocru, copiaRA/SP
+  atomicos na propria thread e usa ultimoPC de dispatch, com rotulos honestos.
+- Repeticao wait_owner_safe_astra_20260905 completou901,67s,00:13:41, sem repetir
+  a falha. Janela snapshots88->179 apos worker7exit: mainwait381,299654s,
+  overlaprede8=352,673244s (92,5%), dados5=27,944445s, outros0,479710s.
+  E atribuicao da ESPERA PELO TOKEN, nao de todo tempo/CPU, nem causa interna.
+- Zero caps em658 registros, animacao21,34 escritas/16 Updates; GS964321prims.
+  Imagem900k quasepreta com marcas fracas; contexto0preto, contexto1semcaptura.
+  Menu/ganhoFPS nao aceitos. NenhumMC3 ficou rodando. Sem push.
+- Ferramentas Probe-FrontendWrites -TraceWait, Analyze-WaitProfile e testes
+  sinteticos passaram. Proximo: controle quiet e callback1f9608 (vtable+0x7c),
+  separando CPU/hold/espera sem mudar scheduler ou funcoes matematicas congeladas.
+  Evidencias/hashes/limites:docs/RESULT_WAIT_OWNERS_2026-09-05.md.

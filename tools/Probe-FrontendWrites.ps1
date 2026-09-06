@@ -1,5 +1,5 @@
 param([int]$Seconds = 900, [string]$Label = ('fe_writes_' + (Get-Date -Format 'yyyyMMdd_HHmmss')), [switch]$QuietBootTrace, [switch]$TraceVuBudget, [switch]$TraceVuInput,
-      [ValidateRange(1, [long]::MaxValue)][long]$FrameDumpMinPrims = 700000)
+      [ValidateRange(1, [long]::MaxValue)][long]$FrameDumpMinPrims = 700000, [switch]$TraceWait)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $exe = Join-Path $root 'work\link\partial\mc3_partial.exe'
@@ -24,6 +24,7 @@ $env:MC3_BOOT_TRACE = if ($QuietBootTrace) { '0' } else { '1' }
 $env:MC3_HEADLESS = '1'
 $env:MC3_FE_WRITE_TRACE = '1'
 $env:MC3_PHASE_TIMING = '1'
+if ($TraceWait) { $env:MC3_WAIT_PROFILE = '1' }
 if ($TraceVuInput) {
     $env:MC3_VU1_INPUT_TRACE = '1'
     $env:MC3_VU1_INPUT_DUMP = Join-Path $root "work\captures\vuinput_$Label"
@@ -48,6 +49,7 @@ $meta = [ordered]@{
 }
 $meta | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath "$log.meta" -Encoding UTF8
 $p = Start-Process -FilePath $exe -WorkingDirectory $root -ArgumentList @("`"$elf`"") -WindowStyle Hidden -PassThru -RedirectStandardOutput "$log.stdout" -RedirectStandardError "$log.stderr"
+$processHandle = $p.Handle # Preserve the exit code if the runner exits before timeout.
 $watch = [Diagnostics.Stopwatch]::StartNew()
 try {
     while (-not $p.HasExited -and $watch.Elapsed.TotalSeconds -lt $Seconds) {
@@ -65,6 +67,7 @@ try {
             userSeconds = $p.UserProcessorTime.TotalSeconds
             kernelSeconds = $p.PrivilegedProcessorTime.TotalSeconds
             exitedBeforeLimit = $p.HasExited
+            exitCode = if ($p.HasExited) { $p.ExitCode } else { $null }
         }
         $result | ConvertTo-Json | Set-Content -LiteralPath "$log.result.json" -Encoding UTF8
     } finally {

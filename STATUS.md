@@ -1,6 +1,14 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-05, 21:08, contrato VIF/VU1 Astra** — identificado e corrigido um erro no
+Atualizado: **2026-09-06, 00:13, espera medida por dono (Astra)**.
+Rodada901,67s completou: depois da abertura, **352,67 dos381,30s de espera pelo token
+coincidiram com a thread de rede (92,5%)**. Não é92,5% do tempo total nem prova de bug
+do scheduler. Corrigido também crash de diagnóstico que lia contexto já destruído.
+**317/317 testes; zero caps; animação21; imagem900k quase preta, menu não aceito.**
+Ver `docs/RESULT_WAIT_OWNERS_2026-09-05.md`. Próximo: controle com logs reduzidos e
+medição da chamada interna do gerenciador de rede; não desativar a thread.
+
+Histórico do lote anterior — identificado e corrigido um erro no
 **FSAND**, que zerava VI1 em vez de escrever em VI7 e prendia o bloco 0x2820..0x2868.
 O teste reduzido passou de atingir 65.536 ciclos a terminar em dez. **313/313 testes**.
 Rodada corrigida901s: **82 caps**, contra15.852 no probe anterior901s; sem prova de
@@ -10,7 +18,7 @@ Captura inicial confirmou bloco48 com header14, mas leitura errada em338 com zer
 O mesmo caso termina em934 ciclos corrigido, antes65536; oito replays e316/316 testes
 passaram. Rodada corrigida901,51s: **zero caps**, animação18 (igual à anterior),
 940.100 primitivas. **Sem ganho de FPS provado; imagem700k preta, menu não aceito.**
-Próximo teste: captura posterior com `-FrameDumpMinPrims 900000`, sem alterar scheduler.
+Captura posterior900k executada no lote de espera acima, sem alterar scheduler.
 Ver `docs/RESULT_VIF_INPUTS_2026-09-05.md`.
 Ver `docs/RESULT_VU1_BUDGET_2026-09-05.md`.
 **10,4 s é VIF acumulado dividido por voltas, não duração total de quadro.**
@@ -124,7 +132,10 @@ a cena anterior; não elimina este caminho.
 
 ## Próximos alvos, em ordem
 
-0. **Validar imagem posterior e medir voltas reais com os dois consertos VU.**
+0. **Discriminar o custo interno do gerenciador de rede, dono da espera medida.**
+   Primeiro controlar a interferência dos logs (`-QuietBootTrace -TraceWait`);
+   depois medir callback em1f9608, destino emvtable+0x7c e retorno guest1f9610.
+   Não desligar rede nem alterar scheduler/math por essa atribuição isolada.
    FSAND da entrada0x30 e contrato TOP/TOPS/ITOP/ITOPS da entrada0x60 foram corrigidos,
    com testes discriminantes e replay dos oito inputs reais. Não reabrir a mesma
    hipótese sem nova evidência. Usar `-FrameDumpMinPrims` na sonda para fotografar
