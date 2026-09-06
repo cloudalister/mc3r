@@ -1,5 +1,16 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 00:46 - Astra
+
+Current workspace: `E:\Games\Emuladores\Sony\mc3recomp`.
+Quiet same-binary control900s completed; network overlap422/429s late token wait.
+New callback profiler runtime1fc7b08,318/318 tests;600s probe observed target001b84e8,
+468completed callbacks,411ms mean inclusive wall. Main token counters stopped
+growing and no animation updates in this probe: do not treat it as performance
+acceptance or reuse the previous run's attribution. Both runs stopped by harness.
+Next: main wait-kind/dispatch-PC snapshot and separate nested child-call timing.
+Reproduction and limitations: `docs/RESULT_WAIT_QUIET_2026-09-06.md`.
+
 Workspace: `D:\TARS\Emuladores\Sony\Playstation 2\isos\mc3recomp`
 
 Game: Midnight Club 3 - DUB Edition Remix  

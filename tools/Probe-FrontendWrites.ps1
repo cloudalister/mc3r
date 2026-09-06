@@ -1,5 +1,5 @@
 param([int]$Seconds = 900, [string]$Label = ('fe_writes_' + (Get-Date -Format 'yyyyMMdd_HHmmss')), [switch]$QuietBootTrace, [switch]$TraceVuBudget, [switch]$TraceVuInput,
-      [ValidateRange(1, [long]::MaxValue)][long]$FrameDumpMinPrims = 700000, [switch]$TraceWait)
+      [ValidateRange(1, [long]::MaxValue)][long]$FrameDumpMinPrims = 700000, [switch]$TraceWait, [switch]$TraceNetCallback)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $exe = Join-Path $root 'work\link\partial\mc3_partial.exe'
@@ -25,6 +25,7 @@ $env:MC3_HEADLESS = '1'
 $env:MC3_FE_WRITE_TRACE = '1'
 $env:MC3_PHASE_TIMING = '1'
 if ($TraceWait) { $env:MC3_WAIT_PROFILE = '1' }
+if ($TraceNetCallback) { $env:MC3_NET_CALLBACK_PROFILE = '1' }
 if ($TraceVuInput) {
     $env:MC3_VU1_INPUT_TRACE = '1'
     $env:MC3_VU1_INPUT_DUMP = Join-Path $root "work\captures\vuinput_$Label"

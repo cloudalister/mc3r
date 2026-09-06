@@ -146,8 +146,9 @@ of total elapsed time or all guest work. Animation reached8 by sequence123.
 
 Next discrimination: first repeat with `-QuietBootTrace -TraceWait`, whose wait
 profile remains active independently of the verbose boot logs. Compare the same
-phase, not aggregate boot time; image/FE counters are unavailable in quiet mode
-under the current general trace gate. Do not assume logging overhead is negligible.
+phase, not aggregate boot time; images and sampled FE/GS counters are unavailable
+under the general trace gate, but independent FE write records remain available
+(correction verified2026-09-06). Do not assume logging overhead is negligible.
 Then measure the callback at guest PC1f9608: it reads the vtable from object+0,
 then the function pointer from vtable+0x7c (NOT object+0x7c), with guest return
 1f9610. Capture the actual target and measure completed guest returns rather than

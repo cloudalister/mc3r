@@ -1,6 +1,14 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 00:13, espera medida por dono (Astra)**.
+Atualizado: **2026-09-06, 00:46, callback de rede identificado (Astra)**.
+Controle900s com mesmo binário e menos logs: rede coincide com422/429s de espera
+pelo token na fase tardia. Sonda nova600s: destino real001b84e8,468 chamadas
+completas, média411ms de parede;318/318 testes. **Sem ganho de FPS comprovado.**
+Nessa última rodada a animação não avançou e a espera pelo token parou de crescer:
+é necessário identificar a espera interna da principal antes de atribuir tudo à rede.
+Ver `docs/RESULT_WAIT_QUIET_2026-09-06.md`. Não alterar scheduler nem desligar rede.
+
+Resultado anterior:
 Rodada901,67s completou: depois da abertura, **352,67 dos381,30s de espera pelo token
 coincidiram com a thread de rede (92,5%)**. Não é92,5% do tempo total nem prova de bug
 do scheduler. Corrigido também crash de diagnóstico que lia contexto já destruído.
