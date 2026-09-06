@@ -24,6 +24,7 @@ const owners = [
   ['FUN_005b9908_0x5b9908', ['5b9990','5b9998']],
   ['sub_00501088_0x501088', ['501268','5012c0']],
   ['sub_0042BE50_0x42be50', ['42bf00']],
+  ['FUN_0042b140_0x42b140', ['42b150']],
 ];
 const register = process.argv.includes('--register') ? fs.readFileSync('work/link/partial/register_functions.partial.cpp','utf8') : null;
 for (const [owner, entries] of owners) {
@@ -46,3 +47,13 @@ for (const [owner, entries] of owners) {
   }
   console.log(`PASS ${owner}: ${checked} annotated words match ELF; entries=${entries}; SHA256=${crypto.createHash('sha256').update(raw).digest('hex')}`);
 }
+const listHeader=fs.readFileSync('PS2Recomp/ps2xRuntime/include/runtime/mc3_verified_list.h','utf8');
+const listWords=new Set();
+for (const m of listHeader.matchAll(/\/\/ 0x([0-9a-f]+): 0x([0-9a-f]+)\s/gi)) {
+  const a=parseInt(m[1],16);
+  if (word(a)!==parseInt(m[2],16)) throw Error(`List body ELF mismatch ${m[1]}`);
+  listWords.add(a);
+}
+for (let a=0x42b150;a<=0x42b1c0;a+=4)
+  if (!listWords.has(a)) throw Error(`Missing instruction annotation ${a.toString(16)}`);
+console.log(`PASS list body: ${listWords.size} instruction words match ELF`);

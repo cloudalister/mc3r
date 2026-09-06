@@ -10,7 +10,8 @@ $owners = @(
     @('FUN_005b9500_0x5b9500','batch_0060'),
     @('FUN_005b9908_0x5b9908','batch_0060'),
     @('sub_00501088_0x501088','batch_0049'),
-    @('sub_0042BE50_0x42be50','batch_0036')
+    @('sub_0042BE50_0x42be50','batch_0036'),
+    @('FUN_0042b140_0x42b140','batch_0036')
 )
 $objects = @()
 foreach ($pair in $owners) {
@@ -21,7 +22,7 @@ foreach ($pair in $owners) {
     $objects += $obj
 }
 $exe = 'work/scratch/entry_batch_tests.exe'
-& rtk proxy $compiler @flags tools/entry_batch_tests.cpp @objects PS2Recomp/out/build/ps2xRuntime/libps2_runtime.a C:/msys64/ucrt64/lib/libz.dll.a PS2Recomp/out/build/_deps/raylib-build/raylib/libraylib.a -lopengl32 -lglu32 -lwinmm -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 -o $exe
+& rtk proxy $compiler @flags tools/entry_batch_tests.cpp tools/list_entry_tests.cpp @objects PS2Recomp/out/build/ps2xRuntime/libps2_runtime.a C:/msys64/ucrt64/lib/libz.dll.a PS2Recomp/out/build/_deps/raylib-build/raylib/libraylib.a -lopengl32 -lglu32 -lwinmm -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 -o $exe
 if ($LASTEXITCODE -ne 0) { throw 'Entry test link failed' }
 Get-ChildItem Env:MC3_* | Remove-Item
 $log = Join-Path (Get-Location) ('work/logs/entry_batch_tests_' + (Get-Date -Format 'yyyyMMdd_HHmmss'))

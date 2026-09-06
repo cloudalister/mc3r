@@ -16,6 +16,7 @@ void sub_0042BE28_0x42be28(uint8_t*, R5900Context*, PS2Runtime*) { std::abort();
 static void check(bool ok, const char* message) {
     if (!ok) { std::fprintf(stderr,"FAIL: %s\n",message); std::exit(1); }
 }
+unsigned runListEntryTests();
 int main() {
     std::vector<uint8_t> ram(32u*1024u*1024u);
     auto u32=[&](uint32_t a, uint32_t v) { std::memcpy(ram.data()+a,&v,4); };
@@ -59,5 +60,6 @@ int main() {
         check(leaf.branch_pc==entry && !leaf.in_delay_slot,"leaf branch metadata");
         cases++;
     }
+    cases += runListEntryTests();
     std::printf("PASS: %u actual generated-entry cases\n",cases);
 }

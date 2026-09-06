@@ -1,5 +1,19 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 06:23 -42b150 restored, timer wait blocks runtime coverage
+
+Runtime3fb78c5 implements exact29-word42b150 body through owner42b140 alias.
+322/322 general tests,37 native cases (24 ELF-opcode oracle +2 nested caller
+paths added) passed. list_entry_astra_20260906 completed600.8718s,no early exit.
+entry42b150Calls=0: corrected body was NOT exercised during boot. Only2 initial
+FE writes,no animation. No bad records is NOT missing-call acceptance.
+After initial333193ms SID256 wait, main remained in SID21cv-wait at RA5476b0,
+dispatch322ffc,age218843ms. Static chain arms alarm then waits. Next: existing
+MC3_TIMER2_TRACE (wait-enter/alarm-armed/wait-woke), correlate alarm/callback/
+SignalSema without bypass. No game running; no menu/FPS acceptance. Current
+exe remains the exact probe hash; reproduction and result:
+docs/RESULT_LIST_ENTRY_2026-09-06.md.
+
 ## Checkpoint 2026-09-06 05:57 - seven-entry batch
 
 Restored5b94f0/5b94f8/5b9990/5b9998 exact jr-ra/nop and dispatch hooks into

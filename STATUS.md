@@ -1,6 +1,15 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 05:57, lote de sete entradas restauradas (Astra)**.
+Atualizado: **2026-09-06, 06:23, corpo42b150 restaurado; espera de alarme (Astra)**.
+322/322 gerais +37 casos nativos passaram, incluindo24 comparacoes com ELF e
+dois caminhos42bf00->42b150. Runtime3fb78c5; exe atualizado e medido por601s.
+Esta rodada NAO chamou42b150 (contador0): ficou antes da animacao, aguardando
+SID21/RA5476b0 por218,8s no ultimo registro. Zero bad nao prova cadeia corrigida.
+Sem menu/FPS aceitos; processo encerrado. Proximo: MC3_TIMER2_TRACE existente,
+correlacionar criacao/entrega do alarme com sinal do semaforo; nao forcar sinal.
+Ver `docs/RESULT_LIST_ENTRY_2026-09-06.md`.
+
+Checkpoint anterior05:57:
 Quatro retornos exatos e tres entradas para corpos ja gerados reconectados.
 322/322 testes gerais +11 casos dos objetos reais passaram. Rodada601s:
 zero avisos dos sete destinos; quatro retornos usados12 vezes cada; animacao17.
