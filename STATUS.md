@@ -1,6 +1,15 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 07:04, alarme correlacionado (Astra)**.
+Atualizado: **2026-09-06, 07:29, latencia separada (Astra)**.
+323/323 testes. Rodada601s:34 esperas curtas completas somaram9,147s,
+8,070s recuperando permissao de executar; pior caso769ms nessa etapa.
+Espera inicial272s foi ANTES do sinal (token apenas0,206ms).
+Bloqueio final: alarme0703e019/SID22 armado, sem callback observado por122,5s.
+Proximo: rastrear fila/worker/token ANTES da entrada desse callback.
+Nao mudar scheduler nem forcar sinal. Apenas2 writes iniciais,42b150 nao usada;
+sem menu/FPS aceitos. Processo encerrado. Ver docs/RESULT_SEMA_LATENCY_2026-09-06.md.
+
+Checkpoint anterior07:04:
 Sonda focada:9/9 alarmes sinalizaram e acordaram. Pedidos10ms levaram57..739ms,
 ate477ms DEPOIS do retorno da sinalizacao. Isso nao prova causa no scheduler:
 somam3,302s, separados da espera inicial347,6s. Travamento218s nao reproduzido.

@@ -1,5 +1,16 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 07:29 - separate semaphore latency stages
+
+Passive Sync.cpp/header hooks,323/323 tests. Probe601.027926s completed and
+owned process stopped.34 completed timer waits total9.147s:8.070s token,
+1.077s CV; worst token769.211ms. Initial SID220 wait272.093s preceded signal,
+token only0.206ms. Final SID22/alarm0703e019 armed but no callback/signal/wake
+observed, last cv-wait age122503ms. Need queue/worker/token-before-callback
+diagnosis, not a forced signal or scheduler policy change.2 initial FE writes,
+42b150Calls0, no menu/FPS acceptance. Reproduce/hashes/limitations:
+docs/RESULT_SEMA_LATENCY_2026-09-06.md; tools/Analyze-SemaLatency.ps1.
+
 ## Checkpoint 2026-09-06 07:04 - timer correlation, no behavior change
 
 Legacy timer trace aborted intentionally after95s because global caps16/24
