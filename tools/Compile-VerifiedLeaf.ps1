@@ -1,0 +1,33 @@
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $PSScriptRoot
+Set-Location $root
+if (Get-Process mc3_partial -ErrorAction SilentlyContinue) { throw 'MC3 is running' }
+$bytes = [IO.File]::ReadAllBytes((Join-Path $root 'extracted_iso/SLUS_213.55'))
+if ($bytes.Length -lt 52 -or [BitConverter]::ToUInt32($bytes,0) -ne 0x464c457f -or $bytes[4] -ne 1 -or $bytes[5] -ne 1) { throw 'Expected little-endian ELF32' }
+$ph = [BitConverter]::ToUInt32($bytes,28)
+$size = [BitConverter]::ToUInt16($bytes,42)
+$count = [BitConverter]::ToUInt16($bytes,44)
+$verified = $false
+if ($size -lt 32 -or ([long]$ph + [long]$size*$count) -gt $bytes.Length) { throw 'Invalid program headers' }
+for ($i=0; $i -lt $count; $i++) {
+    $p = $ph + $i*$size
+    if ([BitConverter]::ToUInt32($bytes,$p) -ne 1) { continue }
+    $off = [BitConverter]::ToUInt32($bytes,$p+4)
+    $va = [BitConverter]::ToUInt32($bytes,$p+8)
+    $len = [BitConverter]::ToUInt32($bytes,$p+16)
+    if (0x2300d0 -ge $va -and 0x2300d8 -le ([long]$va+$len)) {
+        $at = [long]$off + 0x2300d0 - $va
+        if ($at+8 -gt $bytes.Length -or [BitConverter]::ToUInt32($bytes,$at) -ne 0x03e00008 -or [BitConverter]::ToUInt32($bytes,$at+4) -ne 0) { throw 'Leaf bytes mismatch; do not compile guessed behavior' }
+        $verified = $true
+    }
+}
+if (!$verified) { throw 'Leaf not mapped in ELF' }
+$source = 'work/generated/ghidra/FUN_002300d8_0x2300d8.cpp'
+$content = [IO.File]::ReadAllText((Join-Path $root $source))
+foreach ($hook in @('case 0x2300d0u: goto label_2300d0;', 'mc3VerifiedLeaf2300d0(ctx);')) {
+    if (!$content.Contains($hook)) { throw 'Generated leaf patch missing; see docs/RESULT_VERIFIED_LEAF_2026-09-06.md' }
+}
+$env:PATH = 'C:\msys64\ucrt64\bin;' + $env:PATH
+& rtk proxy 'C:\msys64\ucrt64\bin\g++.exe' '-std=c++20' '-O2' '-fno-strict-aliasing' '-msse4.1' '-Wall' '-Wno-unused-variable' '-Wno-unused-label' '-Wno-comment' -I work/generated/ghidra -I PS2Recomp/ps2xRuntime/include -I PS2Recomp/ps2xRuntime/src/lib/Kernel -c $source -o work/compile/ghidra/batch_0009/obj/FUN_002300d8_0x2300d8.o
+if ($LASTEXITCODE -ne 0) { throw 'Leaf owner compilation failed' }
+'PASS: ELF jr-ra/nop verified; exact owner rebuilt. Regenerate registration before link.'

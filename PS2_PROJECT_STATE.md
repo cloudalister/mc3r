@@ -1,5 +1,15 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 03:21 - verified leaf restored
+
+Exact2300d0 jr-ra/nop implemented via compiled owner2300d8 and regenerated alias.
+320/320 tests;601.002s probeverified_leaf_astra_20260906 endednormally bytimeout.
+No bad2300d0 record; nextfirstbad5b9990. FE13,256recovery-containinglines(cap),
+no menu/FPS acceptance. No MC3 remains running. ELF5c3a48 has0000102d in delay
+slot: returnszero, NOTnop; faithful remaining-entry repair is next priority.
+Tracked build guard/reproduction:tools/Compile-VerifiedLeaf.ps1 and
+docs/RESULT_VERIFIED_LEAF_2026-09-06.md. Generated owner remains ignored.
+
 ## Checkpoint 2026-09-06 02:20 - main wait / registration gap
 
 319/319 tests; main_wait_astra_20260906 completed601.297s,no early exit.

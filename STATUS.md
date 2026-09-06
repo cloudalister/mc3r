@@ -1,6 +1,15 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 02:20, espera inicial e lacuna de registro (Astra)**.
+Atualizado: **2026-09-06, 03:21, primeira entrada ausente corrigida (Astra)**.
+2300d0 restaurada conforme ELF (`jr ra; nop`), owner recompilado, registro
+regenerado e exe relinkado.320/320 testes; rodada601s semcrash, animação13.
+2300d0 não reaparece no log; primeiro alvo ausente agora5b9990. Ainda256linhas
+de recovery (limite), portanto sem aceite de menu nem ganhoFPS comprovado.
+Próxima prioridade: demais entradas verificadas, especialmente5c3a48, cuja
+instrução de delay devolve ZERO e não é NOP. Não usar retornos genéricos.
+Ver `docs/RESULT_VERIFIED_LEAF_2026-09-06.md`.
+
+Checkpoint anterior02:20:
 Nova sonda:319/319 testes; rodada601s encerrou sem crash, animação11.
 Principal esperou sinal de conclusão por pelo menos361,9s e depois avançou.
 **256 linhas de recovery (limite do log)**: já ocorriam no controle anterior.
