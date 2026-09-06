@@ -1,5 +1,17 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 08:04 - IRQ worker stuck in Timer2 traversal
+
+324/324 tests after link completed. Passive normal-worker tick/stage/lookup
+snapshots; no behavior change.601.3939244s probe: tick25856 frozen at least153.882s,
+cause11/54cc08 repeated with age0 (resumed traversal, not fixed lock-wait age).
+List cycle/corruption NOT proven. Historical54cc08 hypothesis was already limited
+to some runs; do not generalize. Initial257.446s wait had clock advancing. Both
+focused timer waits completed; final wait DIFFERENT SID43/RA529790.42b150Calls67,
+animation2,no menu/FPS acceptance, no process remaining. Next: bounded node-value
+observation + ELF check inside54cc08, no forced return or timer/scheduler changes.
+Evidence/provenance:docs/RESULT_IRQ_PROGRESS_2026-09-06.md.
+
 ## Checkpoint 2026-09-06 07:29 - separate semaphore latency stages
 
 Passive Sync.cpp/header hooks,323/323 tests. Probe601.027926s completed and

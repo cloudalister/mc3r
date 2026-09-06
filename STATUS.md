@@ -1,6 +1,16 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 07:29, latencia separada (Astra)**.
+Atualizado: **2026-09-06, 08:04, IRQ Timer2 localizado (Astra)**.
+324/324 testes. Rodada601s: IRQ tick25856 nao termina por pelo menos153,9s;
+snapshots repetem cause11/54cc08, percorrendo lista no handler. Causa da lista
+ainda nao provada. Nao e o worker host SetAlarm. Dois alarmes curtos completaram;
+espera final e OUTRA:SID43/RA529790. Espera inicial257s com relogio avancando.
+Proximo: capturar nos/ponteiros do laco54cc08 e conferir ELF, sem pular retorno.
+Caso historico ja existia e NAO explica todos os boots.42b150 usada67vezes,
+animacao2, sem menu/FPS aceitos. Processo encerrado. Ver
+docs/RESULT_IRQ_PROGRESS_2026-09-06.md.
+
+Checkpoint anterior07:29:
 323/323 testes. Rodada601s:34 esperas curtas completas somaram9,147s,
 8,070s recuperando permissao de executar; pior caso769ms nessa etapa.
 Espera inicial272s foi ANTES do sinal (token apenas0,206ms).
