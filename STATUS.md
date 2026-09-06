@@ -1,6 +1,17 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 00:46, callback de rede identificado (Astra)**.
+Atualizado: **2026-09-06, 02:20, espera inicial e lacuna de registro (Astra)**.
+Nova sonda:319/319 testes; rodada601s encerrou sem crash, animação11.
+Principal esperou sinal de conclusão por pelo menos361,9s e depois avançou.
+**256 linhas de recovery (limite do log)**: já ocorriam no controle anterior.
+Primeiro destino2300d0 é função válida `jr ra; nop` no ELF, ausente do catálogo/
+registro. Isso não prova que ela cause a lentidão; demais destinos exigem auditoria.
+Prioridade: corrigir entradas ausentes comprovadas e validar sem fallback antes
+de aceitar o menu. Ver `docs/RESULT_MAIN_WAIT_2026-09-06.md`. Sem ganhoFPS provado.
+
+Checkpoint anterior:
+Mapa de cobertura por sistema (auditoria06/09): `docs/MAPA_DE_PROGRESSO.md`.
+55,7% do catálogo tem nome associado; isso **não** mede quanto do jogo funciona.
 Controle900s com mesmo binário e menos logs: rede coincide com422/429s de espera
 pelo token na fase tardia. Sonda nova600s: destino real001b84e8,468 chamadas
 completas, média411ms de parede;318/318 testes. **Sem ganho de FPS comprovado.**

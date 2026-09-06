@@ -1,5 +1,15 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 02:20 - main wait / registration gap
+
+319/319 tests; main_wait_astra_20260906 completed601.297s,no early exit.
+Main SID13cv-wait reached361874ms then returned; FE advanced to11. No deadlock
+or FPS acceptance.256 recovery-containing lines (print cap), also in previous
+quiet control. First target2300d0 is ELF jr-ra/nop absent from catalog/register;
+later targets require independent audit. Next: faithful missing-entry repair,
+not generic return stubs. No game running. Full evidence:
+`docs/RESULT_MAIN_WAIT_2026-09-06.md`.
+
 ## Checkpoint 2026-09-06 00:46 - Astra
 
 Current workspace: `E:\Games\Emuladores\Sony\mc3recomp`.
