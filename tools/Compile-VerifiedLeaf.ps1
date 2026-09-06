@@ -1,9 +1,16 @@
-param([ValidateSet('2300d0','5c3a48')][string]$Entry = '2300d0')
+param([ValidateSet('2300d0','5c3a48','5b94f0','5b94f8','5b9990','5b9998')][string]$Entry = '2300d0')
 $ErrorActionPreference = 'Stop'
 $address = [Convert]::ToUInt32($Entry,16)
-$delayWord = if ($Entry -eq '2300d0') { 0 } else { 0x0000102d }
-$owner = if ($Entry -eq '2300d0') { 'FUN_002300d8_0x2300d8' } else { 'FUN_005c3a68_0x5c3a68' }
-$batch = if ($Entry -eq '2300d0') { 'batch_0009' } else { 'batch_0061' }
+$delayWord = if ($Entry -eq '5c3a48') { 0x0000102d } else { 0 }
+$owners = @{
+    '2300d0' = @('FUN_002300d8_0x2300d8','batch_0009')
+    '5c3a48' = @('FUN_005c3a68_0x5c3a68','batch_0061')
+    '5b94f0' = @('FUN_005b9500_0x5b9500','batch_0060')
+    '5b94f8' = @('FUN_005b9500_0x5b9500','batch_0060')
+    '5b9990' = @('FUN_005b9908_0x5b9908','batch_0060')
+    '5b9998' = @('FUN_005b9908_0x5b9908','batch_0060')
+}
+$owner, $batch = $owners[$Entry]
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 if (Get-Process mc3_partial -ErrorAction SilentlyContinue) { throw 'MC3 is running' }
@@ -29,7 +36,8 @@ for ($i=0; $i -lt $count; $i++) {
 if (!$verified) { throw 'Leaf not mapped in ELF' }
 $source = "work/generated/ghidra/$owner.cpp"
 $content = [IO.File]::ReadAllText((Join-Path $root $source))
-foreach ($hook in @("case 0x${Entry}u: goto label_$Entry;", "mc3VerifiedLeaf$Entry(ctx);")) {
+$call = if ($Entry.StartsWith('5b')) { "mc3VerifiedNopLeaf<0x${Entry}u>(ctx);" } else { "mc3VerifiedLeaf$Entry(ctx);" }
+foreach ($hook in @("case 0x${Entry}u: goto label_$Entry;", $call)) {
     if (!$content.Contains($hook)) { throw 'Generated leaf patch missing; see docs/RESULT_VERIFIED_LEAF_2026-09-06.md' }
 }
 $env:PATH = 'C:\msys64\ucrt64\bin;' + $env:PATH

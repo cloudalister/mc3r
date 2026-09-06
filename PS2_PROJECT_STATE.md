@@ -1,5 +1,18 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 05:57 - seven-entry batch
+
+Restored5b94f0/5b94f8/5b9990/5b9998 exact jr-ra/nop and dispatch hooks into
+existing501268/5012c0/42bf00 bodies.322/322 runtime tests and11 generated-object
+cases passed.600s entry_batch_astra_20260906 completed601.2495s,no early exit.
+No missing warnings for seven targets; four NOP counters12 each. FE17,13updates.
+256 recover-pc records hit print cap; first new42b150 RA42bf30 confirms actual
+42bf00 invocation. Also5bb238/5bb268. No menu/FPS acceptance; no MC3 running.
+Next: exact42b150 implementation and nonzero-count42bf00 integration test.
+Ignored source reproduction, binary hashes and limitations:
+docs/RESULT_ENTRY_BATCH_2026-09-06.md; tools/Verify-EntryBatch.js and
+tools/Test-EntryBatch.ps1. No scheduler/network behavior changes.
+
 ## Checkpoint 2026-09-06 04:50 - zero-return restored
 
 Exact5c3a48 jr-ra/daddu-zero implemented via owner5c3a68 and regenerated alias.

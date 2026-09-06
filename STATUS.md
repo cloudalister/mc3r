@@ -1,6 +1,15 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 04:50, retorno zero corrigido (Astra)**.
+Atualizado: **2026-09-06, 05:57, lote de sete entradas restauradas (Astra)**.
+Quatro retornos exatos e tres entradas para corpos ja gerados reconectados.
+322/322 testes gerais +11 casos dos objetos reais passaram. Rodada601s:
+zero avisos dos sete destinos; quatro retornos usados12 vezes cada; animacao17.
+Ainda256 recoveries impressos (limite). Primeiro novo alvo42b150, chamado de
+42bf00; depois5bb238/5bb268. Sem menu ou ganhoFPS comprovado; jogo encerrado.
+Proximo: restaurar42b150 conforme ELF e testar ramo nao vazio de42bf00.
+Ver `docs/RESULT_ENTRY_BATCH_2026-09-06.md`.
+
+Checkpoint anterior04:50:
 5c3a48 restaurada conforme ELF, inclusive o zero devolvido na instrucao de delay.
 321/321 testes; rodada601s: correcao executada2372 vezes, nenhum bad5c3a48.
 Animacao18; ainda256linhas de recovery (limite), primeiro alvo5b9990.
