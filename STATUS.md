@@ -1,11 +1,17 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-05, captura VU1 Astra** — identificado e corrigido um erro no
+Atualizado: **2026-09-05, 21:08, contrato VIF/VU1 Astra** — identificado e corrigido um erro no
 **FSAND**, que zerava VI1 em vez de escrever em VI7 e prendia o bloco 0x2820..0x2868.
 O teste reduzido passou de atingir 65.536 ciclos a terminar em dez. **313/313 testes**.
 Rodada corrigida901s: **82 caps**, contra15.852 no probe anterior901s; sem prova de
 ganho de FPS (animação18 vs21). **Imagem pontual ainda preta; boot/menu não aceitos.**
-Próximo alvo: entradaVU1 **0x60**, header0x1520 zerado e contrato **XTOP/TOP vs XITOP/ITOP**.
+Lote seguinte: contrato **XTOP/TOP vs XITOP/ITOP corrigido** (runtime031f584).
+Captura inicial confirmou bloco48 com header14, mas leitura errada em338 com zero.
+O mesmo caso termina em934 ciclos corrigido, antes65536; oito replays e316/316 testes
+passaram. Rodada corrigida901,51s: **zero caps**, animação18 (igual à anterior),
+940.100 primitivas. **Sem ganho de FPS provado; imagem700k preta, menu não aceito.**
+Próximo teste: captura posterior com `-FrameDumpMinPrims 900000`, sem alterar scheduler.
+Ver `docs/RESULT_VIF_INPUTS_2026-09-05.md`.
 Ver `docs/RESULT_VU1_BUDGET_2026-09-05.md`.
 **10,4 s é VIF acumulado dividido por voltas, não duração total de quadro.**
 O diagnóstico de causa única ainda não está demonstrado. Ver
@@ -13,7 +19,8 @@ O diagnóstico de causa única ainda não está demonstrado. Ver
 
 ## 📌 Ponto de parada (retomar daqui)
 
-O boot chega à **tela legal do frontend**, desenhada corretamente, e fica nela.
+Historicamente houve **tela legal do frontend desenhada corretamente**. Nas rodadas
+recentes, a captura pontual em700k é preta e não aceita o boot visualmente.
 Há progresso lento de animação. As hipóteses de input abaixo já foram investigadas;
 isso não elimina todo possível defeito nem fecha a contabilidade de tempo.
 
@@ -36,7 +43,7 @@ Medimos `gsState=7`, então cada volta chama a árvore do frontend exatamente um
 
 ## Onde o projeto está, em 3 linhas
 
-- A montanha gráfica **foi vencida**: imagem legível, `gsPrims≈1M`, `gsPixels≈1G`.
+- Houve imagem legível historicamente; no último lote,940.100 primitivas e imagem700k preta.
 - Há correções e hipóteses eliminadas em kernel, IOP, assets e input; isso não prova ausência de defeitos.
 - Há custo gráfico alto. ~68 mil primitivas por volta é uma razão entre totais, ainda sem
   delimitar quadros reais. Prioridade: fechar a medição e testar desperdícios concretos.
@@ -117,11 +124,12 @@ a cena anterior; não elimina este caminho.
 
 ## Próximos alvos, em ordem
 
-0. **Contrato TOP/TOPS/ITOP/ITOPS na entrada VU1 0x60.** XTOP e XITOP leem o mesmo
-   ITOP; o header em0x1520 está zerado na captura final. Registrar os quatro valores e
-   header ANTES da execução; testar o latch de TOP em MSCAL/MSCNT e separar as fontes.
-   O caso FSAND da entrada0x30 já foi corrigido e coberto por teste discriminante.
-   Em paralelo conceitual, fechar tempo por volta real: parede, VIF e espera/execução.
+0. **Validar imagem posterior e medir voltas reais com os dois consertos VU.**
+   FSAND da entrada0x30 e contrato TOP/TOPS/ITOP/ITOPS da entrada0x60 foram corrigidos,
+   com testes discriminantes e replay dos oito inputs reais. Não reabrir a mesma
+   hipótese sem nova evidência. Usar `-FrameDumpMinPrims` na sonda para fotografar
+   depois dos700k iniciais; uma imagem pontual preta não descreve toda a execução.
+   Fechar tempo por volta real: parede, VIF e espera/execução.
    Não alterar scheduler. O gate de `GS::processGIFPacket` (`ps2_gs_gpu.cpp`) já foi
    relinkado no lote Astra; sua magnitude continua sem A/B validado.
 1. **Refazer a medição do gate da seção 15** com `Measure-RenderCost.ps1`. O ganho anunciado

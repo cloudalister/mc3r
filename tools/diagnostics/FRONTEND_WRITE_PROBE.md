@@ -53,6 +53,13 @@ WORKFLOW.md. It attempts a framebuffer dump at 700,000 primitives.
 `-TraceVuBudget` captures the first eight VU1 budget-boundary exits and saves their
 code/final-data under a unique prefix. Read `docs/RESULT_VU1_BUDGET_2026-09-05.md`
 for semantics and use `tools/Analyze-VuBudget.ps1` for the bounded tail summary.
+`-TraceVuInput` additionally saves initial code/data/VU/VIF state for eight matching
+entry0x60 calls. `tools/Replay-VuInputs.ps1` replays those local inputs using TOPS
+observed before each kick; this tests VU control flow, not the complete GS/system.
+See `docs/RESULT_VIF_INPUTS_2026-09-05.md` for binary-layout and provenance limits.
+`-FrameDumpMinPrims <positive-count>` selects a later one-shot image threshold;
+the default remains700000. Compare later thresholds in separate labeled runs.
+A black one-shot image does not establish that all subsequent frames are black.
 The framebuffer dump and frame counters depend on the general trace and are absent in
 this mode. The runner stores a `.result.json` with elapsed wall time and aggregate
 process CPU/user/kernel times. Missing counters must never be interpreted as zero.

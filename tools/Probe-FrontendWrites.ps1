@@ -1,4 +1,5 @@
-param([int]$Seconds = 900, [string]$Label = ('fe_writes_' + (Get-Date -Format 'yyyyMMdd_HHmmss')), [switch]$QuietBootTrace, [switch]$TraceVuBudget)
+param([int]$Seconds = 900, [string]$Label = ('fe_writes_' + (Get-Date -Format 'yyyyMMdd_HHmmss')), [switch]$QuietBootTrace, [switch]$TraceVuBudget, [switch]$TraceVuInput,
+      [ValidateRange(1, [long]::MaxValue)][long]$FrameDumpMinPrims = 700000)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $exe = Join-Path $root 'work\link\partial\mc3_partial.exe'
@@ -23,6 +24,11 @@ $env:MC3_BOOT_TRACE = if ($QuietBootTrace) { '0' } else { '1' }
 $env:MC3_HEADLESS = '1'
 $env:MC3_FE_WRITE_TRACE = '1'
 $env:MC3_PHASE_TIMING = '1'
+if ($TraceVuInput) {
+    $env:MC3_VU1_INPUT_TRACE = '1'
+    $env:MC3_VU1_INPUT_DUMP = Join-Path $root "work\captures\vuinput_$Label"
+    if (Get-ChildItem -Path "$($env:MC3_VU1_INPUT_DUMP)_*.bin" -ErrorAction SilentlyContinue) { throw 'Existing VU1 input capture' }
+}
 if ($TraceVuBudget) {
     $env:MC3_VU1_BUDGET_TRACE = '1'
     $env:MC3_VU1_BUDGET_DUMP = Join-Path $root "work\captures\vu1_$Label"
@@ -32,7 +38,7 @@ $env:MC3_PAD_AUTOSTART = '1500'
 $env:MC3_PAD_AUTOSTART_DELAY_MS = '45000'
 $env:MC3_PAD_AUTOSTART_HOLD_MS = '600000'
 $env:MC3_FRAME_DUMP = Join-Path $root "work\captures\frame_$Label.png"
-$env:MC3_FRAME_DUMP_MIN_PRIMS = '700000'
+$env:MC3_FRAME_DUMP_MIN_PRIMS = $FrameDumpMinPrims.ToString([Globalization.CultureInfo]::InvariantCulture)
 if (Test-Path -LiteralPath $env:MC3_FRAME_DUMP) { throw 'Existing frame capture' }
 $meta = [ordered]@{
     started = (Get-Date).ToString('o'); seconds = $Seconds

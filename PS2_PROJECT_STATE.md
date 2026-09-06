@@ -1669,3 +1669,26 @@ final `66360`), com a instrumentacao passiva do corredor `datStreamer`.
 - Nenhum MC3 permaneceu rodando; sem push. Relatorio/reproducao/fontes/hashes em
   `docs/RESULT_VU1_BUDGET_2026-09-05.md`. Parser efixture emtools/Analyze-VuBudget.ps1
   e tools/Test-AnalyzeVuBudget.ps1. FSEQ/FSOR/FSSET nao alterados neste lote.
+
+## Checkpoint 2026-09-05 - contrato VIF TOP/XTOP corrigido (Astra)
+
+- Capturados oito inputs completos antes do VU. O header correto estava no bloco48
+  (valor14), mas XTOP liaITOP338 e encontrava zero. Confirmado contra referencia
+  primaria: ITOP escreveITOPS; kick fazITOP=ITOPS eTOP=TOPS antes de alternarDBF;
+  OFFSET preservaBASE; XTOP eXITOP leem valores distintos.
+- Runtime031f584 corrige o contrato, sem mudar layout/ABI, scheduler, instrucoes
+  guest, GS ou orcamento. Quatro testes discriminantes falharam antes;316/316
+  passaram depois. Mesmo snapshot:65536 ciclos/Ebit0/1974 pacotes antes,
+  934 ciclos/Ebit1/28 pacotes depois. Oito replays encerraram; suite316/316 em cada.
+- Runner relinkado, strings/mtime/SHA conferidos. Probevif_top_fixed_astra_20260905
+  terminou por limite em901.5107757s,21:08:14. Zero caps em540 blocos completos,
+  84.058.184 ciclos, animacao18,30 escritas/14 Updates, zero regressoes observadas.
+  GS940.100 primitivas/416.127.888 pixels; CPU426.359375s. Todos os oito latches
+  capturados pelo runner passaramTOPS anterior paraTOP, independentemente deITOP.
+- Animacao18 igual a rodada anterior: NAO ha ganho deFPS provado. Imagens700k
+  de apresentacao/contexto0 pretas. Nao demonstra que todos os frames sao pretos.
+  Nenhum MC3 permaneceu rodando; sem push. Boot/menu continuam sem aceitacao.
+- Proximo lote: probe comFrameDumpMinPrims900000 e rotulo novo, para observar
+  uma imagem posterior; depois medir intervalos reais do frontend. Parametro
+  implementado e validado sintaticamente/limites; essa rodada posterior ainda NAO
+  foi executada. Relatorio:docs/RESULT_VIF_INPUTS_2026-09-05.md.
