@@ -1,5 +1,18 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint2026-09-06 18:53 - resumed, alarm stall with live IRQ worker
+
+User resumed.325/325 tests,100 owner opcode annotations matched ELF; bounded
+IRQ-only edge-history probe in generated54cb58, using already-loaded next and
+register scalar copies. No guest behavior change.601.0087923s run: no sampled
+positive traversal steps; no runtime cycle claim. Pending SID116/alarm0703e02b
+for36.317s, no callback, while IRQ tick33686->35787 continues. Different from
+prior frozen54cc08 tick. Next: Timer2 control/count/compare + guest alarm
+deadline/selection, not forced signals or scheduler fixes. Initial322.326s,
+57 timer WaitSema completions,42b150Calls0,only2initialFEwrites. No process
+remaining or menu/FPS acceptance. Full hashes/source reproduction and limits:
+docs/RESULT_IRQ_LIST_2026-09-06.md.
+
 ## Paused by user - 2026-09-06 08:09
 
 Session closed; no MC3 process running. Resume only on user request.

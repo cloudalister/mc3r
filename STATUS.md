@@ -1,8 +1,14 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Pausa solicitada por Cloud: **2026-09-06, 08:09**. Nenhum jogo rodando.
-Retomada consolidada: `docs/CHECKPOINT_FIM_DO_DIA_2026-09-06.md`.
-Nao iniciar nova rodada ate Cloud pedir.
+Retomado por Cloud2026-09-06; ultimo lote concluido **18:53**.
+325/325 testes;100 opcodes anotados conferidos com ELF. Sonda de arestas da
+lista instalada; nenhuma repeticao capturada nesta rodada601s. Alarme0703e02b,
+SID116 pendente36,3s SEM callback, mas worker IRQ continua tick33686->35787.
+Portanto54cc08 NAO explica todos os bloqueios. Timer2 MODE/COUNT/COMP e selecao
+guest ainda nao medidos. Proximo: esses campos + prazo/registro do alarme.
+Espera inicial322s;57 WaitSema de timer completos;2 writes iniciais,42b150Calls0.
+Sem menu/FPS aceitos. Processo encerrado. Ver docs/RESULT_IRQ_LIST_2026-09-06.md.
+Checkpoint historico da pausa:docs/CHECKPOINT_FIM_DO_DIA_2026-09-06.md.
 
 Ultimo resultado: **2026-09-06, 08:04, IRQ Timer2 localizado (Astra)**.
 324/324 testes. Rodada601s: IRQ tick25856 nao termina por pelo menos153,9s;
