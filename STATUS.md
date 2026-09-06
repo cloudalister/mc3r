@@ -1,6 +1,16 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 06:23, corpo42b150 restaurado; espera de alarme (Astra)**.
+Atualizado: **2026-09-06, 07:04, alarme correlacionado (Astra)**.
+Sonda focada:9/9 alarmes sinalizaram e acordaram. Pedidos10ms levaram57..739ms,
+ate477ms DEPOIS do retorno da sinalizacao. Isso nao prova causa no scheduler:
+somam3,302s, separados da espera inicial347,6s. Travamento218s nao reproduzido.
+322 testes gerais +teste da sonda passaram. Rodada601s:42b150 usada85vezes,
+5 recoveries restantes (5bb238/5bb268), animacao14. Sem menu/FPS aceitos.
+Proximo: medir sinal->retomada/token e investigar separadamente espera inicial.
+Sem mudanca de comportamento do jogo; processo encerrado. Ver
+`docs/RESULT_TIMER_WAIT_2026-09-06.md`.
+
+Checkpoint anterior06:23:
 322/322 gerais +37 casos nativos passaram, incluindo24 comparacoes com ELF e
 dois caminhos42bf00->42b150. Runtime3fb78c5; exe atualizado e medido por601s.
 Esta rodada NAO chamou42b150 (contador0): ficou antes da animacao, aguardando

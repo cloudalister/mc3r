@@ -1,5 +1,20 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 07:04 - timer correlation, no behavior change
+
+Legacy timer trace aborted intentionally after95s because global caps16/24
+were exhausted early. New MC3_TIMER_WAIT_TRACE filters main wrapper and matches
+callbacks by semaphore; no guest-context pointers or new locks.322 general
+tests and standalone probe lifecycle/TLS tests passed. timer_focus_astra_20260906
+completed600.909s.9/9 requested10ms waits signaled/woke;57..739ms total each,
+0..477ms after signal-return.3.302s total does NOT explain entire run. Initial
+SID12 wait reached347552ms separately. Previous218s timer stall not reproduced.
+42b150 now invoked85times;5 recovery records remain, targets5bb238/5bb268.
+FE14,11updates,no visual/menu/FPS acceptance. No game running. Next: correlate
+semaphore notification with guest-token reacquisition, retaining initial-wait
+investigation; no scheduler change or forced signals. Full evidence/reproduce:
+docs/RESULT_TIMER_WAIT_2026-09-06.md.
+
 ## Checkpoint 2026-09-06 06:23 -42b150 restored, timer wait blocks runtime coverage
 
 Runtime3fb78c5 implements exact29-word42b150 body through owner42b140 alias.
