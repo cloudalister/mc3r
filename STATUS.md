@@ -1,6 +1,10 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 08:04, IRQ Timer2 localizado (Astra)**.
+Pausa solicitada por Cloud: **2026-09-06, 08:09**. Nenhum jogo rodando.
+Retomada consolidada: `docs/CHECKPOINT_FIM_DO_DIA_2026-09-06.md`.
+Nao iniciar nova rodada ate Cloud pedir.
+
+Ultimo resultado: **2026-09-06, 08:04, IRQ Timer2 localizado (Astra)**.
 324/324 testes. Rodada601s: IRQ tick25856 nao termina por pelo menos153,9s;
 snapshots repetem cause11/54cc08, percorrendo lista no handler. Causa da lista
 ainda nao provada. Nao e o worker host SetAlarm. Dois alarmes curtos completaram;

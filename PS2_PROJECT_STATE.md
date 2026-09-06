@@ -1,5 +1,11 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Paused by user - 2026-09-06 08:09
+
+Session closed; no MC3 process running. Resume only on user request.
+Full session index, exact binary, remaining questions and next bounded task:
+docs/CHECKPOINT_FIM_DO_DIA_2026-09-06.md.
+
 ## Checkpoint 2026-09-06 08:04 - IRQ worker stuck in Timer2 traversal
 
 324/324 tests after link completed. Passive normal-worker tick/stage/lookup
