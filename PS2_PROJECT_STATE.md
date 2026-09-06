@@ -1,5 +1,16 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Checkpoint 2026-09-06 04:50 - zero-return restored
+
+Exact5c3a48 jr-ra/daddu-zero implemented via owner5c3a68 and regenerated alias.
+321/321 tests; zero_return_astra_20260906 completed601.078s without early exit.
+Corrected leaf executed2372 times by final sample; zero bad5c3a48 warnings.
+FE18 (14 animation updates);256 recovery-containing lines hit the print cap.
+First missing target5b9990;501268/5012c0 also observed. No menu/FPS acceptance.
+No MC3 remains running. Next: bounded remaining-entry audit and faithful fixes,
+not generic returns or scheduler/network changes. Generated owner is ignored;
+reproduction, hashes and full result: docs/RESULT_ZERO_RETURN_2026-09-06.md.
+
 ## Checkpoint 2026-09-06 03:21 - verified leaf restored
 
 Exact2300d0 jr-ra/nop implemented via compiled owner2300d8 and regenerated alias.

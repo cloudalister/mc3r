@@ -1,4 +1,9 @@
+param([ValidateSet('2300d0','5c3a48')][string]$Entry = '2300d0')
 $ErrorActionPreference = 'Stop'
+$address = [Convert]::ToUInt32($Entry,16)
+$delayWord = if ($Entry -eq '2300d0') { 0 } else { 0x0000102d }
+$owner = if ($Entry -eq '2300d0') { 'FUN_002300d8_0x2300d8' } else { 'FUN_005c3a68_0x5c3a68' }
+$batch = if ($Entry -eq '2300d0') { 'batch_0009' } else { 'batch_0061' }
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 if (Get-Process mc3_partial -ErrorAction SilentlyContinue) { throw 'MC3 is running' }
@@ -15,19 +20,19 @@ for ($i=0; $i -lt $count; $i++) {
     $off = [BitConverter]::ToUInt32($bytes,$p+4)
     $va = [BitConverter]::ToUInt32($bytes,$p+8)
     $len = [BitConverter]::ToUInt32($bytes,$p+16)
-    if (0x2300d0 -ge $va -and 0x2300d8 -le ([long]$va+$len)) {
-        $at = [long]$off + 0x2300d0 - $va
-        if ($at+8 -gt $bytes.Length -or [BitConverter]::ToUInt32($bytes,$at) -ne 0x03e00008 -or [BitConverter]::ToUInt32($bytes,$at+4) -ne 0) { throw 'Leaf bytes mismatch; do not compile guessed behavior' }
+    if ($address -ge $va -and ($address+8) -le ([long]$va+$len)) {
+        $at = [long]$off + $address - $va
+        if ($at+8 -gt $bytes.Length -or [BitConverter]::ToUInt32($bytes,$at) -ne 0x03e00008 -or [BitConverter]::ToUInt32($bytes,$at+4) -ne $delayWord) { throw 'Leaf bytes mismatch; do not compile guessed behavior' }
         $verified = $true
     }
 }
 if (!$verified) { throw 'Leaf not mapped in ELF' }
-$source = 'work/generated/ghidra/FUN_002300d8_0x2300d8.cpp'
+$source = "work/generated/ghidra/$owner.cpp"
 $content = [IO.File]::ReadAllText((Join-Path $root $source))
-foreach ($hook in @('case 0x2300d0u: goto label_2300d0;', 'mc3VerifiedLeaf2300d0(ctx);')) {
+foreach ($hook in @("case 0x${Entry}u: goto label_$Entry;", "mc3VerifiedLeaf$Entry(ctx);")) {
     if (!$content.Contains($hook)) { throw 'Generated leaf patch missing; see docs/RESULT_VERIFIED_LEAF_2026-09-06.md' }
 }
 $env:PATH = 'C:\msys64\ucrt64\bin;' + $env:PATH
-& rtk proxy 'C:\msys64\ucrt64\bin\g++.exe' '-std=c++20' '-O2' '-fno-strict-aliasing' '-msse4.1' '-Wall' '-Wno-unused-variable' '-Wno-unused-label' '-Wno-comment' -I work/generated/ghidra -I PS2Recomp/ps2xRuntime/include -I PS2Recomp/ps2xRuntime/src/lib/Kernel -c $source -o work/compile/ghidra/batch_0009/obj/FUN_002300d8_0x2300d8.o
+& rtk proxy 'C:\msys64\ucrt64\bin\g++.exe' '-std=c++20' '-O2' '-fno-strict-aliasing' '-msse4.1' '-Wall' '-Wno-unused-variable' '-Wno-unused-label' '-Wno-comment' -I work/generated/ghidra -I PS2Recomp/ps2xRuntime/include -I PS2Recomp/ps2xRuntime/src/lib/Kernel -c $source -o "work/compile/ghidra/$batch/obj/$owner.o"
 if ($LASTEXITCODE -ne 0) { throw 'Leaf owner compilation failed' }
-'PASS: ELF jr-ra/nop verified; exact owner rebuilt. Regenerate registration before link.'
+"PASS: ELF leaf $Entry and exact delay slot verified; owner rebuilt. Regenerate registration before link."

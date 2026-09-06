@@ -1,6 +1,15 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
-Atualizado: **2026-09-06, 03:21, primeira entrada ausente corrigida (Astra)**.
+Atualizado: **2026-09-06, 04:50, retorno zero corrigido (Astra)**.
+5c3a48 restaurada conforme ELF, inclusive o zero devolvido na instrucao de delay.
+321/321 testes; rodada601s: correcao executada2372 vezes, nenhum bad5c3a48.
+Animacao18; ainda256linhas de recovery (limite), primeiro alvo5b9990.
+Sem aceite de menu nem ganhoFPS comprovado. Nenhum MC3 ficou rodando.
+Proximo: auditar lote limitado das entradas restantes (501268/5012c0/42bf00),
+restaurando apenas semantica comprovada; sem retornos genericos ou alterar rede.
+Ver `docs/RESULT_ZERO_RETURN_2026-09-06.md`.
+
+Checkpoint anterior03:21:
 2300d0 restaurada conforme ELF (`jr ra; nop`), owner recompilado, registro
 regenerado e exe relinkado.320/320 testes; rodada601s semcrash, animação13.
 2300d0 não reaparece no log; primeiro alvo ausente agora5b9990. Ainda256linhas
