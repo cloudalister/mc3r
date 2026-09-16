@@ -29,3 +29,15 @@ jdk-21.0.12+8/
 # cache do python
 tools/__pycache__/
 __pycache__/
+
+# harness de sessao e scripts locais (contem caminhos da maquina)
+.agents/
+.codex/
+.ralph/
+progress/
+23_jogar_com_console.bat
+tools/
+!tools/Publish-Atlas.ps1
+docs/
+!docs/ISSUES_PROPOSED.md
+!docs/atlas/
