@@ -1,7 +1,7 @@
-# Proposed GitHub issues (paste-ready, not yet uploaded)
+# Open problems
 
-Three issues, drafted from `docs/RESULT_RENDER_FPS_2026-09-15.md` and
-`docs/RESULT_MENU_ITEMS_2026-09-15.md`. Copy each block into a new GitHub
+Three open problems, with the evidence gathered so far. Each block can be
+copied into a GitHub
 issue body as-is.
 
 ---
@@ -127,7 +127,7 @@ finding.
 
 ### What retail does vs. what the recomp does
 
-Live PINE comparison (`docs/RESULT_MENU_ITEMS_2026-09-15.md`, appendix 6):
+Live comparison against the original running under an emulator:
 in `front+0x40..0x130` (the active-panel slot table), retail activates a
 panel at vtable `0x629B88` (slot `0x58`, flags bit0 set = active) and
 deactivates the previously-active panel at vtable `0x62BDE0` (slot `0xb0`,
@@ -191,6 +191,6 @@ opcode, or a state check earlier in the chain diverging from retail).
 
 ### Evidence
 
-`docs/RESULT_MENU_ITEMS_2026-09-15.md`, appendices 6, 8, 10 and 11 (full
+Measurement notes (full
 PINE comparison method, retail watchpoint backtraces, and the ELF/corpus
 opcode verification of `320B38`).

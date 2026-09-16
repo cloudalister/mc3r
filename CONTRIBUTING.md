@@ -22,33 +22,19 @@ or PR.
 
 ## Before you start
 
-1. Read `STATUS.md` — it is the single current-state summary and is
-   overwritten every session. Do not trust an older doc over it.
-2. Read the most recent `docs/HANDOFF_*.md` or `docs/RESULT_*.md` relevant
-   to what you want to work on. Investigations here are logged in detail
-   specifically so work isn't repeated.
-3. Check `docs/ISSUES_PROPOSED.md` (or the live GitHub issues once
-   published) for known open problems before starting new investigation —
-   in particular the three tracked at time of writing: the diagonally cut
-   menu quad, the ~44.7 Hz frame rate ceiling, and the menu items never
-   populating after START.
+1. Read `README.md` for the current state.
+2. Read `docs/ISSUES_PROPOSED.md` for the open problems and the evidence
+   already gathered, so work isn't repeated: the diagonally cut menu quad,
+   the ~44.7 Hz frame rate ceiling, and the menu items never populating
+   after START.
 
 ## What a good contribution looks like
 
-- **Investigation reports**: a dated `docs/RESULT_<topic>_<date>.md`
+- **Investigation reports**: post findings in the relevant issue
   following the existing format — state clearly what was *measured* vs.
   *hypothesized*, cite file:line references, and say explicitly what wasn't
   done ("no probe was run", "no binary was recompiled") rather than implying
-  more than was verified. This project has been burned before by reports
-  that blurred that line — don't repeat it.
-- **Code changes**: small, scoped, backed by a probe or test showing
-  before/after behavior against the ELF where applicable. Determinism
-  matters — several past bugs here were timing-nondeterminism, not logic
-  bugs, so a fix claimed from a single run is treated as unproven.
-- **Never force a workaround that hides a symptom** (e.g. forcing a flag or
-  semaphore signal instead of finding why it isn't set) without saying so
-  explicitly and flagging it as a known hack in the PR description.
-
+  more than was verified. 
 ## Style
 
 - Comments and docs may be in Portuguese or English; existing `docs/`

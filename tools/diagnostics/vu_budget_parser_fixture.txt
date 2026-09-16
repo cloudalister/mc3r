@@ -1,8 +1,0 @@
-[vu1-budget] idx=0 entry=0000 final=0010 cycles=2 budget=2 reason=end-bit ebit=1 pending=0 target=0000 codeFnv=12345678 itop=0
-[vu1-budget-step] idx=0 cycle=0 pc=0000 lower=00000000 upper=400002ff pending=0 target=0000 ebit=0
-[vu1-budget-step] idx=0 cycle=1 pc=0008 lower=10010007 upper=000002ff pending=0 target=0000 ebit=1
-noise[vu1-budget] idx=1 entry=0000 final=0000 cycles=65536 budget=65536 reason=budget ebit=0 pending=0 target=0000 codeFnv=abcdef01 itop=5
-[vu1-budget-step] idx=1 cycle=65534 pc=0000 lower=400007ff upper=000002ff pending=0 target=0000 ebit=0
-[vu1-budget-step] idx=1 cycle=65535 pc=0008 lower=10010801 upper=000002ff pending=1 target=0000 ebit=0
-[vu1-budget] idx=2 entry=0000 final=0008 cycles=1 budget=1 reason=budget ebit=1 pending=0 target=0000 codeFnv=12345678 itop=0
-[vu1-budget] idx=3 entry=broken
