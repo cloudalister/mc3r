@@ -9,12 +9,6 @@ contain the game's ISO, extracted filesystem, ELF, or any asset, audio or
 texture data, nor any code generated from them. Building requires your own
 legally obtained copy of the game.
 
-![Visual progress map](docs/img/visual-map.png)
-
-The full illustrated page, with a presentation mode, is
-[`docs/EXPLICA_VISUAL.html`](docs/EXPLICA_VISUAL.html) (Portuguese) — open it
-after cloning, or serve it through GitHub Pages.
-
 ## Current state
 
 The build boots natively, with no emulator, and reaches the title screen:
@@ -47,7 +41,6 @@ partially rendered menu.
 - `PS2Recomp/` — submodule: the recompiler and the runtime.
 - `docs/ISSUES_PROPOSED.md` — the three open problems, written up with the
   evidence gathered so far. Good entry points for contributors.
-- `docs/EXPLICA_VISUAL.html`, `docs/img/` — the illustrated progress page.
 
 Probe and analysis scripts used during investigation are kept out of the
 repository while they still carry machine-specific paths.
