@@ -8,7 +8,7 @@ Investigar por horas, com pequenas LLMs, por que o provider `0x629F44` não est�
 
 O PRD executável é:
 
-`E:\Emuladores\Sony\mc3recomp\.agents\tasks\prd-mc3-provider-investigation-2026-07-29.json`
+`<old-project-root>\.agents\tasks\prd-mc3-provider-investigation-2026-07-29.json`
 
 ## Regras de operação
 
@@ -85,7 +85,7 @@ Ao final do lote, o handoff deve responder:
 
 ## Arquivos de registro
 
-- PRD: `E:\Emuladores\Sony\mc3recomp\.agents\tasks\prd-mc3-provider-investigation-2026-07-29.json`
-- Roadmap: `E:\Emuladores\Sony\mc3recomp\docs\INVESTIGATION_BATCH_PLAN_2026-07-29.md`
-- Estado Ralph: `E:\Emuladores\Sony\mc3recomp\.ralph\progress.md`
-- Logs Ralph: `E:\Emuladores\Sony\mc3recomp\.ralph\runs\`
+- PRD: `<old-project-root>\.agents\tasks\prd-mc3-provider-investigation-2026-07-29.json`
+- Roadmap: `<old-project-root>\docs\INVESTIGATION_BATCH_PLAN_2026-07-29.md`
+- Estado Ralph: `<old-project-root>\.ralph\progress.md`
+- Logs Ralph: `<old-project-root>\.ralph\runs\`

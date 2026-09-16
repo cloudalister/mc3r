@@ -2,7 +2,7 @@
 
 Data: 2026-08-23
 
-Projeto: `E:\Games\Emuladores\Sony\mc3recomp`
+Projeto: `<project-root>`
 
 Handoff: `docs/HANDOFF_FASE1_TTY_28.md`
 
@@ -256,7 +256,7 @@ A configuração global já contém:
 
 - `approval_policy = "never"`;
 - `sandbox_mode = "danger-full-access"`;
-- projeto `e:\games\emuladores\sony\mc3recomp` com
+- projeto `<project-root>` com
   `trust_level = "trusted"`;
 - sandbox Windows `elevated`.
 

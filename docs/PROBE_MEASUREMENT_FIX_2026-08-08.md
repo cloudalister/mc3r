@@ -23,7 +23,7 @@ and GIF or GSW moved. It flags either contradiction direction as an inconsistenc
 
 ## Actual validation evidence
 
-All commands below ran from `E:\Emuladores\Sony\mc3recomp` without launching the
+All commands below ran from `<old-project-root>` without launching the
 runner or PCSX2.
 
 ```powershell
@@ -80,7 +80,7 @@ change.
 
 ## File evidence
 
-Repository Git metadata could not provide a diff: `git -C E:\Emuladores\Sony\mc3recomp
+Repository Git metadata could not provide a diff: `git -C <old-project-root>
 status --short` returned `fatal: not a git repository (or any of the parent
 directories): .git`. The inspected owned-file SHA256 values after validation were:
 

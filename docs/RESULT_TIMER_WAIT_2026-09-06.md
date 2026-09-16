@@ -63,7 +63,7 @@ Source SHA256/manifest entries:
 ```powershell
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-TimerWaitProbe.ps1
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Compile-TimerWaitProbe.ps1
-rtk proxy cmd /c E:\Games\Emuladores\Sony\mc3recomp\10_link_partial_runner.bat fast
+rtk proxy cmd /c <project-root>\10_link_partial_runner.bat fast
 ```
 
 No new aliases; existing partial registry is reused.

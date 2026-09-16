@@ -179,7 +179,7 @@ Latest smoke result:
 - Current first bad PC is `0x514590`.
 - Next trace-driven batches are recorded in `docs\TRACE_DRIVEN_STATUS.md`; current first targets are `batch_0050`, `batch_0049`, `batch_0048`, `batch_0047`, and `batch_0046`.
 - New automation: `12_trace_driven_compile.bat 2 250 120` reads the latest runner log, maps missing PCs to batches, compiles up to two uncompiled trace-selected batches, relinks, runs smoke, and updates `work\trace_driven\latest_status.md` plus `docs\TRACE_DRIVEN_STATUS.md`.
-- Desktop shortcut: `C:\Users\Cloud\Desktop\MC3 Trace Driven Compile.lnk`.
+- Desktop shortcut: `<user-home>\Desktop\MC3 Trace Driven Compile.lnk`.
 
 ## Checkpoint 2026-06-17 Resume
 
@@ -528,7 +528,7 @@ Next target:
   - TCP `127.0.0.1:28011` is not listening.
   - `pcsx2_connect` returns `ECONNREFUSED` for both DebugServer and Pine.
 - Applied host config fix:
-  - backed up `C:\Users\Cloud\Documents\PCSX2\inis\PCSX2.ini`
+  - backed up `<user-home>\Documents\PCSX2\inis\PCSX2.ini`
   - set `EnablePINE = true`
   - kept `PINESlot = 28011`
 - Next action:

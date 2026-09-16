@@ -76,7 +76,7 @@ rtk proxy node tools/Verify-IrqList.js
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Compile-IrqListProbe.ps1
 rtk proxy cmd /c work\scratch\build_vu_budget_tests.bat
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-NetCallbackRuntime.ps1
-rtk proxy cmd /c E:\Games\Emuladores\Sony\mc3recomp\10_link_partial_runner.bat fast
+rtk proxy cmd /c <project-root>\10_link_partial_runner.bat fast
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Probe-FrontendWrites.ps1 -Seconds 600 -Label irq_list_astra_20260906 -QuietBootTrace -TraceWait -TraceNetCallback -TraceTimerWait
 ```
 

@@ -4,8 +4,8 @@ Estado validado em 2026-08-09.
 
 ## Caminhos locais
 
-- PCSX2 MCP: `E:\Emuladores\Sony\mc3recomp\external\PCSX2-MCP\PCSX2-MCP-v1.0.0-win64\PCSX2-MCP-v1.0.0-win64\pcsx2-qt.exe`
-- ISO: `E:\Emuladores\Sony\mc3recomp\Midnight Club 3 - DUB Edition Remix.iso`
+- PCSX2 MCP: `<old-project-root>\external\PCSX2-MCP\PCSX2-MCP-v1.0.0-win64\PCSX2-MCP-v1.0.0-win64\pcsx2-qt.exe`
+- ISO: `<old-project-root>\Midnight Club 3 - DUB Edition Remix.iso`
 - DebugServer: `127.0.0.1:21512`
 
 ## Lancamento confiavel no Windows
@@ -13,9 +13,9 @@ Estado validado em 2026-08-09.
 `Start-Process -ArgumentList` quebrou as aspas do caminho da ISO. O metodo validado usa `ProcessStartInfo.Arguments` e `[char]34`:
 
 ```powershell
-$iso = 'E:\Emuladores\Sony\mc3recomp\Midnight Club 3 - DUB Edition Remix.iso'
+$iso = '<old-project-root>\Midnight Club 3 - DUB Edition Remix.iso'
 $psi = New-Object System.Diagnostics.ProcessStartInfo
-$psi.FileName = 'E:\Emuladores\Sony\mc3recomp\external\PCSX2-MCP\PCSX2-MCP-v1.0.0-win64\PCSX2-MCP-v1.0.0-win64\pcsx2-qt.exe'
+$psi.FileName = '<old-project-root>\external\PCSX2-MCP\PCSX2-MCP-v1.0.0-win64\PCSX2-MCP-v1.0.0-win64\pcsx2-qt.exe'
 $psi.Arguments = '-- ' + [char]34 + $iso + [char]34
 $psi.UseShellExecute = $true
 [void][System.Diagnostics.Process]::Start($psi)

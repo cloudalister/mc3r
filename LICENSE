@@ -1,0 +1,32 @@
+LICENSE — NOT YET FINALIZED
+
+This repository's tooling, scripts, and recompiled-runtime code (everything
+here EXCEPT any file derived from the game itself — which this repo does not
+and must not contain, see .gitignore and README.md) needs a license chosen by
+the repository owner before the project is made public. This file is a
+placeholder so contributors see the topic has not been skipped, not a
+license grant.
+
+Suggested options for the owner to pick from (not a decision made on the
+owner's behalf):
+
+1. MIT or Apache-2.0 — simple, permissive, standard for small reverse-
+   engineering tooling projects. Apache-2.0 additionally includes an express
+   patent grant, which matters more if the runtime code could be seen as
+   implementing patented hardware behavior (relevant here, since this is a
+   console CPU/GPU reimplementation).
+2. GPL-3.0 (or LGPL-3.0 for the runtime library specifically) — copyleft,
+   common in emulation/recomp projects (e.g. many N64/PS2 recomp forks use
+   GPL family licenses) specifically to prevent closed-source redistribution
+   of derived recompiled runtimes.
+3. A dual approach some recomp projects use: permissive license (MIT/Apache)
+   for the pipeline/tooling scripts, GPL-family for the runtime library that
+   the recompiled game code links against — mirrors how the upstream
+   PS2Recomp fork this project depends on is licensed. Worth checking what
+   license PS2Recomp itself uses (https://github.com/cloudalister/PS2Recomp)
+   before choosing, for compatibility.
+
+Regardless of which is chosen, this LICENSE only ever covers the tooling and
+runtime code written for this project. It cannot and does not grant any
+right to Rockstar Games' or Take-Two's copyrighted game content — this
+project produces no such content and none is included here.

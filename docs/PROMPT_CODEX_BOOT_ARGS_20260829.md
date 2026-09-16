@@ -9,7 +9,7 @@ Leia o handoff inteiro primeiro, e depois leia `docs/RESULT_BOOT_ARGS_V1.md` ant
 de tocar em qualquer código — ele já decodificou metade do mecanismo e evita que
 você refaça o trabalho.
 
-Repo raiz: `E:\Games\Emuladores\Sony\mc3recomp`
+Repo raiz: `<project-root>`
 
 **COORDENAÇÃO — isto é o mais importante do prompt.** Há uma recompilação completa
 de 15512 objetos em `-O2` rodando neste momento, seguida de relink.

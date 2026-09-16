@@ -3,7 +3,7 @@
 ## Onde estamos
 
 Recompilacao estatica nativa de Midnight Club 3: DUB Edition Remix (PS2, retail
-`SLUS_213.55`), em `E:\Games\Emuladores\Sony\mc3recomp`. O jogo ja passa da tela legal,
+`SLUS_213.55`), em `<project-root>`. O jogo ja passa da tela legal,
 renderiza (1,0M primitivas / 1,09 bi de pixels por corrida de 900 s) e desenha modelos
 com esqueleto. Nao chega ao menu 3D ainda.
 

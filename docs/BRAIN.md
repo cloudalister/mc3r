@@ -55,7 +55,7 @@ The first milestone is pipeline proof, not full function documentation:
 - `PS2Recomp\out\build\ps2xTest\ps2x_tests.exe` passes from the `PS2Recomp` working directory: `263` passed, `0` failed.
 - `ghidra_12.1_PUBLIC_20260513.zip` was extracted locally.
 - `ghidra_12.1_PUBLIC_20260522_ghidra-emotionengine-reloaded.zip` was downloaded from the upstream release and extracted into Ghidra.
-- Ghidra CodeBrowser launch error on 2026-06-01 was caused by missing temp directory `C:\Users\Cloud\AppData\Local\Temp\ghidra`; `02_open_ghidra.bat` now creates it before launch.
+- Ghidra CodeBrowser launch error on 2026-06-01 was caused by missing temp directory `<user-home>\AppData\Local\Temp\ghidra`; `02_open_ghidra.bat` now creates it before launch.
 - After creating the temp directory, Ghidra 12.1 reopened `work\mc2recomp` without new `RuntimeIOException` / `Failed to Launch Tool` entries.
 - `ExportPS2Functions.java` now accepts optional headless args: `toml_path csv_path`.
 - `07_export_ghidra_headless.bat` exports TOML/CSV from the analyzed `work\mc2recomp` project without using the Script Manager picker.
@@ -105,7 +105,7 @@ The first milestone is pipeline proof, not full function documentation:
 - Current first bad PC in `work\logs\11_run_partial_runner.log` is `0x514590`.
 - New trace-driven automation exists: `12_trace_driven_compile.bat 2 250 120`.
 - The automation reads `work\logs\11_run_partial_runner.log`, maps missing PCs to `work\index\functions_index.csv`, skips already compiled object batches, compiles up to the requested number of batches, relinks, smokes, and updates `work\trace_driven\latest_status.md` plus `docs\TRACE_DRIVEN_STATUS.md`.
-- Desktop shortcut: `C:\Users\Cloud\Desktop\MC3 Trace Driven Compile.lnk`.
+- Desktop shortcut: `<user-home>\Desktop\MC3 Trace Driven Compile.lnk`.
 - Next runtime-driven compile targets are in `docs\TRACE_DRIVEN_STATUS.md`; current first targets are `batch_0050`, `batch_0049`, `batch_0048`, `batch_0047`, and `batch_0046`.
 
 ## Working Directories
@@ -376,7 +376,7 @@ Next target:
 - Host PCSX2 config was adjusted:
   - `EnablePINE = true`
   - `PINESlot = 28011`
-  - backup created beside `C:\Users\Cloud\Documents\PCSX2\inis\PCSX2.ini`
+  - backup created beside `<user-home>\Documents\PCSX2\inis\PCSX2.ini`
 - Next action: restart PCSX2-MCP, load MC3, rerun `16_pcsx2_mcp_status.bat`, then open a new Codex session so the `pcsx2_*` MCP tools are loaded into the active tool list.
 
 ## Checkpoint 2026-07-05 PCSX2-MCP Live Connection Confirmed

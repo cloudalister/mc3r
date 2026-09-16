@@ -13,7 +13,7 @@ auto-aprove **apenas** dentro da seção "Envelope de autonomia" do handoff.
 Qualquer coisa fora dele: pare, escreva no RESULT o que faria e por quê, e siga
 para o encerramento.
 
-Repo raiz: `E:\Games\Emuladores\Sony\mc3recomp`
+Repo raiz: `<project-root>`
 
 Ambiente de build (não redescobrir):
 

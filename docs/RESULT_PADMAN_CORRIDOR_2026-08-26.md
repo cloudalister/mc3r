@@ -18,7 +18,7 @@ Sem SignalSema injetado, sem env-gate semantico e sem alteracao do scheduler.
 ## Evidencia PCSX2-MCP
 
 O registro MCP e a configuracao local ainda apontavam para drives antigos. Ambos foram
-religados ao checkout `E:\Games\Emuladores\Sony\mc3recomp`; o PCSX2-MCP abriu a ISO
+religados ao checkout `<project-root>`; o PCSX2-MCP abriu a ISO
 retail e confirmou via DebugServer + PINE:
 
 ```text

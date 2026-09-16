@@ -71,7 +71,7 @@ The counter counts invocations only, not time or returned items.
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-EntryBatch.ps1
 rtk proxy node tools/Generate-PartialRegister.js
 rtk proxy node tools/Verify-EntryBatch.js --register
-rtk proxy cmd /c E:\Games\Emuladores\Sony\mc3recomp\10_link_partial_runner.bat fast
+rtk proxy cmd /c <project-root>\10_link_partial_runner.bat fast
 ```
 
 ## Boot probe

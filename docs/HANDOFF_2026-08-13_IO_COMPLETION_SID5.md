@@ -7,12 +7,12 @@
 Duas correções de higiene aconteceram hoje e mudam a interpretação de tudo que veio antes:
 
 1. **O binário estava contaminado.** O exe usado de 09/08 até hoje continha o experimento rejeitado `MC3_EXPERIMENT_OPCODE2B_HOST0_RESPONSE`. Foi purgado (exe limpo: `13/08 03:01`). **Não confie em nenhuma medição feita entre 09/08 e 13/08.**
-2. **O checkout mudou de pasta:** agora é `E:\Games\Emuladores\Sony\mc3recomp`. Docs e logs antigos citam o caminho velho.
+2. **O checkout mudou de pasta:** agora é `<project-root>`. Docs e logs antigos citam o caminho velho.
 
 ## Ambiente — pendências antes da Tarefa 2
 
 - **`cmake` não está no PATH nem em `Program Files`/`msys64`.** Hoje isso não bloqueou nada porque a lib já estava limpa (só leitura, sem rebuild). Mas a Tarefa 2 provavelmente vai exigir recompilar o runtime (`PS2Recomp\ps2xRuntime`) para instrumentar ou corrigir o wrapper de I/O — resolver o PATH/instalação do cmake **antes** de começar essa tarefa, não durante.
-- **Checkout confirmado em `E:\Games\Emuladores\Sony\mc3recomp`** (ver item acima) — qualquer script ou doc antigo apontando para o caminho velho precisa ser atualizado ao usar.
+- **Checkout confirmado em `<project-root>`** (ver item acima) — qualquer script ou doc antigo apontando para o caminho velho precisa ser atualizado ao usar.
 
 Configuração de medição a usar sempre (calibrada hoje, 10/10 corridas válidas):
 

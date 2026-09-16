@@ -1,5 +1,46 @@
 # STATUS — fonte única de verdade (≤1 página, sobrescrever sempre)
 
+Ultimo resultado: **2026-09-16 00:10, menu: faltam 6 propriedades de lista (Claude)**.
+Instrumentacao propria (wrappers em 20AF60/20AFB0, 24 casos de equivalencia PASS)
+listou as 41 variaveis de script que o recomp cria. Contra a lista do retail
+faltam exatamente: offSetX, offSetY, lineheight, scrollable, currentselection,
+actualselection - propriedades da lista do frontend (itens do menu), registradas
+no ELF em 0x33F728 e na regiao 0x3417A0 (sub_0033FD80/FUN_00340ac8).
+readyformenu existe, e lida e vale sempre 0 nos dois jogos; o valor 1 vem de
+script/dados, nao de codigo. Proximo: chamadores de 0x33F728/0x3417A0 e
+instrumentar esses callers. Ver docs/RESULT_MENU_ITEMS_2026-09-15.md Apendice 12.
+Exe instrumentado mc3-var-lookup-20260915 SHA d4bee44e. Nenhum runner ativo.
+
+Checkpoint anterior:
+Ultimo resultado: **2026-09-15 07:29, 5BA440/37E4D0 + probe20min (Claude)**.
+288/288 OFF e ON. Exe mc3-menu-last2-20260915 SHA dc0375b7...
+ZERO funcoes ausentes, zero recover-pc no probe de 20min. Tela igual ao leaf4:
+placa do painel seguinte sem itens de menu, parada. Menu NAO aceito.
+Bloqueio do menu nao e mais funcao ausente. Proximo: por que itens nao
+desenham; placa cortada na diagonal; FPS baixo. Ver docs/RESULT_MENU_LAST2_2026-09-15.md.
+Atalho 23_jogar_com_console.bat aponta para o exe last2. Nenhum runner ativo.
+
+Checkpoint anterior:
+Ultimo resultado: **2026-09-15 06:25, 4 entradas do menu + probe20min (Claude)**.
+5CC940/5BB228/5BA3D8/5BA338 recuperadas conforme ELF; 240/240 OFF e ON.
+Exe mc3-menu-leaf4-20260915 SHA c2ffba61... Avisos ausentes: so 5BA440 x7 e
+37E4D0 x1. Capturas 3/4 MUDARAM: PRESS START some, logo sobe, placa do painel
+seguinte aparece vazia e parada. Menu utilizavel NAO provado. Estados iguais.
+Proximo: 5BA440 (wrapper virtual) e 37E4D0; separado: placa cortada na
+diagonal e FPS baixo na janela ao vivo. Ver docs/RESULT_MENU_LEAF4_2026-09-15.md.
+Atalho 23_jogar_com_console.bat aponta para o exe leaf4. Nenhum runner ativo.
+
+Checkpoint anterior:
+Ultimo resultado: **2026-09-15 05:48, probe20min com 5BB260/5CD768 (Claude)**.
+Avisos dessas duas entradas: ~4300 -> 0. Estados painel 1/41/40/37/40, final40,
+gates abertos. Capturas iguais a 13/09: PRESS START legivel, faixas brancas.
+Menu completo NAO aceito, sem ganho visual. Maior lookup restante 5CC940
+(render do membro 17788B0, RA42630C, jr ra;nop). Proximo: recuperar
+5CC940/5BA3D8/5BA338 com fixture OFF/ON, depois probe. Nenhum runner ativo.
+Ver docs/RESULT_PROBE_MENU_PAIR_2026-09-15.md.
+Novo atalho 23_jogar_com_console.bat: jogo com janela visivel + console ao vivo.
+
+Checkpoint anterior:
 Retomado por Cloud2026-09-06; ultimo lote concluido **18:53**.
 325/325 testes;100 opcodes anotados conferidos com ELF. Sonda de arestas da
 lista instalada; nenhuma repeticao capturada nesta rodada601s. Alarme0703e02b,

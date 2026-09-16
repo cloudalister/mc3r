@@ -289,11 +289,23 @@
         </div>
     </header>
 
+
+        <div class="container" style="max-width:860px;margin:0 auto 10px auto;text-align:left;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:18px 22px;">
+            <div style="font-weight:700;color:#ff4fa3;letter-spacing:.5px;margin-bottom:8px;">ONDE ESTAMOS — 16/09/2026</div>
+            <ul style="color:#c9c9d6;line-height:1.7;margin:0;padding-left:20px;font-size:0.98rem;">
+                <li><strong>Roda nativo:</strong> o jogo abre sem emulador, mostra a intro e a tela <em>PRESS START BUTTON</em>.</li>
+                <li><strong>Velocidade:</strong> ~44,7 quadros por segundo (o PS2 roda a 60). O maior gasto é a parte que interpreta os comandos gráficos, maior até que o desenho em si.</li>
+                <li><strong>Menu:</strong> depois do START a tela seguinte aparece, mas <strong>sem as opções</strong>. Medimos: o jogo cria 41 das 47 variáveis de tela do original — faltam as 6 que descrevem a lista de opções.</li>
+                <li><strong>Funções que faltavam:</strong> zero. Todas as funções do caminho até o menu já foram reescritas conforme o jogo original e conferidas byte a byte.</li>
+                <li><strong>Defeito visual aberto:</strong> a placa do menu aparece cortada na diagonal.</li>
+            </ul>
+        </div>
+
     <!-- CONTAINER DA APRESENTAÇÃO (SLIDES) -->
     <div id="slide-view" class="slide-container">
         <!-- Slide 1 -->
         <div class="slide active">
-            <span class="slide-num">Cena 1/8</span>
+            <span class="slide-num">Cena 1/10</span>
             <div class="slide-title">1. O Quebra-Cabeça no Escuro</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -317,7 +329,7 @@
 
         <!-- Slide 2 -->
         <div class="slide">
-            <span class="slide-num">Cena 2/8</span>
+            <span class="slide-num">Cena 2/10</span>
             <div class="slide-title">2. O Mapa do Tesouro</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -341,7 +353,7 @@
 
         <!-- Slide 3 -->
         <div class="slide">
-            <span class="slide-num">Cena 3/8</span>
+            <span class="slide-num">Cena 3/10</span>
             <div class="slide-title">3. O Alvo que Parava de se Mexer</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -362,7 +374,7 @@
 
         <!-- Slide 4 -->
         <div class="slide">
-            <span class="slide-num">Cena 4/8</span>
+            <span class="slide-num">Cena 4/10</span>
             <div class="slide-title">4. As Portas Trancadas em Fila</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -381,7 +393,7 @@
 
         <!-- Slide 5 -->
         <div class="slide">
-            <span class="slide-num">Cena 5/8</span>
+            <span class="slide-num">Cena 5/10</span>
             <div class="slide-title">5. A Fábrica com Defeito de Série</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -401,7 +413,7 @@
 
         <!-- Slide 6 -->
         <div class="slide">
-            <span class="slide-num">Cena 6/8</span>
+            <span class="slide-num">Cena 6/10</span>
             <div class="slide-title">6. O Medidor no Cano Errado</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -421,7 +433,7 @@
 
         <!-- Slide 7 -->
         <div class="slide">
-            <span class="slide-num">Cena 7/8</span>
+            <span class="slide-num">Cena 7/10</span>
             <div class="slide-title">7. O Dominó Armado</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -440,7 +452,7 @@
 
         <!-- Slide 8 -->
         <div class="slide">
-            <span class="slide-num">Cena 8/8</span>
+            <span class="slide-num">Cena 8/10</span>
             <div class="slide-title">8. A Tela Rosa (Bônus!)</div>
             <pre>
 ┌──────────────────────────────────────────────┐
@@ -458,6 +470,48 @@
 │          esperando o desenho chegar!"        │
 └──────────────────────────────────────────────┘</pre>
             <div class="caption">"O rosa não é erro — é a cor de 'ninguém desenhou nada ainda'. Quando o primeiro desenho chegar, ela acorda."</div>
+        </div>
+
+        <!-- Slide 9 -->
+        <div class="slide">
+            <span class="slide-num">Cena 9/10</span>
+            <div class="slide-title">9. As Seis Peças da Lista</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│   JOGO ORIGINAL          NOSSO JOGO          │
+│   ─────────────          ──────────          │
+│   offSetX        ✓       offSetX        ✗    │
+│   offSetY        ✓       offSetY        ✗    │
+│   lineheight     ✓       lineheight     ✗    │
+│   scrollable     ✓       scrollable     ✗    │
+│   currentselect  ✓       currentselect  ✗    │
+│   actualselect   ✓       actualselect   ✗    │
+│   ...outras 41   ✓       ...outras 41   ✓    │
+│                                              │
+│   As 6 que faltam descrevem UMA coisa:       │
+│          a LISTA de opções do menu           │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O menu não some por acaso: as seis peças que faltam são exatamente as que dizem onde cada opção fica, se a lista rola e qual está selecionada."</div>
+        </div>
+
+        <!-- Slide 10 -->
+        <div class="slide">
+            <span class="slide-num">Cena 10/10</span>
+            <div class="slide-title">10. Virando o Jogo do Avesso</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│  TENTATIVA 1: espiar o jogo no emulador      │
+│    └─> travou o emulador 3x  ✗               │
+│                                              │
+│  TENTATIVA 2: instrumentar o NOSSO jogo      │
+│    ┌────────────────────────────────┐        │
+│    │  [nosso código]  ──► [log]     │        │
+│    │   mesma conta, só que narrada  │        │
+│    └────────────────────────────────┘        │
+│    └─> 24 testes provam que o jogo se        │
+│        comporta igual, com ou sem o log  ✓   │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Quando olhar de fora quebrava tudo, viramos o jogo do avesso: ele mesmo passou a contar o que faz — sem mudar uma vírgula do que calcula."</div>
         </div>
 
         <!-- Controle de Navegação dos Slides -->
@@ -629,11 +683,49 @@
 └──────────────────────────────────────────────┘</pre>
             <div class="caption">"O rosa não é erro — é a cor de 'ninguém desenhou nada ainda'. Quando o primeiro desenho chegar, ela acorda."</div>
         </div>
+        <!-- Card 9 -->
+        <div class="card">
+            <div class="card-title">9. As Seis Peças da Lista</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│   JOGO ORIGINAL          NOSSO JOGO          │
+│   ─────────────          ──────────          │
+│   offSetX        ✓       offSetX        ✗    │
+│   offSetY        ✓       offSetY        ✗    │
+│   lineheight     ✓       lineheight     ✗    │
+│   scrollable     ✓       scrollable     ✗    │
+│   currentselect  ✓       currentselect  ✗    │
+│   actualselect   ✓       actualselect   ✗    │
+│   ...outras 41   ✓       ...outras 41   ✓    │
+│                                              │
+│   As 6 que faltam descrevem UMA coisa:       │
+│          a LISTA de opções do menu           │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"O menu não some por acaso: as seis peças que faltam são exatamente as que dizem onde cada opção fica, se a lista rola e qual está selecionada."</div>
+        </div>
+        <!-- Card 10 -->
+        <div class="card">
+            <div class="card-title">10. Virando o Jogo do Avesso</div>
+            <pre>
+┌──────────────────────────────────────────────┐
+│  TENTATIVA 1: espiar o jogo no emulador      │
+│    └─> travou o emulador 3x  ✗               │
+│                                              │
+│  TENTATIVA 2: instrumentar o NOSSO jogo      │
+│    ┌────────────────────────────────┐        │
+│    │  [nosso código]  ──► [log]     │        │
+│    │   mesma conta, só que narrada  │        │
+│    └────────────────────────────────┘        │
+│    └─> 24 testes provam que o jogo se        │
+│        comporta igual, com ou sem o log  ✓   │
+└──────────────────────────────────────────────┘</pre>
+            <div class="caption">"Quando olhar de fora quebrava tudo, viramos o jogo do avesso: ele mesmo passou a contar o que faz — sem mudar uma vírgula do que calcula."</div>
+        </div>
     </div>
 
     <footer class="instructions-footer">
         <p>💡 <strong>Dica para o Vídeo:</strong> Se você abrir este arquivo no navegador, poderá alternar para o <strong>Modo Apresentação</strong> e usar as teclas &larr; e &rarr; do seu teclado para passar os slides na gravação!</p>
-        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">E:\Games\Emuladores\Sony\mc3recomp\docs\EXPLICA_VISUAL.html</p>
+        <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">docs/EXPLICA_VISUAL.html</p>
     </footer>
 
     <script>

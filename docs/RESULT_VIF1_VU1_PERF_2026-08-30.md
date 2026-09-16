@@ -146,7 +146,7 @@ Failed: 0
 ```
 
 Build oficial `RelWithDebInfo` e fast relink passaram. O relink usou o caminho
-absoluto `E:\Games\Emuladores\Sony\mc3recomp\10_link_partial_runner.bat`.
+absoluto `<project-root>\10_link_partial_runner.bat`.
 Commit local do submódulo: `27faf89` (`mc3`), sem push.
 
 ## O que não foi provado

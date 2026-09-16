@@ -3,8 +3,8 @@
 Updated: 2026-08-23 04:46:01
 Mode: pollsid59c595
 Seconds: 8
-Trace log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\14_run_boot_trace.log
-Driver log: E:\Games\Emuladores\Sony\mc3recomp\work\logs\15_auto_boot_probe_20260823_044552.log
+Trace log: <project-root>\work\logs\14_run_boot_trace.log
+Driver log: <project-root>\work\logs\15_auto_boot_probe_20260823_044552.log
 Partial runner timestamp: 2026-08-23 04:43:45
 
 ## Summary
@@ -18,7 +18,7 @@ Partial runner timestamp: 2026-08-23 04:43:45
 | SP | 0x19fb60 |
 | GP | 0x67f070 |
 | Function | sub_004B2318_0x4b2318 |
-| File | E:\Games\Emuladores\Sony\mc3recomp\work\generated\ghidra\sub_004B2318_0x4b2318.cpp |
+| File | <project-root>\work\generated\ghidra\sub_004B2318_0x4b2318.cpp |
 | Resolve evidence | register_functions.cpp |
 | Render counters | dma=2 gif=0 gsw=0 vif=3 gifPk1=0 gifPk2=0 gifPk3=0 gifPkTotal=0 gsPrims=0 gsPixels=0 |
 | Deterministic | no |

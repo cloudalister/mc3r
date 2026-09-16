@@ -160,7 +160,7 @@ local game data, not included in the source commit. A different machine needs
 its own matching snapshots; the native state layout must match the test binary.
 
 ```powershell
-rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Replay-VuInputs.ps1 -CaptureLog work/logs/probe_vif_input_before_astra_20260905.log.stderr -Prefix E:/Games/Emuladores/Sony/mc3recomp/work/captures/vuinput_vif_input_before_astra_20260905 -Label <unique-replay-label>
+rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Replay-VuInputs.ps1 -CaptureLog work/logs/probe_vif_input_before_astra_20260905.log.stderr -Prefix <project-root>/work/captures/vuinput_vif_input_before_astra_20260905 -Label <unique-replay-label>
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Probe-FrontendWrites.ps1 -Seconds 900 -Label <unique-boot-label> -TraceVuBudget -TraceVuInput
 rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File tools/Analyze-FrontendBoot.ps1 -LogPath work/logs/probe_<unique-boot-label>.log.stderr
 ```

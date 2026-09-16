@@ -84,7 +84,7 @@ O PS2Recomp recebeu a opção `[general].extra_entry_points`, apontando para o C
 Na configuração retail local:
 
 ```toml
-extra_entry_points = "E:/Games/Emuladores/Sony/mc3recomp/work/exports/boundary_port.csv"
+extra_entry_points = "<project-root>/work/exports/boundary_port.csv"
 ```
 
 Log da regeneração:

@@ -61,7 +61,7 @@ Comando do probe:
 $env:MC3_DETERMINISTIC='1'
 $env:MC3_DISPATCH_BUDGET='1200000'
 $env:MC3_BOOT_TRACE='1'
-$env:MC3_FRAME_DUMP='E:\Games\Emuladores\Sony\mc3recomp\work\evidence\mc3_first_frame.png'
+$env:MC3_FRAME_DUMP='<project-root>\work\evidence\mc3_first_frame.png'
 .\14_run_boot_trace.bat 300
 ```
 

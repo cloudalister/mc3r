@@ -1,5 +1,863 @@
 # PS2 Project State: Midnight Club 3 Recomp
 
+## Current 2026-09-15 07:29 - last two missing entries, zero missing lookups
+
+5BA440 (virtual call wrapper, corpus JALR pattern) and 37E4D0 built by
+tools/Build-MenuLast2Entries.ps1; 288 cases OFF/ON PASS.
+Exe <scratch-dir>/mc3-menu-last2-20260915/bin/mc3_partial.exe SHA dc0375b7...
+Probe menu_last2_20260915_a 1202s: zero not-found, zero recover-pc.
+Captures same as leaf4 (next panel, no items). Menu NOT accepted.
+See docs/RESULT_MENU_LAST2_2026-09-15.md.
+
+## Current 2026-09-15 06:25 - leaf4 entries and 20-minute probe
+
+5CC940/5BA3D8 (jr ra;nop), 5BA338 (OR2 this+6C), 5BB228 (float obj+270) built
+by tools/Build-MenuLeaf4Entries.ps1; 240 cases OFF/ON PASS.
+Exe <scratch-dir>/mc3-menu-leaf4-20260915/bin/mc3_partial.exe SHA c2ffba61...
+Probe menu_leaf4_20260915_a 1202s: missing only 5BA440 x7, 37E4D0 x1.
+Captures 3/4 changed from PRESS START to next panel layout (empty, static).
+Menu NOT accepted. See docs/RESULT_MENU_LEAF4_2026-09-15.md.
+
+## Current 2026-09-15 05:48 - pair exe 20-minute probe
+
+menu_pair_20260915_a with SHA783551ac..., same settings as 13/09 21:39 probe.
+1202s, stopped by limit; 207 snapshots/188 post-activation, states 1/41/40/37/40.
+5BB260/5CD768 lookup lines ~4300 -> 0. Captures unchanged: PRESS START, white bands.
+Menu NOT accepted. Remaining: 5CC940 178 (RA42630C), 5BB228 9, 5BA3D8 9, 5BA338 6,
+5BA440 5, 37E4D0 1. Next recover 5CC940/5BA3D8/5BA338. No runner active.
+See docs/RESULT_PROBE_MENU_PAIR_2026-09-15.md.
+
+## Current 2026-09-13 22:39 - pair5BB260/5CD768 tested
+
+New executable <scratch-dir>/mc3-menu-pair-20260913/bin/mc3_partial.exe.
+SHA783551ac50f250c10c088eebf09683f6cd8a30796c164376fef71c7906bcb4b6.
+Eight ELF opcodes verified;252 full-registry reference cases PASS (126 OFF/ON).
+Prior four entries retained, prior binary preserved. No live rerun yet.
+See docs/RESULT_MENU_PAIR_ENTRIES_2026-09-13.md. Next comparable20min probe;
+visual gain/menu acceptance remains unverified. No runner active.
+
+## Current 2026-09-13 21:59 - 20-minute probe completed
+
+menu_missing_20260913_a completed1202s, stopped by harness deadline; no early exit.
+PID25204 gone; reader exited0. No Called unimplemented recorded.
+Four captures,252 snapshots/218 post-activation; final state40, PRESS START
+legible but white bands remain. Full menu NOT accepted, no visual gain claim.
+Eight lookup targets remain:5CD768,5BB260,5BB228,5CC940,5BA338,5BA440,5BA3D8,37E4D0.
+Counts/ELF mapping and exact provenance in docs/RESULT_PROBE_MENU_MISSING_2026-09-13.md.
+Artifact directory <scratch-dir>/mc3-menu-missing-20260913/run.
+Next recover/trace remaining entries, prioritizing5BB260/5CD768; no game active.
+
+## Current 2026-09-13 19:26 - three missing entries recovered
+
+New isolated executable <scratch-dir>/mc3-menu-missing-20260913/bin/mc3_partial.exe.
+SHA719502b45720a33d3e1299359d55db4ea439e77aa3c0cb70af25b4102573ec4e.
+Adds exact ELF entries5BB238/5CD780/5CD790; retains5BB268.
+96 full-registry opcode-reference cases PASS, entry gate OFF/ON, full context/RAM.
+Prior executable unchanged. No new live game validation or visual success claim.
+Next: bounded20-minute probe with entry/host-clock/bridge/STQ ON, depth OFF,
+capture presented frames and inspect missing functions regardless of exit code.
+Details docs/INVESTIGACAO_MANUAL_2026-09-13_TARDE.md.
+Earlier sleep/shutdown block is historical and does not authorize another shutdown.
+
+## Closed work 2026-09-13 10:38 - tested leaf fix, authorized shutdown next
+
+Plan docs/PLANO_1H_ENQUANTO_CLOUD_DORME_2026-09-13.md. User explicitly authorized
+PowerShell shutdown after preserving work; reserve10:39 onward for closure.
+Combined entry-fix + host-clock probe menu_combined_20260913_a CLOSED10:11:55,
+PID47664/reader41528 deliberately stopped.118 snapshots,95 post-activation.
+Third presented capture has legible logo/PRESS START, still white bands and defects.
+Diagnostic menu_vertex_20260913_a CLOSED10:28:39 after896.5s, PID61328 gone.
+Exit0 HID missing function5BB268 atRA22524C; see stderr/audit-final.json.
+178 snapshots,155 post-activation;750 valid vertices, no affine/pointer mismatch.
+Reader ended on Read failed after runner exit. No active game probe.
+Copied2101A0 observer exe e9411f39e3eeb67e1a7bed5aa4498cd8e3e8ad48f050f9fb0ce71d016a6d5d70;
+depth OFF, entry/host-clock/bridge/STQ ON.32 full-state equivalence cases PASS.
+Artifacts <scratch-dir>/mc3-menu-combined-20260913/run; read-only watcher.
+Combined sequence reaches D8=40 then37 and title inactive; next menu not accepted.
+UI wrapper16D6710 +9 naturally changes0->1; movie177F230 accumulator advances,
+header fps256=3840 (15fps). Actual20ACD0 timing fixture passed four cases.
+Actual visual path found2102A8 ->530208 setup ->2101A0 affine vertex writer;
+callback70F1BC=3203B8 emits texture DMA. MenuOptionScreen property setters are
+not themselves renderers. Observer artifacts mc3-menu-vertex-20260913 in C:.
+VIF fixture real530208+2101A0 PASSED positions/UV/colors/Q1, MSCAL2 then0;
+VU/GS not executed. Live UI tree76 nodes contains Press START/OK/Back despiteD8=40.
+Build-Leaf5BB268.ps1 COMPLETED10:35:47, exact retail leaf return2
+(ELF03E00008,24020002), base menu-entry without observer. Full registry3 cases
+OFF and ON passed. New exe <scratch-dir>/mc3-leaf-5bb268-20260913/bin/mc3_partial.exe
+SHA a6f93b7e4305d67cd98a5086dcea1d2d13ea6ded3dbe881f4a72d2d890b0ed7a.
+Long game rerun beyond15min NOT done; first next action is that bounded validation.
+Prior generated sources/registry/objects unchanged. Details RESULT_1H_ENQUANTO_CLOUD_DORME_2026-09-13.md.
+Automation mc3-concluir-1h-e-desligar already PAUSED via tool, verified file.
+No new probe this block; next15-minute probe would exceed deadline.
+Final audit confirms original registry/exe preserved, one new leaf binding,
+OFF/ON fixture passed; no owned runner/reader/compiler active.
+Preservation sources/manifest:mc3-sleep-block-20260913 in C:.
+Authorized shutdown.exe /s /t 0 without /f follows preservation; request record there.
+Do not start a new work loop if resumed after this block's deadline10:49:30.
+
+## Current 2026-09-13 09:11 - post-activation collection confirmed
+
+Continuous reader captured40 samples,21 after D8=40 AND panel1725D50 active.
+Child1725EA0 flags647 opens gate; final member17788B0 flags591 also open.
+State37 observed then return40 under periodic START; no usable visible menu.
+Resources now identified from correct signed ADDIU addresses:65ACEC MemCard,
+65AE24 MenuOptionScreen (prior66... resource address interpretation was wrong).
+No renderer patch; next target actual visual emitter for these resources -> GS.
+Do not repeat parent/child gate investigation: observed open in live game.
+Reader56660/runner60308 deliberately stopped, sessions completed, no runner active.
+Details docs/RESULT_MENU_TRANSITIONS_2026-09-13.md; artifacts mc3-menu-transition-20260913/run.
+
+## Closed 2026-09-13 08:58 - continuous transition reader
+
+menu_transition_20260913_a headless immutable menu-entry exe, cap960s, PID60308.
+Harness session24828; reader session39571 watches900s with2s sampling/change-only saves.
+Receipt verifies PID/path/start ticks/SHA once, read-only handle and ELF signatures.
+No runtime rebuild/relink. Entry/bridge/STQ ON, host clock/depth OFF.
+<scratch-dir>/mc3-menu-transition-20260913/run/transitions holds snapshots.
+Stop only verified owned process after enough post-activation evidence or cap.
+Correction:340994 compares42D with immediate10;364 is only loaded in taken delay slot,
+not a second comparison requirement. Need actual D8=40 AND panel active, not E0 alone.
+
+## Current 2026-09-13 08:54 - live draw collection closed
+
+Headless menu_draw_20260913_a capped720s/elapsed721s, immutable menu-entry exe.
+Final intact frame confirms title inactive974; last live read still D8=41,E0=40.
+Post-activation child sample NOT obtained. No usable visible menu; no active runner.
+Title child1726350/group631C40 has gate open, one member177ABD0/render5CC940.
+Next panel inactive462: child1725EA0 flags135, one member17788B0 flags78.
+Do not call pre-activation closed flags a bug. Group render422698 traverses+48 list.
+Reader now supports exact receipt identity and bounded child-list observation.
+Next: targeted shared Render3404D0 state transitions and post-activation group collection.
+See docs/RESULT_MENU_DRAW_LIVE_2026-09-13.md and <scratch-dir>/mc3-menu-draw-20260913/run.
+
+## Current 2026-09-13 - post-title draw route isolated
+
+No new visual probe: usable menu still unconfirmed; title-exit evidence below remains latest.
+Panel62BDE0 Render41F980 forwards child+48 through4262D8; child flags require bits0+9.
+Actual compiled registry/retail forwarding fixture passed15/15 with entry fix OFF and ON.
+Common slots of62BDE0/62BCF8 show no unsupported final entry alias in source audit.
+Read-only reader now prepared to collect draw child flags/vtable/render; syntax PASS,
+live fields untested. Adapt verified probe identity before next run; no active game launched.
+Next: observe draw child afterD8=40, then follow gate producer or child's GS draw route.
+Details: docs/RESULT_MENU_DRAW_ROUTE_2026-09-13.md. Artifacts <scratch-dir>/mc3-menu-draw-20260913.
+
+## Current 2026-09-13 07:33 - title exit unlocked, visual UI still corrupt
+
+Confirmed in game: single33FEB0 registration repair advances node42D0->10; node368 reaches0.
+Titleflags975->974 (inactive), actual panel+D8=40 in two read-only samples.
+The old JSON panelState reads+E0 (requested field), not current+D8. Do not confuse them.
+No usable visible menu accepted: capture3 still has white bands and corrupt scene.
+Entry probe closed deliberately after746.407s/CPU652.766s; all MC3 probes stopped.
+331/331 tests OFF/ON and compiled-registration counter fixture passed.
+Reproduce with MC3_MENU_ENTRY_FIX=1; frame host clock and depth OFF. Fix remains opt-in.
+Original E executable/objects preserved; <scratch-dir>/mc3-menu-entry-20260913/CLOSURE.json verifies artifacts.
+Next: identify/draw active panel1725d50,vtable62BDE0,Update37EC18 and resolve white bands.
+Details: docs/RESULT_MENU_ENTRY_2026-09-13.md; clock investigation: docs/RESULT_MENU_CLOCK_2026-09-13.md.
+
+
+## Closed 2026-09-13 07:20 - menu entry registration repair
+
+Clock-only probe closed deliberately after405.730s: timer advances but node368=5 remains.
+Compiled-registry fixture proves Update33FEB0 overwritten by unsupported sub33FD80 alias.
+One default-OFF registration fix tested: real counter0 before,1 after;331/331 OFF/ON.
+Headless menu_entry_20260913_a started07:20:51,PID7880,session77935,900s cap.
+MENU_ENTRY_FIX ON; FRAME_HOST_CLOCK and DEPTH OFF. Do not rebuild/relink while active.
+Artifact <scratch-dir>/mc3-menu-entry-20260913. Original E binary/objects untouched.
+See docs/RESULT_MENU_ENTRY_2026-09-13.md. Usable menu not yet confirmed.
+
+
+## Closed 2026-09-13 07:09 - isolated frame-clock experiment
+
+Menu B closed deliberately after716.526s; three captures, no usable menu.
+Direct read-only samples confirm raw frame delta0/saved Count0 and title node368=5.
+Actual retail433490 fixture reproduces observed delta0.000106813 from frozen Count.
+New default-OFF MC3_FRAME_HOST_CLOCK changes only two frame timer Count readers.
+Fixture OFF/ON and331/331 suite OFF/ON passed. Original E objects/exe intact.
+Headless frame_clock_20260913_a started07:09:36,PID47864,session24961,900s cap.
+Do not rebuild/relink or start another runner while active. No visible menu accepted.
+Artifact <scratch-dir>/mc3-frame-clock-20260913; see docs/RESULT_MENU_CLOCK_2026-09-13.md.
+
+
+## Superseded 2026-09-13 06:54 - corrected title observation, menu investigation
+
+Cloud clarified that the scene is an in-game animation with moving cameras and
+buildings, and asked to prioritize reaching the menu. Do not compare unrelated
+animation frames as an A/B. White-band persistence remains observed separately.
+Run a stopped deliberately after320s: locator searched62AA70 but retail ctor
+362F60 stores62AA68; Update is slot24, not1C. titleObj=0 was invalid evidence
+of a missing title. At final intact tick16920,titleUpdate25,inputUpdate25,
+StartPublishes473; UI was running, queue sampledcount0. No menu accepted.
+Read-only locator corrected and titleFlags/titleMessageCalls added; retail ELF
+check and331/331 suite OFF/ON passed. Parser rejects interleaved snapshots.
+Headless menu_frontend_20260913_b started06:54:32,PID52252,session53530,1200s cap.
+Uses new verified observer executable with MC3_GS_DEPTH_TEST absent/OFF; bridge
+and STQ ON, Start held30s/released30s after45s. BOOT_TRACE ON to observe title,
+frontend command queue and input; graphics probes OFF; presentation captures ON.
+Artifact root <scratch-dir>/mc3-menu-20260913/run_b (run_a retained in run).
+Exe32be831f6a6eef95e7327f45c2f8a756a16b8228d186ae599c01613de5c0a75d.
+Lib1241189183ddd1191a395bb1743b8a192616b0162eb1de21408a316ae7cc13a3.
+No intro skip, forced guest state, memory-card edit, new build or visible window.
+Pending: distinguish title animation, accepted Start, menu state and visible UI.
+
+## Closed 2026-09-13 06:40 - depth experiment does not fix white bands
+
+Cloud requested continued investigation. Added MC3_GS_DEPTH_TEST, default OFF:
+fragment Z for all primitives, format-aware test/write, ZMSK and alpha AFAIL.
+340/340 depth contracts and43/43 limits pass ON; OFF matches immutable baseline
+(96pass244fail).331/331 full suite OFF/ON,ADC44 andcopy100128pixels pass.
+Three copy fixtures now set the depth-write mask omitted from their old setup.
+Depth plane uses double; vertex Z remains float, so full32-bit precision is not
+claimed. This is experimental, not full GS parity or visual acceptance.
+Headless depth_render_20260913_a started06:29:09,PID53464; deliberately stopped
+06:40:25 after thirdcapture. Harness ended06:40:30,wall681.241s,CPU662.125s,
+exit-1intentional. No runner remains. PNG3 at660.024s/prim4192788 retainswhite
+bands and is darker than previous capture. No visible improvement accepted.
+5 sourceowners/15 depth samples,0 rejected; storedZ nowffff instead of prior0.
+All15 estimates exceed16-bit range: the real saturating path passes GEQUAL at
+ffff, while old observer mask-based passAgainstCurrent=0 is NOT actual rejection.
+Matched copyprim2227445 remains allnearwhite in source. Four previouscolor
+owners no longer appear; no claim that every missingowner was depth-rejected.
+Keep MC3_GS_DEPTH_TEST OFF by default. Next trace the first writer setting the
+watched Z16S location toffff before2M, then inspect its XYZ/clip provenance.
+Same Start/bridge/STQ and source/present captures as previous passive depth run.
+Artifact root <scratch-dir>/mc3-depth-render-20260913.
+Exe a3bf2785a35d92601ab0b4997007efe480845b897f97ab3c6ef68f3cf2cf9271.
+Lib d0b4582aef59d553c69e8249f97f140646ba1ca1d38e45fb89699a3633b49294.
+Original and previous binaries preserved. Depth is implemented experimentally,
+but visual acceptance failed. Details docs/RESULT_DEPTH_RENDER_2026-09-13.md.
+
+## Closed 2026-09-13 05:43 - depth absent, visual failure remains
+
+No clear visual improvement accepted: ADC correction is confirmed, bands remain.
+Read-only depth observer built and tested: 331 suite cases OFF and ON, 44 ADC
+cases, copy fixture unchanged. Synthetic Z=100 against stored Z=200 confirms
+the current rasterizer ignores requested GEQUAL depth and leaves Z unchanged.
+This does not yet establish which real-game fragments should be occluded.
+Headless run depth_source_20260913_a, PID55264, started05:32:35, deliberately
+stopped05:43:50 after third capture; harness ended05:43:52,wall676.822s,CPU624.875s.
+Exit-1 is intentional stop, not an observed crash. No runner remains active.
+9 source triangles/27 depth samples,0 rejected: all Z16S,ZBP176,GEQUAL enabled;
+5 request depth writes. Raw Z stays zero in all27.18 estimates exceed16-bit
+range; no usable rejection against current raw zero. This cannot reconstruct
+missing depth history or prove that depth alone causes the bands.
+Third PNG660.028s/prim4984963 still shows white bands/deformed scene.
+24 ADC records remain bounded; two source copies still captured. Next build
+an overlapping-primitive depth regression before implementing full Z behavior.
+Artifact root <scratch-dir>/mc3-depth-20260913.
+Executable SHA256 0c6585b3726798ec2be9e2f73c5a5bf1e19f9ab256c0efc8dab0f4aa26fb9b2d.
+Original executable and previous ADC artifact preserved. Depth rendering has
+not been enabled; observer uses estimated interpolated Z and raw current VRAM.
+Missing historical Z writes and float/range limitations constrain inference.
+Follow-up evidence: docs/RESULT_DEPTH_PROBE_2026-09-13.md.
+
+## Closed 2026-09-13 04:57 — ADC queue corrected, white bands remain
+
+Queue correction confirmed on the SAME real prim2225038: previous verticesABC
+becameBCD;24 ADC records,0 rejected,highest observed4194304,all observed counts
+bounded.9 source draw events,0 rejected,0 capped at last5.5Mprim snapshot.
+Two source captures remain white beforecopy at2175494/2227445;6 pipeline samples
+match.Third presentedPNG at660.055s/prim5372283 still shows white bands and
+deformed scene. No full graphics/gameplay acceptance claimed.
+Run adc_queue_20260913_0446 deliberately stopped04:57:50 after criterion met;
+harness ended04:57:55,wall712.326s,CPU694.469s,exit-1(intentional stop).
+PID59840/path/start verified;stop.json records intent.No runner active.
+Keep the proven queue fix. Next inspect packets/flags/depth of remaining source
+producers, especially2225038/2225467;do not assume Q-sign filtering is a fix.
+OriginalE/previousC executable preserved. Detailed evidence/rollback:
+docs/RESULT_ADC_QUEUE_2026-09-13.md;<scratch-dir>/mc3-adc-20260913.
+
+### Implementation and historical launch record 04:46 (now closed)
+
+Cloud authorized the next step with "go". A minimal ADC/XYZ3 fixture reproduced
+36 failures/44 cases against previous immutable library;8 no-skip/incomplete
+controls passed. GS::vertexKick returned before queue advancement on !drawing,
+so A,B,C(skip),D drew staleABC instead ofBCD. Corrected complete-primitive queue
+advancement for strips/fans/lists while keeping rasterization/metrics conditional
+on drawing. No class layout change, clipping rule or Q-sign filter added.
+44/44 fixed cases PASS (directXYZ/XYZF,packedXYZ/XYZF,all primitive types,long skips).
+331/331 full suite OFF and ON PASS; copy100128pixel fixture and five writer fixture
+remain byte-identical OFF/ON. ADC trace10records, results identical OFF/ON.
+Headless run adc_queue_20260913_0446 started04:46:02,PID59840,session63612,900s.
+Artifacts <scratch-dir>/mc3-adc-20260913. Same Start30/30delay45,bridge/STQ,
+sourcewatchFBP64/CT24 threshold2M,copy/presentation captures;ADCtraceON.
+Exe51d5f876dbcdb474e647346c66a4fc9b72b87b81ba2e5e2bceaf6382662dbf19.
+Libef6f14c88506e1bde829b795478b4b8f1d38daa1bef76727e512d5042635f2f1.
+Previous C/E executables and baseline4files preserved/hashed. Queue bug fixed
+in tests and verified in real vertex records; remaining visual failure described
+in closure above. See docs/RESULT_ADC_QUEUE_2026-09-13.md.
+
+## Closed 2026-09-13 04:33 — bands already present before the final copy
+
+Two real source snapshots atprim2227445/2407292 show the white/cyan bands before
+the CT24->CT16 copy. Six samples at256,84..86 match source/TEXA/shading/blending/
+CT16 storage; second source RGB4,255,255 correctly quantizes to CT16cyan.
+Third presented PNG at660.024s/prim2743953 reproduces bands. Graphics still broken;
+no functional rendering fix or visual acceptance claimed.
+Source watch FBP64/FBW8/CT24 tracks physicaladdr690312;32 selected writers are
+draw/GIFpath1 triangle strips intoFRAME64/FBW8/CT32. Firstwhiteproducer2225038,
+firstcyanproducer2404667; extreme screen coordinates and mixed/negativeQ logged.
+The32-eventcap was reached; these are selected events, not all writes.
+Run copy_source_20260913_0423 deliberately stopped04:33:17 after two source and
+three presented captures; harness ended04:33:20,wall686.219s,CPU638.297s,exit-1.
+PID6376/path/start verified; stop.json records intent. No runner active.
+331/331OFF/ON plus100128 fixture pixels and immutable evidence tests passed.
+Exe63bff17189f7e5d5d77fd2eba72800ae304b323dcb2dc6e73682ab5d7c3066c7.
+Artifacts <scratch-dir>/mc3-copy-source-20260913, originalE and priorC
+executables preserved. See docs/RESULT_COPY_SOURCE_2026-09-13.md for exact samples.
+Next validate ADC/kick queue progression with a minimal sequence, then trace
+actual GIFpath1 packets of identified producers. PackedADC is decoded; fabsQ
+preserves sign. Do not infer either is discarded from their names alone.
+
+### Historical launch record 2026-09-13 04:21
+
+Cloud authorized this follow-up with "gogo". Headless run copy_source_20260913_0423
+started04:21:54 Brasilia, PID6376, harness session93991, limit900s (now closed).
+Artifacts <scratch-dir>/mc3-copy-source-20260913; baseline source/lib/tests
+hash-verified; previous C runner and original E runner preserved.
+New copy probe OFF by default, max4 source PPMs (512x64 rows72..135), input samples,
+shaded color and destination CT16 before/after at256,84..86 for the exact observed
+sprite. No GS layout change or pixel-loop hook.331/331 OFF and ON passed; fixture
+100128 pixels, clean/striped inputs, source preservation, OFF/ON VRAM digests and
+exclusive PPM creation passed. New exe63bff17189f7e5d5d77fd2eba72800ae304b323dcb2dc6e73682ab5d7c3066c7.
+Same quiet/bridge/STQ/Start30/30delay45. Source watch now FBP64,FBW8,CT24 at256,85
+(TBP2048), threshold2M; this watches the producer while copy probe watches output.
+Actual source/producer evidence is recorded in the closure above.
+
+## Closed 2026-09-13 03:54 — surface blind spot identified, graphics still malformed
+
+Cloud approved the 180-minute diagnostic batch; session began03:22:56 Brasilia.
+Verified backup:16202 files/SHA256 under <scratch-dir>/mc3-surface-20260913/baseline_v2.
+Original E exe/lib preserved. New C build:331/331 OFF and ON; five real writer
+fixtures produce identical VRAM/presentation hashes OFF/ON. New watch defaultOFF
+covers CT16 and draw/IMAGE/HWREG/local-copy/clear at one physical address.
+Old probe rejected CT16; previous logs already show FRAME CT16. New presentation
+logs confirm DISPFB0/FBW8/CT16 with CRT origins0,0 and0,1; field mode active.
+Run surface_owner_20260913_0345 started03:42:04; deliberately stopped03:54:11
+after726.863s with criterion met. PID56912/path/start verified before stop;
+stop.json records intent. exit=-1 is deliberate termination, not a crash.
+Exe d0c66999cfbf652d82f2725270d69a33ceacd7149ee8351599eb16000b0d638f.
+Headless quiet/bridge/STQ, Start30/30 delay45, both probesON, threshold2M.
+Two actual draw changes at prim2227445/2407292: black->white/cyan in CT16,
+GIFpath2, CT24/TBP2048 textured copy, regular32px-wide sprite geometry.
+Both precede old3M gate; old probe also rejectedCT16. ThirdPNG reproducesbands.
+Three presentedPNGsOK;331/331 OFF/ON; oldprobe0,newowners2,rejected0.
+No runner active; no gameplay/graphics correction accepted. Next inspect source
+texture plus two presentation rows and full blend/Z state, not VU1 by appearance.
+Atlas connector returns404 for existing site and empty site list; no replacement
+site/access change. Local atlas text updated; remote publication not completed.
+See docs/RESULT_SURFACE_OWNER_2026-09-13.md for provenance, limits and rollback.
+
+## Planning audit 2026-09-13 — previous surface run completed, no active runner
+
+Read-only audit reconciled the stale Active entry below: surface_band_20260910_0955
+ended 10/09 at10:19:45 by harness timeout, wall1502.3739775s. Five presented PNGs
+ok=1; PNG5 still malformed (inspected13/09), prims4257869. Surface probe enabled
+in meta but zero intact/rejected surface events. No observed missing-function error.
+No new runtime evidence found for11–13/09 in inspected docs/logs/captures.
+No mc3_partial process found. DiskE only296329216bytes free; gate new builds on
+adequate temporary/rollback space. No build/run or functional edits in this audit.
+Plan for NEW session: docs/PLANO_GRAFICOS_NOVA_SESSAO_2026-09-13.md (180min proposal).
+Next: explain surface probe blind spot before attributing defect to vertices/VU1.
+
+
+## Active 2026-09-10 09:55 — bounded surface attribution probe
+
+Cloud authorized a new batch with "go" after overnight closure; old automation stays PAUSED.
+Read-only pixel probe added (OFF by default): pixel256,85 in FBP0, after3M primitives,
+max32 white/cyan RGB changes. Records actual pre/post framebuffer and draw state.
+331/331 tests passed OFF and ON+STQ; two integration records; log parser tests PASS.
+New exe 1d3bf49bbdc88f23b178978d6ea0797827848581d5e88fd2d6b35acbfca9ac0b.
+Run surface_band_20260910_0955, session89383,1500s, headless/quiet, bridge+STQ ON,
+entry trace/presented capture ON, Start30/30 delay45. Do not duplicate/build/relink.
+No new graphics correction or in-game conclusion yet. See RESULT_SURFACE_PROBE_2026-09-10.md.
+
+
+## Closure 2026-09-10 09:46 — overnight automation PAUSED
+
+First heartbeat after the 09:30 deadline paused mc3-investiga-o-at-6h.
+No mc3_partial process found; no experiment or manual window was terminated.
+No new build/run, shutdown, restart, or game-state mutation after the deadline.
+Results and private atlas remain those documented below; no new visual gain.
+Next authorized work should isolate one malformed surface across GS input and
+raster output, as planned in docs/RESUMO_MADRUGADA_2026-09-10.md.
+
+
+## Current 2026-09-10 08:58 — final runtime result; graphics still broken
+
+09:02 artifact close: private atlas v6 deployed successfully; 344-file hashed
+source/capture backup at <scratch-dir>/mc3recomp-backups-20260910_0750/closing_sources_0901.
+No new long experiment planned. Existing heartbeat must pause at/after09:30.
+
+Latest run stq_correct_capture_20260910_0756 ended 08:31:22 by harness timeout:
+2103.3388474 s wall, 1533.75 s CPU, exitedBeforeLimit=false, exitCode=null.
+No active mc3_partial observed at the closing audit. No new long run planned.
+5cd758: 16 intact markers through call 16384; 5e89f8: no observed marker.
+STQ varying-Q: 24 intact markers through 4194304. No observed unimplemented error.
+Six presented PNGs succeeded; PNG6 still has white/cyan bands and damaged scene.
+STQ contract fix is exercised, NOT a full visual fix. Both experimental gates
+remain default OFF. No FPS/menu/profile/race acceptance.
+See docs/RESUMO_MADRUGADA_2026-09-10.md for next bounded diagnostic and backups.
+Older Live/Active entries below are historical and superseded by this entry.
+
+
+## Live 2026-09-10 08:19 - STQ code exercised, bands persist
+
+PID18688 stillactive until~08:31.23STQvariableQmarkers through2097152,
+5cd758through4096,no unimplemented. PNG4/5 inspected: scene texture appearance
+differs butwhite/cyanbands remain. PNG5prims3994037 matches priorOFFPNG5,
+but entiregame state not proven identical; no broadvisualsuccess/FPSclaim.
+STQcontractbug corrected in gatedpath, not solecause ofgraphicsproblem.
+Wait finalresult/PNG6; defaultOFF remains. Finalmorningreport/site dueby09:30.
+
+
+## Active 2026-09-10 07:57 - STQ contract red/green; experimental visual run ACTIVE
+
+0651run endedtimeout07:25,no unimplemented,5cd758through16384,5e89f8unseen.
+PNGs4-6 confirm malformedlater scene, not acceptedmenu/gameplay.
+Found triangle STQ interpolationbug vs PCS X2reference and discriminating
+publicGS test. ProperCLUTfixture: gateOFF/requirecorrect328/329(red),
+OFFlegacy329/329,ONcorrect329/329. Initialfixturefailure was NOTvalidproof.
+NewMC3_GS_STQ_INTERPOLATION1 defaultOFF changesonlytriangleSTQ interpolation,
+sparsevariableQmarker. No XYOFFSET/geometry/scheduler changes.
+
+Run stq_correct_capture_20260910_0756 session15082,2100s expected~08:31,
+quietheadless,GSbridge1,STQ1,leaftrace1,sixcapture,Start30/30s-delay45.
+Exe f76cd5f0ecbd4af7b4f2dc7a441b75d1049d3f29f358d0dcb871a5f4041a0f57;
+lib0377ebdf5b1788e2d9f5d04e563ca78062f3cc8d21414b7b187affe7769b7d7b.
+Relink/markers/mtimesPASS. Do notbuild/relink/duplicate whileactive.
+Next audit markers+sixPNGs and outcome. FullreportRESULT_STQ_INTERPOLATION.
+E diskpressure: failedbackup074832 INCOMPLETE. Only064330binarybackups
+movedwithverifiedhashes to <scratch-dir>/mc3recomp-backups-20260910_0750;
+thatdir also hascurrentpreSTQexe/lib/sources/diff. Otherbackupsunchanged.
+No save/assetdeletion. Sitev5 remains live; aggregateupdateaftervisualoutcome.
+Userasleep,deadline09:30; leaveexperimentaldefaultsOFF.
+
+
+## Active 2026-09-10 07:15 - 5cd758 runtime coverage confirmed; graphics still broken
+
+Same run/PID51672 active, expected07:25 end. Compact live audit:14intact
+5cd758 markers throughn4096, zero observedunimplemented,5e89f8 still0markers.
+Specific missing-accessor barrier traversed; not globalgameplay acceptance.
+Presented PNG4(960032ms) and5(1260036ms) inspected: darkstar/smoke-like scene
+and stretchedsurfaces, then white/cyanhorizontalbands matching manual-type
+corruption. This is later visual scene vs legal/title, NOT mainmenu confirmed,
+nor geometry fix. Keep run alive for finalPNG6/result; no newbuild/instance.
+Atlasv5 current; next substantive site update after finalrun outcome.
+
+
+## Active 2026-09-10 06:53 - second exact leaf restored; presented capture run ACTIVE
+
+Quiet ended06:22:12 early1702.443s EXIT0 with7unimplemented5cd758/RA4ff924,
+then orderly cleanup. Internal requestStop path, not OS crash.5e89f8 unvisited.
+5cd758 verified ELF jrra/addiu v0,a0,ec (rs4 NOT v0); restored separateowner
+case/label and exactpartialregistration.7actualowner tests PASS;64earlierleaf
+tests remain prior result. Bounded presented capture hook reuses UploadFrame
+scratch, no extra latch; independentBOOT_TRACE, defaultOFF,max6attempts,
+60s initial then300s. Capture scheduler/boundsPASS. Runtime328/328OFF andON
+PASS today, build/relinkmarkers/mtimesPASS. Backup064330 plus restored copies.
+
+Run recovered_leaves_capture_20260910_0651 began06:50:22, PID51672,
+session81214,2100s expectedend07:25:22. Quiet/headless,GSbridge1,leaftrace1,
+CapturePresented,Start30s/30s/delay45s. Newexe5f66cb623b7efc3d2e1ba7c64cba20b367641af1cee385b881d68b36fbacb0d4;
+lib1fd5e0ac904f58cdcc17e2d1b1426a72c366756c7474363c986af8f3a995552f.
+FirstPNG captured60s and inspected:MC3legal, not new visual progress.
+Do not build/relink/duplicate while running. Next compare both leafmarkers,
+newerrors, actualexit, and up to6present_* PNGs using Analyze-EntryCoverage.js.
+Full evidence docs/RESULT_LATE_CAPTURE_5CD758_2026-09-10.md.
+Atlasv5 private deploymentSUCCEEDED06:53:17,
+appgdep_6aa27df2153c8191bd7e356ba6ce0111. User asleep, deadline09:30.
+
+
+## Active 2026-09-10 05:54 - pulse run no leaf coverage; quiet control RUNNING
+
+Pulse1800s ended05:32:21 timeout1802.926s, CPU838.9375s, no natural close,
+no intact leaf marker/unimplemented error. Capture at3.5Mprims still MC3
+title/loading art; final fields4.609Mprims,66title/frontendTicks,198UIupdates,
+2722guestPadReads. Counters are last intact observations, not one record.
+Changing Start alone did not produce observed leaf coverage; do not claim
+runtime fix validated or headless broken. Subagent traced headless: only
+FLAG_WINDOW_HIDDEN, normal emulation/audio/presentation and autoStart remain.
+
+Quiet control entry_5e89f8_quiet_20260910_0555 started actually05:53:49,
+PID25788/session51904,1800s expected end06:23:49. Same exe/lib/settings as
+pulse except BOOT_TRACE0; leaf sparse marker staysON independent of it.
+NO PNG EXPECTED: current frame-dump implementation is inside boot trace.
+This isolates trace-sensitive coverage vs pulse (not proof of FPS gain).
+Do not build/relink while active. After06:24 analyze result and errors/leaf;
+if still uncovered, implement bounded periodic displayed-frame capture
+independent of boot trace for next run, not another blind duration change.
+Subagent boot_next_audit currently readonly planning that insertion point.
+Remaining authorization until09:30, no shutdown; sitev4 retains known facts.
+
+
+## Active 2026-09-10 05:03 - first probe no leaf coverage; input-interval probe RUNNING
+
+0426 probe ended04:40:33 by harness timeout901.5s, not natural close; no intact
+5e89f8 markers or unimplemented errors. Does NOT validate restored leaf in-game.
+Display PNG inspected: MC3 title/loading art legible, not gameplay/profile.
+Context0 alternativeFB image distorted; differentFB cannot alone prove bug.
+Analyzer tools/Analyze-EntryCoverage.js: 16frontend-edge markers,45UIupdates,
+2750guestPadReads,15title/frontendTicks,~3.97Mprims. Last fields need not share
+one intact line. bootPhase=mc3intro stale classification not definitive stage.
+Cannot claim no input because padReads0 or because long Start hold.
+
+New probe entry_5e89f8_pulse_20260910_0504 started actually05:02:18,
+PID42852/session43420,1800s expected end05:32:18. Same verified exe/lib,
+GSbridge/entrytrace/boottrace1, headless. Harness now parameterizes existing
+Start knobs, defaults preserved; this run hold30000/period30000/delay45000ms.
+Dump threshold3500000prims, not a promised wall time. Repeated Start only,
+no X/navigation/save bypass. No builds while running. Next heartbeat05:20
+should only compact-check active state; after05:32 analyze closed result and
+view capture, decide whether leaf remains unvisited or new blocker emerges.
+User asleep; authorization until09:30. Sitev4 unchanged: no confirmed new
+in-game fix yet. Update site at next substantive confirmed outcome.
+
+
+## Active 2026-09-10 04:26 - NEW exe verified; 900s coverage probe RUNNING
+
+Cloud explicitly went to sleep and reconfirmed continue. Deadline09:30 local,
+no shutdown. Existing20min heartbeat remains the continuation mechanism.
+Relink-Entry5e89f8 session26932 EXIT0: registry, stubs, relink, identity/new
+leaf marker, mtimes all PASS. Newexe SHA256:
+15b7251765cc562fe194d942a01db272397367b22209317e37cca8497d174c37.
+Runtime lib unchanged a21022d6fd98ab73480dd70851ffa949fd83431ef3a5ee66eacdf6cb7671527f.
+Probe session51516 RUNNING label entry_5e89f8_bridge_20260910_0426,
+900sec, headless, BOOT_TRACE1, GS_IRQ_BRIDGE1, ENTRY_COPY_TRACE1,
+FrameDumpMinPrims1500000, existing Start harness. No other game instance.
+Expected end about04:41; do NOT relaunch/build while it runs. Inspect result
+JSON/stdout/stderr in work/logs/probe_<label>.log.* after completion.
+Need positive leaf coverage, closure reason/realexit, next missing address,
+and image inspection; no runtime or geometry improvement claimed yet.
+Sitev4 already private-published04:13, update next after confirmed outcome.
+
+
+## Active 2026-09-10 04:22 - registration verified, compiling registry; stop path found
+
+Generate-PartialRegister completed: 15831 functions,168845 aliases,0 missing
+stubs. Verify-Entry5e89f8 --register PASS. Registry compilation session32812
+RUNNING with UCRT64 PATH; first attempt without that PATH failed immediately.
+Exe still OLD: do not run until compile/relink/marker verification completes.
+Source default unimplemented handler ps2_runtime.cpp:2207-2222 logs the exact
+error seen five times for5e89f8, then requestStop(). This supplies a concrete
+internal stop path matching the manual close, not proof of OS crash or click
+causality. Economical subagent independently traced stop/main-loop/cleanup.
+Next: relink, verify new marker/hash, bounded headless coverage probe.
+
+
+## Active 2026-09-10 04:16 - real5e89f8 leaf restored/tested, partial generation running
+
+OwnerFUN005e8980 now dispatches SEPARATE5e89f8 body: LQ/SQ,LQ,JR/SQ;
+two16byte copies, v0/v1 changed, a1ignored.64compiled-owner cases PASS,
+ELF bytes/source guard PASS. Source in generated ignoredtree: preserve it.
+Optional MC3_ENTRY_COPY_TRACE and harness TraceEntryCopy for coverage.
+Generate-PartialRegister session14069 RUNNING; wait completion before compile
+partialregister/relink. Ownerobject rebuilt, exe still OLD until relink verified.
+Do NOT start run now. Backup040727. Full details docs/RESULT_ENTRY_5E89F8_2026-09-10.md.
+Atlas version4 published private04:13 with manual visual milestones, not
+leaffix/gameplay claims. User authorized start now; deadline09:30 unchanged.
+
+## Manual run closed 2026-09-10 03:57 - cleanup seen, crash unconfirmed
+
+Cloud reports close after click; PID36624 gone03:57:39. stdout ends normal
+resource unload and Window closed successfully. PS2 Thread Exit messages
+are not crash proof; runtime uses them for termination. Windows Application
+1000/1001/1002 last1h matchingmc3 query viawevtutil empty. Actual game
+exitcode unavailable: helper92321 exit0 is NOT runner exitcode. Improve
+next controlled harness exit/motive evidence, no claim click caused crash.
+Concrete independent lead: unimplemented5e89f8,RA340250,a0016ddf40. Source
+neighbor5e8980 exists; register has aliases through5e89e0,not5e89f8 in search.
+First cheap audit: realbytes/function boundary/caller/expected result, not
+blind alias or stub. Then targeted render/UI-state evidence. Read latest
+RESULT_TESTE_VISUAL_CLOUD and PLANO_PRIORIDADES. Manual test ended; after04h
+night work authorized until09:30. No saves/card destruction or PC shutdown.
+
+## User screen 2026-09-10 03:52 - CREATE PRO... faint, possible profile UI
+
+New screenshot08 after memory-card check shows faint CREATE PRO... prefix.
+Saved work/captures/manual_20260910_cloud_08_possible_profile.png.
+Possible create-profile UI, not confirmed full title, selected option or
+completed card/save action. Remaining on it may be waiting for input, not
+execution limit. Identify active UI/selection before treating as hang;
+don't blindly confirm or modify persistent cards/saves. Bounded log tail
+has no direct profile/card marker. ManualPID36624 active; no interruption.
+Read latest RESULT_TESTE_VISUAL_CLOUD_2026-09-10.md. Deadline09:30 remains.
+
+## Confirmed visual milestone 2026-09-10 03:47 - checking memory card screen
+
+Cloud pressed Enter repeatedly and screenshot07 now shows readable CHECKING
+MEMORY CARD over still-broken background. Saved work/captures/
+manual_20260910_cloud_07_memory_card.png. Same manual PID36624 active.
+This confirms a new visual flow, NOT completed card check/save operation,
+nor previous screen identity as main menu. stdout confirms guestPad read731
+start1 and uiinput-pad sample209 buttons0800/start1: input delivery proven,
+causality for this screen not isolated. Let manual check finish; do not interrupt while user
+tests. Never format/delete/recreate cards or saves to bypass it. Read latest
+RESULT_TESTE_VISUAL_CLOUD_2026-09-10.md. Deadline09:30 remains unchanged.
+
+## User hypothesis 2026-09-10 03:46 - possible main menu, not confirmed
+
+Cloud suspects current distorted scene is already main menu. PNG06 saved:
+work/captures/manual_20260910_cloud_06_possible_menu.png. Treat subjective75%
+as user hypothesis, not measured confidence. No legible options or confirmed
+selection response. Next discriminate frontend/menu active vs rendering-only
+progress using actual state/input, not image resemblance or old entry counts.
+Manual PID36624 still active, no interruption authorized while he tests.
+
+## User visual evidence 2026-09-10 03:39 - progression after black, deformed output
+
+Same manual run still active PID36624. Cloud confirms visible progression
+after previous black interval; three more PNGs preserved as
+work/captures/manual_20260910_cloud_03.png through05. Large stretched
+surfaces/triangles/cyan-white bands, not accepted menu/gameplay. Therefore
+black was not proven terminal/global hang. Enter pressed several times,
+effect inconclusive due to slowness. Don't infer input success/failure.
+Read latest RESULT_TESTE_VISUAL_CLOUD_2026-09-10.md. Night priority: locate
+first invalid frame/data/state, distinguish geometry/texture/render/present
+causes; not a speculative fix. Don't interrupt manual game. Deadline09:30.
+
+## User visual evidence 2026-09-10 03:33 - credits exit, fragmented output then black
+
+Cloud reports~23s first screen,>=~3min credits, then triangular/fragmented
+output, blue point, glitches and persistent black. Two user PNGs preserved
+work/captures/manual_20260910_cloud_01.png and02. This is beyond the old
+one-shot legal capture; NOT confirmed menu3D/gameplay. Read
+docs/RESULT_TESTE_VISUAL_CLOUD_2026-09-10.md before next experiment.
+Prioritize first invalid frame around transition: production/rendering/
+presentation or stopped production; do not assume cause from artifacts.
+Manual PID36624 still active at03:33; Windows Responding is not guest progress.
+Do not interrupt user's test. Enter response not yet reported. Deadline09:30.
+
+## Active 2026-09-10 - manual playtest then authorized night until09:30
+
+Cloud authorized visible manual launch now, autonomous work after~04h until
+09:30 America/Sao_Paulo. Same exe/lib hashes confirmed this session.
+Manual gateON,HEADLESS0,BOOT_TRACE0,PHASE_TIMING1,no automatic Start;
+PID36624,label manual_gs_bridge_20260910_0328. New helper Launch-ManualGsBridge.
+Preserve user's playtest; no duplicate instance or auto-close while active.
+Heartbeat mc3-investiga-o-at-6h reused ACTIVE,20min, deadline09:30; before04h
+read-only/light only, after04h wait for manual test end or user's sleeping notice.
+No shutdown/restart permission today. Plan docs/PLANO_PRIORIDADES_2026-09-10.md.
+Last old visual frame22140 interleaved; prior intact22080 has frontend entry
+counts and guestPadReadCalls1640 despite padReads0. Do not infer input failure
+or no transition from that zero/bootPhase label. Next: reconcile progression
+and late visual frame, then only a targeted, causal correction.
+
+## Closed 2026-09-09 07:46 - user requested shutdown after run
+
+Visual run ended07:39:28, controlled600.988s,CPU205.266s; no early exit.
+No mc3_partial process at07:45. Analyzer:820completed,707matched allnormal
+5282bc;CV4.917s/token110.259s. One invalid log row61867; noisy trace means
+do not compare aggregate performance with quiet A/B. Capture remains legal/logo.
+User asked to shut down PC after completion, superseding work-until08h.
+Pause heartbeat and request Windows shutdown after this checkpoint. No new runs.
+Next session: inspect boot progression beyond one-shot capture; remaining
+token/work costs, not another watchdog change. Experimental bridge defaultOFF.
+
+## Active 2026-09-09 07:33 - same-binary OFF confirms targeted wait; visual ON running
+
+07:36: Atlas version3 published private, deployment succeeded; exact IDs in
+RESULT_GS_IRQ_BRIDGE. New capture exists and inspected: legal/logo already
+seen historically, no new visual stage. Dump is one-shot, not final-state proof.
+Runtime baseline preserved073444 with explicit new GS headers. Visual34602
+still running until~07:39. Next wake: analyze CLOSED visual log/result first;
+do not repeat run or rebuild blindly. Last live sample pc4f94b4 is inside
+FUN004f93a8, historical label zipHandle::Read; sample alone is not a hang.
+Next narrow question: bootPhase/file-read progression and remaining token/work
+cost after corrected wait. Maintain defaultOFF, stop new work at08h.
+
+OFF completed07:18:48:86waits/85matched allwatchdog5295dc, medianCV866.7722ms.
+ON779waits/682matched allnormal5282bc, medianCV8.625ms. Same hashes/settings
+except gate/dump names; not FPS or boot acceptance. Experimental defaultOFF.
+VisualON gs_irq_bridge_visual_r1_20260909 started07:29,session34602,600s,
+BOOT_TRACE1 and dump threshold100000. Wait before another run. Site next
+update must distinguish targeted wait fix from unconfirmed visual progress.
+Deadline08h. Details docs/RESULT_GS_IRQ_BRIDGE_2026-09-09.md.
+
+## Active 2026-09-09 07:12 - bridge ON succeeded at wait target; OFF control running
+
+ON gs_irq_bridge_r1 closed06:57:779waits,682matched notifications allnormal
+5282bc;CV7.723s median8.625ms vs prior868.15ms. IRQsample780finish/dispatch.
+Not100xgame/FPS and no visual yet. Worker779iterations completed,errors0.
+OFF SAME EXE control gs_irq_bridge_off_r1 started07:09,harness94285,600s.
+Check result before next run. After control, visualON run WITHOUT QuietBootTrace
+(it disables LogBootTraceFrame entirely, explaining missing captures).
+Do not compare noisy visual run timing toquietA/B. No more builds needed now.
+Details docs/RESULT_GS_IRQ_BRIDGE_2026-09-09.md. Deadline08h unchanged.
+
+## Active 2026-09-09 06:47 - GS IRQ bridge first trial
+
+Experimental MC3_GS_IRQ_BRIDGE implemented,defaultoff. Per-memory atomic
+sidecar (ABI layout unchanged), realFINISH pending/mask, CSRread/ack/reset,
+IMRsyscall/MMIO and existing IRQtick cause0 dispatch. No forced semaphore.
+New tests328/328 OFF and328/328 ON in sequential reruns after initial failures;
+full details docs/RESULT_GS_IRQ_BRIDGE_2026-09-09.md. Relink99323 PASS,
+gate string verified in exe. Started600s gs_irq_bridge_r1_20260909 with gateon
+and FrameDumpMinPrims100000. Deadline08h/heartbeat active remains.
+
+## Active 2026-09-09 06:27 until08h - correction and atlas
+
+Cloud extended autonomous work until08:00; heartbeat sameid active with
+new deadline/prompt. Headless bounded runs allowed without repeated go.
+Next priority GS FINISH cause0 opt-in delivery fix with synchronized state,
+CSR/IMR including syscalls/ack/reset, tests and10min comparison; no forced
+semaphore or shortened watchdog. No new runtime change in atlas update.
+No recent visual capture exists; historical legal/Dolby/transitions only.
+Atlas recollected counts unchanged; status section added,version2 published
+privately, deployment succeeded06:27:22. Existing tab preserved.
+Full continuation:docs/LOTE_ATE_08H_2026-09-09.md. Stop/pause at08h.
+
+## Checkpoint 2026-09-09 06:21 - IMR coverage run completed
+
+gs_imr_r1 ended06:20:22 controlled601.029s;216.531sCPU;0MC3afterward.
+56valid GS records,0invalid. FINISH n256 with dispatch0/entry0; IRQ sample
+tick32768 enabledMaskffffffff/onehandler. IMR syscall changedff00→fc00
+before first FINISH and sampled later old/new low bits stayedfc00.
+Coverage caveat: sampled events are not continuous mask history.
+258waits,257matched notifications allwatchdog005295dc:1;CV223.069s,
+token21.801s. No normal5282bc producer, no behavior fix/FPS claim.
+Next: opt-in real GS cause0 delivery with synchronized per-instance state,
+CSR/IMR/ack/reset coverage and tests, then bounded comparison. Never direct
+SignalSema/shortened alarm. Old heartbeat stays PAUSED. Full report and
+binary hashes:docs/RESULT_GS_IMR_2026-09-09.md.
+
+## Resumed by user go 2026-09-09 06:08 - IMR syscall coverage
+
+New bounded lot authorized after prior deadline. Old heartbeat stays PAUSED.
+Baseline work/patches/legal_phase_baseline_20260909_060851 plus explicit
+gs_finish_probe.before.h and Analyze-GsFinish.before.js. Added passive
+ImrSyscall(kind8:new,old) and Reset(kind9) events, no behavior changes.
+Build completed; gate0/1 and parser tests PASS; runtime326/326 PASS;
+relink35062 PASS timestamps/identity. Started600s headless gs_imr_r1_20260909.
+Check result file and analyze closed stderr; no second run implied.
+
+## Closed 2026-09-09 06:04 America/Sao_Paulo
+
+Deadline reached. Heartbeat mc3-investiga-o-at-6h PAUSED, confirmed by app.
+No MC3/cc1plus found at closure; no process termination required, no new
+experiment after deadline. Diagnostic result and bounded next lot:
+docs/RESULT_GS_FINISH_WATCHDOG_2026-09-09.md. No validated behavioral fix.
+Resume only with new user direction; first cover direct GsPutIMR mask writes.
+
+## Closing check 2026-09-09 05:53
+
+No MC3/cc1plus found. Latest result and next step verified in
+docs/RESULT_GS_FINISH_WATCHDOG_2026-09-09.md. No new experiment this wake.
+Heartbeat still ACTIVE until deadline; next wake at/after06:00 must only
+pause mc3-investiga-o-at-6h and record closure, not resume diagnostics.
+
+## Checkpoint 2026-09-09 05:43 - GS FINISH observed, no cause0 delivery
+
+gs_finish_r1 completed05:30:32,601.083s controlled,214.094sCPU; no MC3 at05:41.
+IRQ snapshot32768:206FINISH,0cause0 dispatch/entry,enabledMaskffffffff,
+one enabled cause0 handler.251completed waits,250notifications allwatchdog
+005295dc:1;CV217.079s/token8.361s. Not a performance comparison.
+Parser recovered8 prefixed interleaved events:37valid now,testsPASS.
+IMPORTANT missing coverage: GsPutIMR/iGsPutIMR in System.cpp directly write
+gs().imr, bypassing MMIO hooks. No ImrWrite does NOT prove GS unmasked.
+Next complete syscall mask probe before opt-in delivery fix/validation.
+No behavioral fix, no further build/run authorized. Under20min to deadline:
+close/document only; pause heartbeat at06:00. Full evidence/provenance in
+docs/RESULT_GS_FINISH_WATCHDOG_2026-09-09.md.
+
+## Active 2026-09-09 05:20 - authorized GS FINISH passive run
+
+User go authorized new headless10min probe. Baseline preserved in
+work/patches/legal_phase_baseline_20260909_051614 (runtime binary diff,
+old exe/lib and prior sources). New gate MC3_GS_FINISH_TRACE records real
+FINISH events, CSR low reads/writes, IMR low writes, IRQ mask/handler count
+under existing mutex and cause0 dispatch/handler steps. No delivery fix.
+Samples first8/powers-of-two, process counters; snapshots not coherent and
+not final totals. Does not instrument unsupported8/16-bit GS MMIO paths.
+Standalone gate0/1 PASS; runtime build12946 completed;326/326 tests PASS;
+relink99342 PASS timestamps/old markers; new marker/gate verified in exe.
+Parser tests PASS. Started gs_finish_r1_20260909 at05:20 for600s headless.
+Read work/logs/probe_gs_finish_r1_20260909.log.result.json before next action;
+analyze closed stderr with tools/Analyze-GsFinish.js and Analyze-LegalSema.js.
+No new run authorized beyond this one. Deadline06:00 remains.
+
+## Checkpoint 2026-09-09 05:13 - GS FINISH delivery candidate, offline audit
+
+legal_notify_r1 completed at04:41: 258completed waits,257blocked; all257
+matched first notifications producerRA005295dc (watchdog), runtimeTID1.
+Offline analyzer rerun and parser tests PASS; invalidLines0. CV223.058s,
+token6.398s. Alarm13440 H-SYNC ticks at64us gives860.16ms, not a proven
+clock conversion defect. Normal completion handler528260 checks/acks GS
+CSR FINISH and signals same sema atRA5282bc; absent from matched authors.
+Init52904c registers this handler for INTC cause0, NOT cause2 (previous
+registration is5280b8). GS FINISH sets CSR but inspected IRQ dispatcher
+calls only causes11/2/3. Missing GS IRQ delivery is a candidate, not yet a
+validated behavior fix; actual FINISH arrival/mask during waits unmeasured.
+No new build/run/runtime edits in this offline audit. Headless execution
+requires a new user question per current heartbeat. Preserve baseline and
+measure FINISH arrival, mask and cause0 delivery before claiming causality.
+Details:docs/RESULT_GS_FINISH_WATCHDOG_2026-09-09.md.
+Deadline06:00 remains; pause heartbeat then. No game/compiler active at05:10.
+
+## Active 2026-09-09 until06:00 America/Sao_Paulo - legal phase timing
+
+Cloud authorized continued work until06h. Heartbeat mc3-investiga-o-at-6h
+active in this task; pause at deadline. legal_phase_r1 completed:258paired
+iterations,check3.229s/work437.057s of442.498s worker;errors0,duplicates0.
+Initial wait275.490s is shorter than worker lifetime; do not equate intervals.
+New detail hooks split work1aad28 into eight calls; tests/compile/opcodesPASS.
+legal_detail_r1 completed:5295f0=248.385s,1ac2a0=189.109s ofwork444.484s;
+258paired calls,errors0. No MC3 at03:29. New leaf hooks measure two waits
+inside5295f0 and320b38/320fd0 inside1ac2a0. Tests/4ownercompilePASS;
+relink61831PASS,leaf marker verified. legal_leaf_r1_20260909 headless600s
+completed,harness61846done:WaitSema529690=244.868s/258calls of5295f0=262.287s;
+320b38=152.152s,320fd0=80.838s. No MC3 at03:53. New independent legal-sema
+lane splits CV/token using existing Sync hooks;tests326/326PASS,build52297done.
+legal_sema_r1 completed30363:258waits total234.683s,CV223.136s/token11.546s.
+257blocked CV860.8..876.9ms;notify->CV0.005..0.1325ms. No MC3 at04:17.
+New first-notification producerRa/Tid probe in Sync/header;unitPASS;
+build82202done. Test17218 couldn't launch(file busy); rerun44682PASS326/326.
+Analyzer/testPASS. Relink2807done,legal-notify marker verified. At04:31 started
+headless600s legal_notify_r1_20260909,harness66162;check result before next run.
+Full continuation:docs/LOTE_ATE_06H_2026-09-09.md. No behavior fix yet.
+
+## Checkpoint 2026-09-09 - initial wait producer correlated offline
+
+Existing r1/r2 logs identify legal worker signal SID200/79, state01ea1ff0,
+followed by matching worker0 return. Initial270s/326s waits precede accepted
+notification; CV return after notification0.0079/0.0464ms. Producer1aab90
+signals state+4000 through398b40. Next measure loop1aabe0->1aac70->1aad28,
+repeat at1aabf4 while saved return is zero. No new runtime/build/run or fix.
+EndOfTransition snapshots precede signal but are fixed-global probes, not
+per-script causal timing. Existing script probe scans up to16KiB before
+milestone filtering: active overhead unknown. Offline analyzer/tests added,
+PASS. Full evidence:docs/RESULT_INITIAL_WAIT_PRODUCER_2026-09-09.md.
+
+## Checkpoint 2026-09-09 - identity/deadline diagnostic completed, no behavior fix
+
+Supersedes the callback-first direction below. Offline historical clock slope
+is near nominal globally and in final70s; old log has no now-at-arm and cannot
+prove65s unexpired. New passive identity/base/threshold/call probe,326/326 tests,
+standalone gate-off/on tests, five owners compiled and relink markers verified.
+Two bounded601s headless runs:20/20 observed alarms configured1474560ticks,
+first calls matched internal ID/target/wrapper,20 callbacks and20 wakes.
+Historical long timer stall did NOT reproduce; root cause remains unresolved.
+Six extra calls reused watched addresses with different IDs: confirms ambiguity
+of address-only snapshots, NOT causation of old SID214. No semantic fix or FPS/menu
+acceptance. Initial separate RA398b28 wait lasted270s/326s; recommended next lot
+maps its producer/signal conditions without forcing wake. No third run or MC3
+process remaining. About40min used from3h ceiling. Existing dirty work preserved:
+work/patches/timer_route_baseline_20260909_014537 and
+work/patches/timer_identity_sources_20260909_015409. Full evidence and limits:
+docs/RESULT_LOTE_3H_ALARME_BOOT_2026-09-09.md.
+
+## Checkpoint 2026-09-08 - timer-route result recovered, callback boundary next
+
+Recovered the completed 601.024s run from Sep06 (report was still pending).
+Five complete armed records, four callbacks/wakes; final SID214/alarm0703e0d3
+remains cv-wait65023ms. Timer2 due/dispatch grow14832->18659 with masked0.
+Final selection sample matches watched entry00701e00 and early0, but pointer
+reuse and separate snapshot banks do not prove alarm identity. Next: correlate
+loaded callback target/arguments and return PCs across54ce8c/54cd70/54ced0,
+then wrapper54d640. Not a stopped-clock diagnosis; no forced wake or scheduler
+fix. New read-only tools/Analyze-TimerRoute.js; full evidence and limitations in
+docs/RESULT_TIMER_ROUTE_2026-09-06.md. Runtime unmodified in this recovery turn;
+prior uncommitted probe changes preserved. Dashboard is separate progress/ repo.
+
 ## Checkpoint2026-09-06 18:53 - resumed, alarm stall with live IRQ worker
 
 User resumed.325/325 tests,100 owner opcode annotations matched ELF; bounded
@@ -117,7 +975,7 @@ not generic return stubs. No game running. Full evidence:
 
 ## Checkpoint 2026-09-06 00:46 - Astra
 
-Current workspace: `E:\Games\Emuladores\Sony\mc3recomp`.
+Current workspace: `<project-root>`.
 Quiet same-binary control900s completed; network overlap422/429s late token wait.
 New callback profiler runtime1fc7b08,318/318 tests;600s probe observed target001b84e8,
 468completed callbacks,411ms mean inclusive wall. Main token counters stopped
@@ -312,7 +1170,7 @@ Primary live targets:
   - Mapeado o endereçamento MIPS real: base `0x00620000 - 0x60C0 = 0x00619F40` (e não `0x629F44`).
   - **Leitura:** `sub_004FAED8_0x4faed8` em `0x4faee8` (`lbu $v1, -0x60C0($v0)`). Aborta se `0x00619F40 == 0`.
   - **Escrita:** `FUN_004fa7a8_0x4fa7a8` em `0x4fa7b8` (`sb $a0, -0x60C0($v1)`).
-- **Documentação gerada:** [LOOP_0x5A8908_ANATOMY.md](file:///e:/Emuladores/Sony/mc3recomp/docs/LOOP_0x5A8908_ANATOMY.md)
+- **Documentação gerada:** [LOOP_0x5A8908_ANATOMY.md](<project-root>/docs/LOOP_0x5A8908_ANATOMY.md)
 
 ## Checkpoint 2026-08-02 07:46 BRT - ASSETS.DAT bridge batch 20
 
@@ -360,7 +1218,7 @@ Primary live targets:
 
 ## Checkpoint 2026-08-13 03:10 (binário limpo; bloqueio determinístico identificado)
 
-**Mudança de ambiente:** o checkout mudou de `E:\Emuladores\Sony\mc3recomp` para `E:\Games\Emuladores\Sony\mc3recomp`. Docs e logs antigos (inclusive `latest_status.md` gerado antes de hoje) ainda citam o caminho velho. `cmake` NÃO está no PATH nem em Program Files/msys64 — bloqueia rebuild de runtime (não bloqueou hoje: a lib já estava limpa).
+**Mudança de ambiente:** o checkout mudou de `<old-project-root>` para `<project-root>`. Docs e logs antigos (inclusive `latest_status.md` gerado antes de hoje) ainda citam o caminho velho. `cmake` NÃO está no PATH nem em Program Files/msys64 — bloqueia rebuild de runtime (não bloqueou hoje: a lib já estava limpa).
 
 ### 1. Binário stale purgado (bloqueio de 09/08 resolvido)
 
@@ -630,7 +1488,7 @@ Leitura: o módulo de arquivo cria o semáforo de conclusão, emite a operação
 - Correcao da medicao anterior: a base retail da tabela padlib e `0x006FC590`, nao
   `0x0070C590`. Os dois `scePadPortOpen` ja completavam e publicavam `0x6BB440` e
   `0x6BB600`, com `open=1` e clientes ligados aos servidores PADMAN.
-- O PCSX2-MCP foi religado ao checkout atual em `E:\Games\Emuladores\Sony\mc3recomp`.
+- O PCSX2-MCP foi religado ao checkout atual em `<project-root>`.
   A captura live confirmou `SLUS-21355`, DebugServer + PINE, fase interna `7` no pad 0,
   pacote DualShock `0x79` em `0x006BB440` e o ultimo comando PADMAN `0x08`.
 - O primeiro bloqueio real era o comando `GET_MODVER 0x12`: o fallback generico zerava
