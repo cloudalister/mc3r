@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MC3 Recomp — Code Atlas</title>
+<link rel="icon" href="favicon.svg" />
+<style>
+:root{color-scheme:dark;}
+*{box-sizing:border-box;}
+body{margin:0;background:#11171e;color:#e7edf2;font-family:-apple-system,Segoe UI,Arial,Helvetica,sans-serif;font-size:16px;}
+.shell{max-width:1320px;margin:auto;padding:0 24px;}
+.topbar{height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #28313b;}
+.brand{display:flex;align-items:center;gap:13px;font-weight:750;letter-spacing:1px;}
+.brand-icon{display:grid;place-items:center;background:#16c68c;color:#0c2823;width:36px;height:36px;transform:skew(-10deg);font-size:20px;font-style:italic;}
+.brand-secondary{font-size:13px;color:#90a1af;font-weight:500;}
+.live-label{display:flex;align-items:center;gap:9px;color:#9baebd;font-size:13px;}
+.live-label i{height:6px;width:6px;background:#18cb91;border-radius:50%;display:inline-block;}
+.heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;margin:38px 0 30px;}
+.eyebrow{font-size:11px;letter-spacing:1.7px;font-weight:650;color:#a0b1bf;margin:0 0 10px;}
+h1{font-size:clamp(27px,3.2vw,40px);letter-spacing:-1.6px;line-height:1.18;font-weight:650;margin:0;}
+h1>span{color:#15c58b;}
+.subtitle{color:#a0b0bf;margin:10px 0 0;font-size:14px;}
+.download{display:flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #344350;border-radius:5px;color:#c5d1db;white-space:nowrap;font-size:13px;text-decoration:none;}
+.download:hover{background:#21303b;}
+.overview{display:grid;grid-template-columns:1.12fr 1fr;border:1px solid #2c3945;background:#18212b;border-radius:7px;overflow:hidden;}
+@media (max-width:760px){.overview{grid-template-columns:1fr;}}
+.primary-metric{padding:24px 28px;border-right:1px solid #2c3945;}
+.metric-top{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:14px;font-weight:550;}
+.tag{font-size:9px;letter-spacing:1px;color:#85b9a7;border:1px solid #305045;border-radius:3px;padding:3px 6px;}
+.big-number{font-size:64px;letter-spacing:-3px;line-height:1.1;margin-top:14px;font-weight:600;font-variant-numeric:tabular-nums;}
+.big-number span{font-size:32px;color:#7e99a8;margin-left:5px;}
+.primary-metric p{color:#98aab8;font-size:13px;margin:10px 0 18px;}
+.primary-metric p strong{color:#d8e7ed;font-weight:500;}
+.progress-track{height:9px;border-radius:2px;background:#293742;overflow:hidden;}
+.progress-indicator{height:100%;background:#12bd84;}
+.cyan-bar .progress-indicator{background:#16a9d6;}
+.bar-caption{display:flex;justify-content:space-between;margin-top:9px;color:#8ba697;font-size:11px;}
+.secondary-metrics{padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between;gap:22px;}
+.secondary-metrics strong{font-weight:550;color:#c6e4f3;}
+.secondary-metrics p{font-size:12px;color:#94a6b5;margin:8px 0 0;line-height:1.6;}
+.unmeasured{border-top:1px solid #2a3742;padding-top:18px;font-size:14px;}
+.unmeasured strong{float:right;color:#7be0b0;font-size:13px;}
+.runtime-update{margin:1.5rem 0;padding:1.25rem;border:1px solid #34434d;border-radius:12px;}
+.runtime-update p{margin-top:.75rem;font-size:1rem;line-height:1.6;}
+.snapshot{display:flex;gap:22px;flex-wrap:wrap;padding:15px 0 22px;font-size:11px;color:#8397a7;}
+.snapshot code{color:#75c8b0;margin-left:8px;}
+.snapshot>span:last-child{margin-left:auto;}
+.muted{color:#8295a6;}
+.section-title{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:15px;margin:15px 0;}
+h2{font-size:19px;font-weight:600;letter-spacing:-0.4px;margin:0;}
+.section-title>span,.list-heading>span{font-size:12px;color:#91a4b3;}
+.filters{display:grid;grid-template-columns:1fr 220px 185px;gap:10px;margin-bottom:14px;}
+@media (max-width:760px){.filters{grid-template-columns:1fr;}}
+.search{position:relative;}
+.search svg{position:absolute;left:13px;top:13px;pointer-events:none;}
+.search input{width:100%;background:#182028;border:1px solid #33414e;border-radius:5px;color:#e7edf2;padding:11px 13px 11px 38px;font-size:13px;}
+select{width:100%;background:#182028;border:1px solid #33414e;border-radius:5px;color:#e7edf2;padding:11px 13px;font-size:13px;}
+.legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:12px;color:#b7c5d0;margin-bottom:10px;}
+.legend i{width:9px;height:9px;display:inline-block;border-radius:2px;margin-right:6px;vertical-align:middle;}
+.legend b{color:#e7edf2;font-weight:600;}
+.map-total{margin-left:auto;color:#8397a7;}
+.map-wrap{position:relative;border:1px solid #2c3945;border-radius:7px;overflow:hidden;background:#161d25;}
+canvas{width:100%;height:340px;display:block;cursor:pointer;}
+.empty-map{position:absolute;inset:0;display:grid;place-items:center;color:#8397a7;font-size:13px;}
+.map-readout{border-top:1px solid #2c3945;padding:9px 13px;font-size:12px;color:#9baebd;}
+.inspection{position:relative;margin-top:14px;padding:18px 20px;border:1px solid #2c3945;border-radius:7px;background:#182028;}
+.inspection button{position:absolute;top:10px;right:10px;background:none;border:none;color:#9baebd;cursor:pointer;font-size:16px;}
+.inspection h3{margin:6px 0;font-size:17px;}
+.inspection code{display:block;margin-top:8px;color:#9fd8c4;font-size:12px;word-break:break-all;}
+.list-heading{display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 8px;}
+h3{margin:0;font-size:15px;}
+.table-scroll{overflow-x:auto;border:1px solid #2c3945;border-radius:7px;}
+table{border-collapse:collapse;width:100%;font-size:13px;}
+th{text-align:left;padding:10px 14px;color:#8ea0af;font-size:11px;letter-spacing:.5px;border-bottom:1px solid #2c3945;background:#161d25;position:sticky;top:0;}
+td{padding:9px 14px;border-bottom:1px solid #202a33;white-space:nowrap;}
+td button{background:none;border:none;color:#dce9f0;cursor:pointer;font-size:13px;padding:0;text-align:left;}
+td button:hover{color:#15c58b;}
+.method{display:flex;align-items:center;gap:6px;color:#c2d0da;}
+.method i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+.empty{color:#8397a7;padding:14px 0;}
+.pagination{display:flex;align-items:center;gap:12px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;}
+.pagination span{color:#9baebd;font-size:13px;}
+button.plain{background:none;border:1px solid #344350;border-radius:5px;color:#c5d1db;padding:7px 12px;cursor:pointer;font-size:13px;}
+button.plain:hover{background:#21303b;}
+button.icon{width:32px;height:32px;display:grid;place-items:center;border:1px solid #344350;border-radius:5px;background:none;color:#c5d1db;cursor:pointer;}
+button.icon:disabled{opacity:.4;cursor:default;}
+.methodology{margin:24px 0;border:1px solid #2c3945;border-radius:7px;padding:16px 20px;}
+.methodology summary{cursor:pointer;font-weight:600;}
+.methodology p{color:#9baebd;font-size:13px;line-height:1.6;}
+.methodology code{display:block;color:#7f95a3;font-size:11px;}
+footer{display:flex;justify-content:space-between;padding:24px 0 50px;color:#8397a7;font-size:12px;flex-wrap:wrap;gap:8px;}
+.loading{max-width:1320px;margin:auto;padding:80px 24px;}
+</style>
+</head>
+<body>
+<div id="root" class="loading"><h1>MC3 / Code Atlas</h1><p id="loading-msg">Loading the project catalog…</p></div>
+<script>
+(function(){
+  var n = function(v){ return v.toLocaleString('en-US'); };
+  var pct = function(v,t){ return ((100*v)/t).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var labels = { all:'All associations', hash:'Named by signature', callgraph:'Named by call graph', unknown:'No name associated' };
+  var colors = { hash:'#12b97e', callgraph:'#16a9d6', unknown:'#34434d' };
+
+  function treemap(items, width, height){
+    var sorted = items.slice().sort(function(a,b){ return b.size-a.size || (a.address<b.address?-1:a.address>b.address?1:0); });
+    var sums = [0];
+    for (var i=0;i<sorted.length;i++) sums.push(sums[sums.length-1]+sorted[i].size);
+    var out = [];
+    function divide(lo,hi,x,y,w,h){
+      if (lo>=hi) return;
+      if (hi-lo===1){ out.push({item:sorted[lo],x:x,y:y,w:w,h:h}); return; }
+      var total = sums[hi]-sums[lo];
+      var mid = lo+1;
+      while (mid<hi-1 && (sums[mid]-sums[lo]) < total/2) mid++;
+      var r = (sums[mid]-sums[lo])/total;
+      if (w>=h){ divide(lo,mid,x,y,w*r,h); divide(mid,hi,x+w*r,y,w*(1-r),h); }
+      else { divide(lo,mid,x,y,w,h*r); divide(mid,hi,x,y+h*r,w,h*(1-r)); }
+    }
+    divide(0, sorted.length, 0, 0, width, height);
+    return out;
+  }
+
+  var state = { data:null, error:false, query:'', method:'all', batch:'all', page:0, selected:null };
+  var root = document.getElementById('root');
+
+  fetch('progress-data.json').then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
+    .then(function(v){ state.data = v; render(); })
+    .catch(function(){ state.error = true; render(); });
+
+  function filteredEntries(){
+    if (!state.data) return [];
+    var q = state.query.toLowerCase().trim();
+    return state.data.functions.filter(function(f){
+      return (state.method==='all' || f.method===state.method)
+        && (state.batch==='all' || f.batch===state.batch)
+        && (f.address+' '+f.name+' '+(f.label||'')).toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  function batches(){
+    var s = {};
+    (state.data ? state.data.functions : []).forEach(function(f){ s[f.batch]=1; });
+    return Object.keys(s).sort();
+  }
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function render(){
+    if (!state.data){
+      root.className = 'loading';
+      root.innerHTML = '<h1>MC3 / Code Atlas</h1><p>' + (state.error ? 'Could not load the data. Reload to try again.' : 'Loading the project catalog…') + '</p>';
+      return;
+    }
+    root.className = 'shell';
+    var c = state.data.counts;
+    var filtered = filteredEntries();
+    var maxPage = Math.max(0, Math.ceil(filtered.length/20)-1);
+    if (state.page > maxPage) state.page = maxPage;
+    var bList = batches();
+
+    var html = '';
+    html += '<header class="topbar"><div class="brand"><span class="brand-icon">III</span><span>MC3<span class="brand-secondary"> / RECOMP</span></span></div><span class="live-label"><i></i> Local snapshot</span></header>';
+    html += '<main>';
+    html += '<section class="heading"><div><p class="eyebrow">MIDNIGHT CLUB 3 · DUB EDITION · PS2</p><h1>The code, piece by piece<span>.</span></h1><p class="subtitle">A map of what we\'ve identified so far — and what\'s still left to find.</p></div><a class="download" href="progress-data.json" download>&#8659; Dashboard data</a></section>';
+
+    html += '<section class="overview" aria-label="Project progress">';
+    html += '<div class="primary-metric"><div class="metric-top"><span>Names associated</span><span class="tag">CATALOG</span></div>';
+    html += '<div class="big-number">'+pct(c.named,c.total)+'<span>%</span></div>';
+    html += '<p><strong>'+n(c.named)+'</strong> of '+n(c.total)+' entries with an associated name</p>';
+    html += '<div class="progress-track"><div class="progress-indicator" style="width:'+((100*c.named)/c.total)+'%"></div></div>';
+    html += '<div class="bar-caption"><span>Name found</span><span>'+n(c.total-c.named)+' still unassociated</span></div></div>';
+    html += '<div class="secondary-metrics"><div><div class="metric-top"><span>Generated sources found</span><strong>'+pct(c.generated,c.total)+'%</strong></div>';
+    html += '<div class="progress-track cyan-bar"><div class="progress-indicator" style="width:'+((100*c.generated)/c.total)+'%"></div></div>';
+    html += '<p>'+n(c.generated)+' / '+n(c.total)+' in the index and on disk.</p></div>';
+    html += '<div class="unmeasured"><span>Boots to menu</span><strong>Reaches title screen</strong><p>Boots natively at ~44.7 FPS vs. the PS2\'s 60.</p></div></div>';
+    html += '</section>';
+
+    html += '<section class="runtime-update" aria-label="Latest game status">';
+    html += '<div class="section-title"><h2>Where things stand</h2><span>2026-09-16</span></div>';
+    html += '<p><strong>Boots natively:</strong> no emulator, reaches the PRESS START title screen.</p>';
+    html += '<p><strong>Performance:</strong> measured ~44.7 FPS vs. the PS2\'s 60. The VIF1 interpreter is the largest measured cost (137.1s cumulative in a 460s sample), ahead of VU1 (87.8s) and the software GS rasterizer (61.0s).</p>';
+    html += '<p><strong>Function coverage:</strong> zero missing functions on the path to the menu; every one verified opcode-by-opcode against the original ELF.</p>';
+    html += '<p><strong>Menu blocker:</strong> after START, the next panel appears without its items. The build creates 41 of the 47 script variables the original creates; the six missing ones (offSetX, offSetY, lineheight, scrollable, currentselection, actualselection) are the menu list\'s own properties, registered in the original at 0x33F728 and in the body entered at 0x340AC8.</p>';
+    html += '<p><strong>Rendering bug:</strong> the menu plate is drawn cut diagonally.</p>';
+    html += '<p><strong>Catalog:</strong> 15,812 functions, 8,815 with an associated name (55.75%), 2,120 named via call graph.</p>';
+    html += '</section>';
+
+    var collected = new Date(state.data.capturedAt).toLocaleString('en-US', { timeZone:'America/Sao_Paulo' });
+    html += '<div class="snapshot"><span><span class="muted">BASE</span> <code>'+esc(state.data.commit)+'</code></span><span>Collected '+collected+'</span><span>Includes uncommitted local files</span></div>';
+
+    html += '<section class="explorer">';
+    html += '<div class="section-title"><h2>Function map</h2><span>'+n(filtered.length)+' entries · area proportional to catalog bytes</span></div>';
+    html += '<div class="filters">';
+    html += '<div class="search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8ea0af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="q" aria-label="Search function" placeholder="Search by name or address, e.g.: main, 0x001A…" value="'+esc(state.query)+'"/></div>';
+    html += '<select id="method" aria-label="Filter association">';
+    ['all','hash','callgraph','unknown'].forEach(function(k){ html += '<option value="'+k+'"'+(state.method===k?' selected':'')+'>'+labels[k]+'</option>'; });
+    html += '</select>';
+    html += '<select id="batch" aria-label="Filter batch"><option value="all"'+(state.batch==='all'?' selected':'')+'>All batches</option>';
+    bList.forEach(function(b){ html += '<option value="'+esc(b)+'"'+(state.batch===b?' selected':'')+'>'+esc(b)+'</option>'; });
+    html += '</select></div>';
+
+    html += '<div class="legend">';
+    ['hash','callgraph','unknown'].forEach(function(m){
+      var val = m==='hash'?c.hash:(m==='callgraph'?c.callgraph:c.total-c.named);
+      html += '<span><i style="background:'+colors[m]+'"></i>'+labels[m]+' <b>'+n(val)+'</b></span>';
+    });
+    html += '<span class="map-total">'+(c.bytes/1024/1024).toFixed(2)+' MiB in catalog</span></div>';
+
+    html += '<div class="map-wrap"><canvas id="map" aria-label="Function mosaic. The list below allows keyboard navigation."></canvas>';
+    if (!filtered.length) html += '<div class="empty-map">No function matches the filter.</div>';
+    html += '<div class="map-readout" id="readout">Explore the map · click a function to inspect it</div></div>';
+
+    if (state.selected){
+      var sel = state.selected;
+      html += '<aside class="inspection" aria-live="polite"><button id="close-sel" aria-label="Close details">&times;</button>';
+      html += '<p class="eyebrow">SELECTED FUNCTION · '+esc(sel.address)+'</p><h3>'+esc(sel.label||sel.name)+'</h3>';
+      html += '<p>'+labels[sel.method]+' · '+n(sel.size)+' bytes · '+esc(sel.batch)+'</p>';
+      html += '<code>'+esc(sel.source||'No matching source found in the index')+'</code></aside>';
+    }
+
+    html += '<div class="list-heading"><h3>Inspect entries</h3><span>Select to view details</span></div>';
+    html += '<div class="table-scroll"><table><thead><tr><th>FUNCTION / ASSOCIATED NAME</th><th>ADDRESS</th><th>ASSOCIATION</th><th>SIZE</th></tr></thead><tbody>';
+    filtered.slice(state.page*20, state.page*20+20).forEach(function(f){
+      html += '<tr><td><button class="row-sel" data-addr="'+esc(f.address)+'">'+esc(f.label||f.name)+'</button></td>';
+      html += '<td><code>'+esc(f.address)+'</code></td>';
+      html += '<td><span class="method"><i style="background:'+colors[f.method]+'"></i>'+labels[f.method]+'</span></td>';
+      html += '<td>'+n(f.size)+' B</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    if (!filtered.length) html += '<p class="empty">Nothing found. Try another name or clear the filters.</p>';
+
+    html += '<div class="pagination"><button class="plain" id="clear-filters">Clear filters</button>';
+    html += '<span>Page '+(state.page+1)+' of '+(maxPage+1)+'</span>';
+    html += '<button class="icon" id="prev-page" aria-label="Previous page"'+(state.page===0?' disabled':'')+'>&#8592;</button>';
+    html += '<button class="icon" id="next-page" aria-label="Next page"'+(state.page>=maxPage?' disabled':'')+'>&#8594;</button></div>';
+    html += '</section>';
+
+    html += '<details class="methodology"><summary>How to read these numbers</summary>';
+    html += '<p>Green: name associated by normalized instruction signature. Blue: association via call graph. Gray: no association to the alpha build.</p>';
+    html += '<p>The bars count entries. The mosaic uses catalog sizes; ranges can overlap.</p>';
+    html += '<p>The collection includes uncommitted local files. Refresh the snapshot with the project\'s update script; reloading the page only re-reads the snapshot.</p>';
+    (state.data.sources||[]).forEach(function(s){ html += '<code>'+esc(s)+'</code>'; });
+    html += '</details>';
+
+    html += '<footer><span>MC3 RECOMP <span class="muted">/ progress atlas</span></span></footer>';
+    html += '</main>';
+
+    root.innerHTML = html;
+    wire(filtered);
+  }
+
+  function wire(filtered){
+    var q = document.getElementById('q');
+    if (q) q.addEventListener('input', function(e){ state.query = e.target.value; state.page = 0; render(); });
+    var method = document.getElementById('method');
+    if (method) method.addEventListener('change', function(e){ state.method = e.target.value; state.page = 0; render(); });
+    var batch = document.getElementById('batch');
+    if (batch) batch.addEventListener('change', function(e){ state.batch = e.target.value; state.page = 0; render(); });
+    var clearBtn = document.getElementById('clear-filters');
+    if (clearBtn) clearBtn.addEventListener('click', function(){ state.query=''; state.method='all'; state.batch='all'; state.page=0; render(); });
+    var prev = document.getElementById('prev-page');
+    if (prev) prev.addEventListener('click', function(){ if (state.page>0){ state.page--; render(); } });
+    var next = document.getElementById('next-page');
+    if (next) next.addEventListener('click', function(){ state.page++; render(); });
+    var closeSel = document.getElementById('close-sel');
+    if (closeSel) closeSel.addEventListener('click', function(){ state.selected=null; render(); });
+    document.querySelectorAll('.row-sel').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var addr = btn.getAttribute('data-addr');
+        state.selected = filtered.find(function(f){ return f.address===addr; }) || null;
+        render();
+      });
+    });
+
+    var canvas = document.getElementById('map');
+    if (!canvas) return;
+    var tiles = [];
+    var readout = document.getElementById('readout');
+    function draw(){
+      var w = canvas.clientWidth || canvas.parentElement.clientWidth, h = 340;
+      var dpr = window.devicePixelRatio || 1;
+      canvas.width = w*dpr; canvas.height = h*dpr;
+      var ctx = canvas.getContext('2d');
+      ctx.scale(dpr,dpr);
+      ctx.clearRect(0,0,w,h);
+      tiles = treemap(filtered, w, h);
+      tiles.forEach(function(t){
+        ctx.fillStyle = colors[t.item.method];
+        ctx.fillRect(t.x+0.35, t.y+0.35, Math.max(0.2,t.w-0.7), Math.max(0.2,t.h-0.7));
+        if (t.w>65 && t.h>28){
+          ctx.fillStyle = '#e8fff5';
+          ctx.font = '11px monospace';
+          ctx.fillText(t.item.address.slice(2), t.x+5, t.y+17, t.w-10);
+        }
+        if (state.selected && t.item.address === state.selected.address){
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+          ctx.strokeRect(t.x+1, t.y+1, t.w-2, t.h-2);
+        }
+      });
+    }
+    draw();
+    window.addEventListener('resize', draw);
+    function hit(e){
+      var r = canvas.getBoundingClientRect();
+      var x = e.clientX-r.left, y = e.clientY-r.top;
+      return tiles.find(function(t){ return x>=t.x && x<t.x+t.w && y>=t.y && y<t.y+t.h; });
+    }
+    canvas.addEventListener('mousemove', function(e){
+      var t = hit(e);
+      readout.textContent = t ? ((t.item.label||t.item.name)+' · '+n(t.item.size)+' bytes') : 'Explore the map · click a function to inspect it';
+    });
+    canvas.addEventListener('mouseleave', function(){ readout.textContent = 'Explore the map · click a function to inspect it'; });
+    canvas.addEventListener('click', function(e){
+      var t = hit(e);
+      if (t){ state.selected = t.item; render(); }
+    });
+  }
+})();
+</script>
+</body>
+</html>
