@@ -11,35 +11,35 @@ legally obtained copy of the game.
 
 ## Current state
 
-The build boots natively, with no emulator, and reaches the title screen:
+The build boots natively, with no emulator, and reaches the title screen
+(last updated 2026-09-30):
 
-- **Boot** is deterministic and reaches `PRESS START BUTTON`.
-- **Frame rate**: ~44.7 Hz against the PS2's 60 Hz, measured over a 460 s
-  sample. Of the three instrumented subsystems, the VIF1 interpreter is the
-  largest single cost (137.1 s cumulative), ahead of VU1 (87.8 s) and the
-  software GS rasterizer (61.0 s). No optimization has been applied.
-- **Menu (main blocker)**: after START the next panel appears, but without
-  its options. Every function on that path is now implemented and verified
-  opcode-by-opcode against the original ELF — zero missing lookups in a
-  20-minute run. Instrumentation of the running build shows it creates 41 of
-  the 47 script variables the original creates; the six missing ones
-  (`offSetX`, `offSetY`, `lineheight`, `scrollable`, `currentselection`,
-  `actualselection`) are exactly the properties describing the menu's item
-  list. They are registered in the original at `0x33F728` and in the body
-  entered at `0x340AC8`; neither is reached in this build yet.
+- **Boot** reaches `PRESS START BUTTON`.
+- **Frame rate**: ~44.7 Hz against the PS2's 60 Hz. Exclusive-time profiling
+  (one ~400 s run) shows the software GS rasterizer is the largest graphics
+  cost (64.5 s own time), ahead of VU1 (26.6 s) and VIF1 (23.0 s). An earlier
+  claim that VIF1 was the largest was wrong: the phase timers are nested and
+  the VIF1 timer included VU1 and rasterizer time. Inside the rasterizer,
+  ~45% of samples are bilinear texture sampling. No optimization applied yet.
+- **Menu (main blocker)**: the recomp creates the same 47 script variables as
+  the original and builds the menu item list, but only ~11 minutes after
+  boot (immediate after START on the PS2). The delay is thread time, not a
+  missing function: the main thread spends ~224 s waiting for its turn versus
+  ~98 s executing in a 400 s run, and the network worker thread
+  (`netManagerThread::MainLoop`) is the largest single thief of turns.
+  Menu options are still not visible in captures.
 - **Known rendering bug**: the panel behind the title is cut diagonally —
   only half of a quad is drawn. Cause not yet proven.
 
 These are measurements from single runs, with method and caveats recorded in
-the issue descriptions. The game does not play yet: it boots and stops at a
-partially rendered menu.
+the issue descriptions. The game does not play yet.
 
 ## Repository layout
 
 - `scripts/NN_*.bat` — pipeline steps: ISO extraction, Ghidra export,
   recompilation, compile, link, boot probe.
 - `PS2Recomp/` — submodule: the recompiler and the runtime.
-- `docs/ISSUES_PROPOSED.md` — the three open problems, written up with the
+- `docs/ISSUES_PROPOSED.md` — the open problems, written up with the
   evidence gathered so far. Good entry points for contributors.
 
 Probe and analysis scripts used during investigation are kept out of the
