@@ -130,9 +130,19 @@ the list is built immediately after START.
 - After a semaphore signal, a waiting thread can take up to ~477 ms to resume
   (re-acquiring the execution turn) for a 10 ms requested delay.
 
+### PC sampling of the network worker (2026-09-30)
+
+Sampling the worker's host thread (~62k samples, one run) found **0% of
+samples inside recompiled guest code**: it is blocked in the OS ~100% of the
+time, mostly queueing for the execution turn (`reacquireGuestExecution` /
+`enterGuestExecution`, ~35%) or inside `WaitSema`/`SignalSema` (~24%); the
+rest could not be attributed reliably. So the worker is not a CPU hog; the
+cost comes from many turn handoffs per loop through a non-fair
+`std::recursive_mutex` while the main thread holds the turn for long stretches.
+
 ### What would close this issue
 
-Explain why one `netManagerThread` iteration costs 2–3 ms (PC sampling of that
-thread is the next step) and/or make the turn handoff honour priorities
-without the 7x slowdown.
+Count turn handoffs per `netManagerThread` iteration and the wait per handoff,
+and/or make the turn handoff honour priorities without the 7x slowdown (a
+scheduler change).
 
