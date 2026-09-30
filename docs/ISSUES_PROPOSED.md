@@ -130,6 +130,13 @@ the list is built immediately after START.
 - After a semaphore signal, a waiting thread can take up to ~477 ms to resume
   (re-acquiring the execution turn) for a 10 ms requested delay.
 
+### How much the network worker explains (2026-09-30, one run)
+
+With the worker's per-loop sleep raised to 10 s (effectively parked from t~131 s),
+the menu list registered at **315.6 s** instead of 669 s (100 ms sleep: 416 s).
+So the worker accounts for roughly half of the delay; the remaining ~316 s is
+the main thread's own work plus turn-handoff latency elsewhere.
+
 ### PC sampling of the network worker (2026-09-30)
 
 Sampling the worker's host thread (~62k samples, one run) found **0% of
